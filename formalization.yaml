@@ -1,0 +1,230 @@
+# formalization.yaml (v0.3): repo-root metadata for formalization projects.
+version: "v0.3"
+
+project:
+  name: "quantum-power-flow-limits"
+  authors:
+    - "Cameron Khanpour"
+    - "Samuel Talkington"
+  license: "MIT"
+
+sources:
+  - title: "The Limits of Quantum Computers for Power Flow"
+    authors:
+      - "Cameron Khanpour"
+      - "Samuel Talkington"
+    id: "unpublished manuscript draft (no public identifier)"
+    type: "manuscript draft"
+    author_contacted: "n/a"
+
+status:
+  scope: >-
+    Lean 4 verification of the numbered claims in the manuscript: Lemma 1,
+    Theorem 1, Corollary 1, and Propositions 1--3, together with the stated
+    grid, corridor, planar, and near-planar specializations.
+  sorry_count: 0
+  sorry_in_definitions: 0
+  notes: >-
+    Challenge.lean contains intentional statement placeholders for Comparator;
+    they are not part of the proof implementation counted above.
+  axioms:
+    - "propext"
+    - "Quot.sound"
+    - "Classical.choice"
+  main_results:
+    - declaration: "two_totalWeight_div_le_lambdaMax"
+      file: "PowerFlowLimits/Eigenvalues.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "two_mul_weight_le_lambdaMax"
+      file: "PowerFlowLimits/Eigenvalues.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "lambda2_le_cut_div"
+      file: "PowerFlowLimits/CutBounds.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "lambda2_mul_le_cut"
+      file: "PowerFlowLimits/CutBounds.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "kappaPlus_ge_totalWeight"
+      file: "PowerFlowLimits/CutBounds.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "kappaPlus_ge_edge"
+      file: "PowerFlowLimits/CutBounds.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "separator_kappa_bound"
+      file: "PowerFlowLimits/Separators.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "treewidth_kappa_bound"
+      file: "PowerFlowLimits/Separators.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: "Existence of a balanced separator from bounded treewidth, supplied as hypotheses."
+          source: "The Limits of Quantum Computers for Power Flow"
+    - declaration: "planar_kappa_bound"
+      file: "PowerFlowLimits/Separators.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: "Existence of a balanced planar separator, supplied as hypotheses."
+          source: "The Limits of Quantum Computers for Power Flow"
+    - declaration: "near_planar_kappa_bound"
+      file: "PowerFlowLimits/Separators.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: "Existence of the stated near-planar separator, supplied as hypotheses."
+          source: "The Limits of Quantum Computers for Power Flow"
+    - declaration: "corridor_kappa_bound"
+      file: "PowerFlowLimits/Corridors.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "random_kappa_bound"
+      file: "PowerFlowLimits/Random.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "e2e_query_lower_bound"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: "The quantum query and state-preparation lower bounds are explicit hypotheses."
+          source: "The Limits of Quantum Computers for Power Flow"
+    - declaration: "e2e_query_lower_bound_grid"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "e2e_query_lower_bound_corridor"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "e2e_observable_lower_bound"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: "The quantum linear-system solve lower bound is an explicit hypothesis."
+          source: "The Limits of Quantum Computers for Power Flow"
+
+automation:
+  methods:
+    - method: "other"
+      tool_setup: "The formalization process is not recorded in the repository metadata."
+  notes: "Update this section if a more detailed process record becomes available."
+
+fidelity:
+  divergences: >-
+    The separator-existence inputs behind Corollary 1 and the quantum query
+    facts behind Proposition 3 are represented as explicit hypotheses, as in
+    the manuscript's proofs. Proposition 2 makes pointwise boundedness,
+    per-outcome connectivity, and positivity regularity assumptions explicit.
+    The repository also proves a sharper interface-stiffness separator bound
+    and a weighted-degree hub bound beyond the manuscript's numbered claims.
+
+review:
+  status: "self-assessed"
+  reviewers:
+    - "Cameron Khanpour"
+    - "Samuel Talkington"
+  notes: >-
+    The proof modules build without sorry and report only Lean's standard
+    axioms. Comparator independently checks the manuscript-facing declarations.
+
+alignment:
+  namespace: "root"
+  statements:
+    - source: "Lemma 1(i), trace form"
+      lean: "two_totalWeight_div_le_lambdaMax"
+      module: "PowerFlowLimits.Eigenvalues"
+      status: "proved"
+    - source: "Lemma 1(i), edge form"
+      lean: "two_mul_weight_le_lambdaMax"
+      module: "PowerFlowLimits.Eigenvalues"
+      status: "proved"
+    - source: "Lemma 1(ii), quotient form"
+      lean: "lambda2_le_cut_div"
+      module: "PowerFlowLimits.CutBounds"
+      status: "proved"
+    - source: "Lemma 1(ii), denominator-free form"
+      lean: "lambda2_mul_le_cut"
+      module: "PowerFlowLimits.CutBounds"
+      status: "proved"
+    - source: "Lemma 1, equation (2), total-weight form"
+      lean: "kappaPlus_ge_totalWeight"
+      module: "PowerFlowLimits.CutBounds"
+      status: "proved"
+    - source: "Lemma 1, equation (2), per-edge form"
+      lean: "kappaPlus_ge_edge"
+      module: "PowerFlowLimits.CutBounds"
+      status: "proved"
+    - source: "Theorem 1"
+      lean: "separator_kappa_bound"
+      module: "PowerFlowLimits.Separators"
+      status: "proved"
+    - source: "Corollary 1(i)"
+      lean: "treewidth_kappa_bound"
+      module: "PowerFlowLimits.Separators"
+      status: "literature-dependency"
+      note: "The separator partition is supplied as hypotheses."
+    - source: "Corollary 1(ii)"
+      lean: "planar_kappa_bound"
+      module: "PowerFlowLimits.Separators"
+      status: "literature-dependency"
+      note: "The separator partition is supplied as hypotheses."
+    - source: "Near-planar remark"
+      lean: "near_planar_kappa_bound"
+      module: "PowerFlowLimits.Separators"
+      status: "literature-dependency"
+      note: "The separator partition is supplied as hypotheses."
+    - source: "Proposition 1"
+      lean: "corridor_kappa_bound"
+      module: "PowerFlowLimits.Corridors"
+      status: "proved"
+    - source: "Proposition 2"
+      lean: "random_kappa_bound"
+      module: "PowerFlowLimits.Random"
+      status: "proved"
+    - source: "Proposition 3(i), abstract form"
+      lean: "e2e_query_lower_bound"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "literature-dependency"
+      note: "The quantum query inputs are supplied as hypotheses."
+    - source: "Proposition 3(i), grid specialization"
+      lean: "e2e_query_lower_bound_grid"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved"
+    - source: "Proposition 3(i), corridor specialization"
+      lean: "e2e_query_lower_bound_corridor"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved"
+    - source: "Proposition 3(ii)"
+      lean: "e2e_observable_lower_bound"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "literature-dependency"
+      note: "The quantum solve-cost input is supplied as a hypothesis."
+
+acknowledgements: >-
+  Built with Lean 4 and Mathlib; independent statement and axiom checking is
+  configured for leanprover/comparator.

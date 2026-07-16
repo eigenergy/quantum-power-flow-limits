@@ -1,0 +1,28 @@
+{
+  "challenge_module": "Challenge",
+  "solution_module": "PowerFlowLimits",
+  "theorem_names": [
+    "two_totalWeight_div_le_lambdaMax",
+    "two_mul_weight_le_lambdaMax",
+    "lambda2_le_cut_div",
+    "lambda2_mul_le_cut",
+    "kappaPlus_ge_totalWeight",
+    "kappaPlus_ge_edge",
+    "separator_kappa_bound",
+    "treewidth_kappa_bound",
+    "planar_kappa_bound",
+    "near_planar_kappa_bound",
+    "corridor_kappa_bound",
+    "random_kappa_bound",
+    "e2e_query_lower_bound",
+    "e2e_query_lower_bound_grid",
+    "e2e_query_lower_bound_corridor",
+    "e2e_observable_lower_bound"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

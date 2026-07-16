@@ -2,8 +2,9 @@
 
 Lean 4 formalization of the numbered claims in *The Limits of Quantum
 Computers for Power Flow* (Cameron Khanpour and Samuel Talkington). Every
-theorem compiles against mathlib with no `sorry`, and every proof rests on
-only the standard axioms (`propext`, `Classical.choice`, `Quot.sound`).
+theorem in the proof implementation compiles against mathlib with no `sorry`,
+and every proof rests on only the standard axioms (`propext`,
+`Classical.choice`, `Quot.sound`).
 
 The paper's susceptance Laplacian B = Aᵀ diag(b) A with b_e > 0 is
 `G.laplacian (fun _ => 1)` for a `WeightedGraph G` whose weights are the
@@ -66,6 +67,42 @@ lake build
 ```
 
 Toolchain: Lean 4 v4.28.0, mathlib v4.28.0.
+
+## Independent verification with Comparator
+
+[`Challenge.lean`](Challenge.lean) is the small, trusted statement surface for
+the manuscript results. It imports only Mathlib and repeats the
+project-specific definitions needed to read those statements. The existing
+`PowerFlowLimits` module is the solution checked against it. The settings are
+in [`comparator.json`](comparator.json).
+
+First check that both modules build:
+
+```
+lake exe cache get
+lake build Challenge PowerFlowLimits
+```
+
+To run [Comparator](https://github.com/leanprover/comparator), install
+`landrun` from its `main` branch and build both `lean4export` and Comparator at
+tag `v4.28.0`, matching this repository's Lean toolchain. Put the three
+binaries on `PATH`. On a Linux system with user `systemd`, run Comparator using
+its currently recommended sandbox wrapper:
+
+```
+systemd-run --property=RestrictAddressFamilies=~AF_UNIX --user --pty \
+  -E PATH="$PATH" --working-directory "$(pwd)" -- \
+  bash -c 'lake env comparator comparator.json'
+```
+
+Success means that all declarations listed in `comparator.json` have exactly
+the statements in `Challenge.lean`, are accepted by the Lean kernel, and use
+only `propext`, `Quot.sound`, and `Classical.choice`. Comparator's optional
+independent `nanoda` kernel can be enabled by installing it and changing
+`enable_nanoda` in the config.
+
+Project provenance, scope, fidelity notes, and declaration-level alignment
+are recorded in [`formalization.yaml`](formalization.yaml)
 
 ## Authors
 

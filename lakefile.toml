@@ -15,3 +15,6 @@ rev = "v4.28.0"
 
 [[lean_lib]]
 name = "PowerFlowLimits"
+
+[[lean_lib]]
+name = "Challenge"
