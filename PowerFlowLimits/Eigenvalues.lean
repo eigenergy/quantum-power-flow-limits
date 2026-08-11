@@ -1,9 +1,17 @@
-import PowerFlowLimits.Laplacian
+/-
+Copyright (c) 2026 Cameron Khanpour and Samuel Talkington. All rights reserved.
+Released under MIT license as described in the file LICENSE.
+Authors: Cameron Khanpour, Samuel Talkington
+-/
+import PowerFlowLimits.Connectivity
 import Mathlib.Analysis.Matrix.Spectrum
 import Mathlib.LinearAlgebra.Matrix.ToLinearEquiv
 
 /-!
-# Variational eigenvalues: lambda_2, lambda_max, the effective condition number, and the trace bound via the spectral theorem
+# Variational eigenvalues
+
+This file defines lambda_2, lambda_max, and the effective condition number. It also proves the
+trace bound through the spectral theorem.
 
 Part of the Lean 4 formalization of
 "The Limits of Quantum Computers for Power Flow" (Khanpour and Talkington).
@@ -41,6 +49,118 @@ theorem lambda2_set_nonempty (G : WeightedGraph n m) :
   rw [h_comm, laplacian_quadratic]
   exact Finset.sum_nonneg fun e _ =>
     mul_nonneg (mul_nonneg zero_le_one (G.weights_pos e).le) (sq_nonneg _)
+
+/-- With at least two buses, the variational set defining `lambda₂` is bounded above. -/
+theorem lambda2_set_bddAbove (G : WeightedGraph n m) (hn : 1 < n) :
+    BddAbove {r : ℝ | ∀ (x : Fin n → ℝ), ∑ i, x i = 0 →
+      r * (∑ i, x i ^ 2) ≤
+        ∑ i, (∑ j, G.laplacian (fun _ ↦ 1) i j * x j) * x i} := by
+  let i₀ : Fin n := ⟨0, by omega⟩
+  let i₁ : Fin n := ⟨1, by omega⟩
+  have hi : i₀ ≠ i₁ := by
+    intro h
+    have := congrArg Fin.val h
+    simp only [i₀, i₁] at this
+    omega
+  let x : Fin n → ℝ := fun i ↦ stdBasis i₀ i - stdBasis i₁ i
+  have hx_sum : ∑ i, x i = 0 := by
+    simp [x, stdBasis, Finset.sum_sub_distrib, Finset.sum_ite_eq', Finset.mem_univ]
+  have hx_pointwise : ∀ i, x i ^ 2 =
+      (if i = i₀ then 1 else 0) + (if i = i₁ then 1 else 0) := by
+    intro i
+    by_cases h0 : i = i₀
+    · subst i
+      simp [x, stdBasis, hi]
+    · by_cases h1 : i = i₁
+      · subst i
+        simp [x, stdBasis, h0]
+      · simp [x, stdBasis, h0, h1]
+  have hx_sq : ∑ i, x i ^ 2 = 2 := by
+    simp_rw [hx_pointwise, Finset.sum_add_distrib]
+    simp [Finset.sum_ite_eq', Finset.mem_univ]
+    norm_num
+  refine ⟨(∑ i, (∑ j, G.laplacian (fun _ ↦ 1) i j * x j) * x i) / 2, ?_⟩
+  intro r hr
+  have h := hr x hx_sum
+  rw [hx_sq] at h
+  linarith
+
+/-- The variational second eigenvalue is nonnegative at unit switching. -/
+theorem lambda2_nonneg (G : WeightedGraph n m) (hn : 1 < n) :
+    0 ≤ laplacian_eigenvalue₂ G (fun _ ↦ 1) := by
+  have hzero : 0 ∈ {r : ℝ | ∀ (x : Fin n → ℝ), ∑ i, x i = 0 →
+      r * (∑ i, x i ^ 2) ≤
+        ∑ i, (∑ j, G.laplacian (fun _ ↦ 1) i j * x j) * x i} := by
+    intro x _
+    rw [zero_mul]
+    have hcomm : ∑ i, (∑ j, G.laplacian (fun _ ↦ 1) i j * x j) * x i =
+        ∑ i, x i * ∑ j, G.laplacian (fun _ ↦ 1) i j * x j := by
+      apply Finset.sum_congr rfl
+      intro i _
+      ring
+    rw [hcomm, laplacian_quadratic]
+    exact Finset.sum_nonneg fun e _ ↦
+      mul_nonneg (mul_nonneg zero_le_one (G.weights_pos e).le) (sq_nonneg _)
+  unfold laplacian_eigenvalue₂
+  exact le_csSup (lambda2_set_bddAbove G hn) hzero
+
+/-- Ordinary graph connectivity with positive branch weights implies positive `lambda₂`. -/
+theorem combinatoriallyConnected_implies_spectralConnected (G : WeightedGraph n m)
+    (hconn : G.CombinatoriallyConnected) (hn : 1 < n) :
+    G.Connected (fun _ ↦ 1) := by
+  obtain ⟨K, hK_pos, hanti⟩ :=
+    (LinearMap.injective_iff_antilipschitz G.weightedDropLinearMap).mp
+      (G.weightedDropLinearMap_injective hconn (by omega))
+  let r : ℝ := ((K : ℝ) ^ 2)⁻¹
+  have hK_real : 0 < (K : ℝ) := by exact_mod_cast hK_pos
+  have hK_sq : 0 < (K : ℝ) ^ 2 := sq_pos_of_pos hK_real
+  have hr_pos : 0 < r := by simp only [r]; positivity
+  have hr_mem : r ∈ {a : ℝ | ∀ (x : Fin n → ℝ), ∑ i, x i = 0 →
+      a * (∑ i, x i ^ 2) ≤
+        ∑ i, (∑ j, G.laplacian (fun _ ↦ 1) i j * x j) * x i} := by
+    intro x hx
+    let xE : EuclideanSpace ℝ (Fin n) := WithLp.toLp 2 x
+    let z : zeroSumSubspace n := ⟨xE, by simpa [xE] using hx⟩
+    have hbound : ‖z‖ ≤ (K : ℝ) * ‖G.weightedDropLinearMap z‖ :=
+      ZeroHomClass.bound_of_antilipschitz G.weightedDropLinearMap hanti z
+    have hsq : ‖z‖ ^ 2 ≤ ((K : ℝ) * ‖G.weightedDropLinearMap z‖) ^ 2 :=
+      (sq_le_sq₀ (norm_nonneg z)
+        (mul_nonneg hK_real.le (norm_nonneg (G.weightedDropLinearMap z)))).mpr hbound
+    have hscaled : ((K : ℝ) ^ 2)⁻¹ * ‖z‖ ^ 2 ≤
+        ‖G.weightedDropLinearMap z‖ ^ 2 := by
+      calc
+        ((K : ℝ) ^ 2)⁻¹ * ‖z‖ ^ 2 = ‖z‖ ^ 2 / (K : ℝ) ^ 2 := by
+          field_simp
+        _ ≤ ‖G.weightedDropLinearMap z‖ ^ 2 := by
+          rw [div_le_iff₀ hK_sq]
+          simpa [mul_pow, mul_comm] using hsq
+    have hz_norm : ‖z‖ ^ 2 = ∑ i, x i ^ 2 := by
+      change ‖xE‖ ^ 2 = ∑ i, x i ^ 2
+      rw [EuclideanSpace.norm_sq_eq]
+      simp [xE, Real.norm_eq_abs, sq_abs]
+    have hdrop_norm : ‖G.weightedDropLinearMap z‖ ^ 2 =
+        ∑ e, G.weights e * (voltageDrop G x e) ^ 2 := by
+      simpa [z, xE] using G.weightedDropLinearMap_norm_sq z
+    have henergy : r * (∑ i, x i ^ 2) ≤
+        ∑ e, G.weights e * (voltageDrop G x e) ^ 2 := by
+      rw [hz_norm, hdrop_norm] at hscaled
+      exact hscaled
+    calc
+      r * (∑ i, x i ^ 2) ≤
+          ∑ e, G.weights e * (voltageDrop G x e) ^ 2 := henergy
+      _ = ∑ e, 1 * G.weights e * (voltageDrop G x e) ^ 2 := by simp
+      _ = ∑ i, x i * ∑ j, G.laplacian (fun _ ↦ 1) i j * x j :=
+        (laplacian_quadratic G (fun _ ↦ 1) x).symm
+      _ = ∑ i, (∑ j, G.laplacian (fun _ ↦ 1) i j * x j) * x i := by
+        apply Finset.sum_congr rfl
+        intro i _
+        ring
+  have hr_le : r ≤ sSup {a : ℝ | ∀ (x : Fin n → ℝ), ∑ i, x i = 0 →
+      a * (∑ i, x i ^ 2) ≤
+        ∑ i, (∑ j, G.laplacian (fun _ ↦ 1) i j * x j) * x i} :=
+    le_csSup (lambda2_set_bddAbove G hn) hr_mem
+  unfold WeightedGraph.Connected laplacian_eigenvalue₂
+  exact lt_of_lt_of_le hr_pos hr_le
 
 /-- A spectrally connected graph has at least two nodes. -/
 theorem WeightedGraph.Connected.one_lt {G : WeightedGraph n m} {s : Fin m → ℝ}
@@ -220,6 +340,16 @@ theorem two_mul_weight_le_lambdaMax (G : WeightedGraph n m) (e : Fin m) :
     (by rw [hx_sq]; norm_num)
   rw [hx_sq] at h2
   linarith
+
+/-- Lemma 1(i), maximum-edge form. A nonempty finite edge set has a branch attaining the maximum
+weight, and twice that weight bounds `lambda_max` from below. -/
+theorem exists_maxWeight_lambdaMax_bound (G : WeightedGraph n m) (hm : 0 < m) :
+    ∃ e : Fin m, (∀ f, G.weights f ≤ G.weights e) ∧
+      2 * G.weights e ≤ laplacianEigenvalueMax G (fun _ ↦ 1) := by
+  have huniv : (Finset.univ : Finset (Fin m)).Nonempty :=
+    ⟨⟨0, hm⟩, Finset.mem_univ _⟩
+  obtain ⟨e, _, he⟩ := Finset.exists_max_image Finset.univ G.weights huniv
+  exact ⟨e, fun f ↦ he f (Finset.mem_univ f), two_mul_weight_le_lambdaMax G e⟩
 
 /-- Lemma 1(i), trace form: λ_max(B) ≥ 2 b(E)/(n-1).
     tr(B) = 2b(E) spreads over at most n-1 nonzero eigenvalues, since the

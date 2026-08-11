@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Cameron Khanpour and Samuel Talkington. All rights reserved.
+Released under MIT license as described in the file LICENSE.
+Authors: Cameron Khanpour, Samuel Talkington
+-/
 import PowerFlowLimits.Eigenvalues
 
 /-!
@@ -111,7 +116,7 @@ theorem lambda2_le_cut_div (G : WeightedGraph n m) (S : Finset (Fin n))
     κ₊(B) ≥ 2γ(1-γ)·b(E)/b(∂S), using n/(n-1) ≥ 1. -/
 theorem kappaPlus_ge_totalWeight (G : WeightedGraph n m) (S : Finset (Fin n))
     (hne : S.Nonempty) (hproper : S ≠ Finset.univ)
-    (hconn : G.Connected (fun _ => 1)) :
+    (hconn : G.CombinatoriallyConnected) :
     2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) * G.totalWeight /
         G.cutWeight S ≤
       effectiveConditionNumber G (fun _ => 1) := by
@@ -120,20 +125,22 @@ theorem kappaPlus_ge_totalWeight (G : WeightedGraph n m) (S : Finset (Fin n))
   have hcard_lt : S.card < n := by
     have h := Finset.card_lt_card (Finset.ssubset_univ_iff.mpr hproper)
     simpa using h
+  have hn2 : 1 < n := lt_of_le_of_lt (Finset.one_le_card.mpr hne) hcard_lt
+  have hspec := combinatoriallyConnected_implies_spectralConnected G hconn hn2
   have hc_pos : (0 : ℝ) < S.card := Nat.cast_pos.mpr (Finset.card_pos.mpr hne)
   have hc_lt : (S.card : ℝ) < n := Nat.cast_lt.mpr hcard_lt
   have hA_pos : (0 : ℝ) < (S.card : ℝ) * ((n : ℝ) - S.card) :=
     mul_pos hc_pos (by linarith)
-  unfold WeightedGraph.Connected at hconn
+  unfold WeightedGraph.Connected at hspec
   have hT3 := lambda2_mul_le_cut G S hne hproper
   have hcw_pos : 0 < G.cutWeight S := by
-    have hpos := mul_pos hconn hA_pos
+    have hpos := mul_pos hspec hA_pos
     nlinarith
   have hW_nn : 0 ≤ G.totalWeight :=
     Finset.sum_nonneg fun e _ => (G.weights_pos e).le
   have hlmax := two_totalWeight_div_card_le_lambdaMax G hn
   unfold effectiveConditionNumber
-  rw [div_le_div_iff₀ hcw_pos hconn]
+  rw [div_le_div_iff₀ hcw_pos hspec]
   calc 2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) * G.totalWeight *
         laplacian_eigenvalue₂ G (fun _ => 1)
       = (2 * G.totalWeight / (n : ℝ) ^ 2) *
@@ -153,7 +160,7 @@ theorem kappaPlus_ge_totalWeight (G : WeightedGraph n m) (S : Finset (Fin n))
     the paper's n·max_e b_e term. -/
 theorem kappaPlus_ge_edge (G : WeightedGraph n m) (S : Finset (Fin n))
     (hne : S.Nonempty) (hproper : S ≠ Finset.univ)
-    (hconn : G.Connected (fun _ => 1)) (e : Fin m) :
+    (hconn : G.CombinatoriallyConnected) (e : Fin m) :
     2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) * ((n : ℝ) * G.weights e) /
         G.cutWeight S ≤
       effectiveConditionNumber G (fun _ => 1) := by
@@ -162,19 +169,21 @@ theorem kappaPlus_ge_edge (G : WeightedGraph n m) (S : Finset (Fin n))
   have hcard_lt : S.card < n := by
     have h := Finset.card_lt_card (Finset.ssubset_univ_iff.mpr hproper)
     simpa using h
+  have hn2 : 1 < n := lt_of_le_of_lt (Finset.one_le_card.mpr hne) hcard_lt
+  have hspec := combinatoriallyConnected_implies_spectralConnected G hconn hn2
   have hc_pos : (0 : ℝ) < S.card := Nat.cast_pos.mpr (Finset.card_pos.mpr hne)
   have hc_lt : (S.card : ℝ) < n := Nat.cast_lt.mpr hcard_lt
   have hA_pos : (0 : ℝ) < (S.card : ℝ) * ((n : ℝ) - S.card) :=
     mul_pos hc_pos (by linarith)
-  unfold WeightedGraph.Connected at hconn
+  unfold WeightedGraph.Connected at hspec
   have hT3 := lambda2_mul_le_cut G S hne hproper
   have hcw_pos : 0 < G.cutWeight S := by
-    have hpos := mul_pos hconn hA_pos
+    have hpos := mul_pos hspec hA_pos
     nlinarith
   have hw_pos := G.weights_pos e
   have hlmax := two_mul_weight_le_lambdaMax G e
   unfold effectiveConditionNumber
-  rw [div_le_div_iff₀ hcw_pos hconn]
+  rw [div_le_div_iff₀ hcw_pos hspec]
   calc 2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
         ((n : ℝ) * G.weights e) * laplacian_eigenvalue₂ G (fun _ => 1)
       = (2 * G.weights e / (n : ℝ)) *
@@ -189,48 +198,15 @@ theorem kappaPlus_ge_edge (G : WeightedGraph n m) (S : Finset (Fin n))
     _ ≤ laplacianEigenvalueMax G (fun _ => 1) * G.cutWeight S :=
         mul_le_mul_of_nonneg_right hlmax hcw_pos.le
 
-/-- Hub bound, beyond the paper's eq. (2): κ₊(B) ≥ γ(1-γ)·n·d_i/b(∂S) for
-    every node i, since λ_max(B) ≥ d_i (diagonal Rayleigh quotient). For a
-    node of weighted degree d_i > 2·max_e b_e — any hub with three or more
-    comparably stiff branches — this beats the paper's per-edge term. -/
-theorem kappaPlus_ge_weightedDegree (G : WeightedGraph n m)
-    (S : Finset (Fin n)) (hne : S.Nonempty) (hproper : S ≠ Finset.univ)
-    (hconn : G.Connected (fun _ => 1)) (i : Fin n) :
-    ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
-        ((n : ℝ) * G.weightedDegree i) / G.cutWeight S ≤
-      effectiveConditionNumber G (fun _ => 1) := by
-  have hn : 0 < n := hne.choose.pos
-  have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr hn
-  have hcard_lt : S.card < n := by
-    have h := Finset.card_lt_card (Finset.ssubset_univ_iff.mpr hproper)
-    simpa using h
-  have hc_pos : (0 : ℝ) < S.card := Nat.cast_pos.mpr (Finset.card_pos.mpr hne)
-  have hc_lt : (S.card : ℝ) < n := Nat.cast_lt.mpr hcard_lt
-  have hA_pos : (0 : ℝ) < (S.card : ℝ) * ((n : ℝ) - S.card) :=
-    mul_pos hc_pos (by linarith)
-  unfold WeightedGraph.Connected at hconn
-  have hT3 := lambda2_mul_le_cut G S hne hproper
-  have hcw_pos : 0 < G.cutWeight S := by
-    have hpos := mul_pos hconn hA_pos
-    nlinarith
-  have hd_nn : 0 ≤ G.weightedDegree i :=
-    Finset.sum_nonneg fun e _ => (G.weights_pos e).le
-  have hlmax : G.weightedDegree i ≤ laplacianEigenvalueMax G (fun _ => 1) := by
-    rw [weightedDegree_eq_diag]
-    exact diag_le_lambdaMax G _ i
-  unfold effectiveConditionNumber
-  rw [div_le_div_iff₀ hcw_pos hconn]
-  calc ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
-        ((n : ℝ) * G.weightedDegree i) * laplacian_eigenvalue₂ G (fun _ => 1)
-      = (G.weightedDegree i / n) *
-        (laplacian_eigenvalue₂ G (fun _ => 1) *
-          ((S.card : ℝ) * ((n : ℝ) - S.card))) := by
-        field_simp
-    _ ≤ (G.weightedDegree i / n) * ((n : ℝ) * G.cutWeight S) :=
-        mul_le_mul_of_nonneg_left hT3 (div_nonneg hd_nn hn_pos.le)
-    _ = G.weightedDegree i * G.cutWeight S := by
-        field_simp
-    _ ≤ laplacianEigenvalueMax G (fun _ => 1) * G.cutWeight S :=
-        mul_le_mul_of_nonneg_right hlmax hcw_pos.le
+/-- Lemma 1, equation (2), maximum-edge form. -/
+theorem exists_maxWeight_kappa_bound (G : WeightedGraph n m) (S : Finset (Fin n))
+    (hne : S.Nonempty) (hproper : S ≠ Finset.univ)
+    (hconn : G.CombinatoriallyConnected) (hm : 0 < m) :
+    ∃ e : Fin m, (∀ f, G.weights f ≤ G.weights e) ∧
+      2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+          ((n : ℝ) * G.weights e) / G.cutWeight S ≤
+        effectiveConditionNumber G (fun _ ↦ 1) := by
+  obtain ⟨e, he, _⟩ := exists_maxWeight_lambdaMax_bound G hm
+  exact ⟨e, he, kappaPlus_ge_edge G S hne hproper hconn e⟩
 
 end
