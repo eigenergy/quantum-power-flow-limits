@@ -1,0 +1,207 @@
+schema_version = 1
+challenge_module = "Challenge"
+solution_module = "PowerFlowLimits.PaperClaims"
+expected_claim_count = 18
+expected_nonformal_claim_count = 6
+permitted_axioms = ["propext", "Quot.sound", "Classical.choice"]
+enable_nanoda = true
+
+[[claim]]
+name = "PaperClaims.lemma1_weightedCuts"
+status = "proved"
+summary = "Trace, edge, cut, and condition number inequalities"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.theorem1_separator"
+status = "proved"
+summary = "Condition number lower bound from a quantitative separator"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.corollary1_treewidth"
+status = "proved"
+summary = "Treewidth bound from a standard rooted tree decomposition"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.corollary1_planarFromLiptonTarjan"
+status = "proved-relative-to-cited-result"
+summary = "Planar specialization from a planarity certificate and the cited separator theorem"
+external_dependencies = ["Lipton-Tarjan planar separator theorem"]
+citation = """
+Lipton and Tarjan, A Separator Theorem for Planar Graphs,
+SIAM Journal on Applied Mathematics 36(2), 1979, doi:10.1137/0136016"""
+interface = "LiptonTarjanVertexCostTheorem"
+
+[[claim]]
+name = "PaperClaims.proposition1_corridor"
+status = "proved"
+summary = "Condition number lower bound for a macroscopic corridor"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.proposition2_randomSeparator"
+status = "proved"
+summary = "Exponential probability bound for independent bounded weights"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.proposition2_randomTreewidth"
+status = "proved"
+summary = "Random weight transfer from a rooted tree decomposition"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.proposition2_randomPlanar"
+status = "proved-relative-to-cited-result"
+summary = "Random weight transfer from a planarity certificate and the cited separator theorem"
+external_dependencies = ["Lipton-Tarjan planar separator theorem"]
+citation = """
+Lipton and Tarjan, A Separator Theorem for Planar Graphs,
+SIAM Journal on Applied Mathematics 36(2), 1979, doi:10.1137/0136016"""
+interface = "LiptonTarjanVertexCostTheorem"
+
+[[claim]]
+name = "PaperClaims.proposition2_randomCorridor"
+status = "proved"
+summary = "Random weight transfer for the corridor bound"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.proposition3_balancedHardPair"
+status = "proved"
+summary = "Extreme Laplacian modes and the resulting normalized hard pair"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.proposition3_fixedScheduleReadout"
+status = "proved-relative-to-cited-result"
+summary = "Fixed schedule readout lower bound on one worst case input for a fixed graph"
+external_dependencies = [
+  "Controlled preparation oracle hybrid progress bound",
+  "Pure state tomography query lower bound",
+  "Classical SDD solve time upper bound",
+  "Dense input loading gate lower bound without QRAM",
+]
+citation = """
+Costa et al., Optimal Scaling Quantum Linear Systems Solver via Discrete Adiabatic Theorem,
+PRX Quantum 3, 040303, 2022, doi:10.1103/PRXQuantum.3.040303; van Apeldoorn et al.,
+Quantum tomography using state-preparation unitaries, arXiv:2207.08800; Koutis, Miller, and
+Peng, A Nearly-m log n Time Solver for SDD Linear Systems, FOCS 2011,
+doi:10.1109/FOCS.2011.85; Plesch and Brukner, Quantum-state preparation with universal gate
+decompositions, Physical Review A 83, 032302, 2011, doi:10.1103/PhysRevA.83.032302;
+Pareek et al., Limitations of Fault-Tolerant Quantum Linear System
+Solvers for Quantum Power Flow, IEEE Transactions on Power Systems, 2025,
+doi:10.1109/TPWRS.2025.3613139"""
+interface = "PaperClaims.ControlledPreparationHybridBound; PaperClaims.PureStateTomographyBound; PaperClaims.ClassicalSDDSolveBound; PaperClaims.DenseLoadingBound"
+
+[[claim]]
+name = "PaperClaims.proposition3_gridReadout"
+status = "proved-relative-to-cited-result"
+summary = "Fixed graph readout bound under linear condition growth"
+external_dependencies = [
+  "Controlled preparation oracle hybrid progress bound",
+  "Pure state tomography query lower bound",
+  "Classical SDD solve time upper bound",
+  "Dense input loading gate lower bound without QRAM",
+]
+citation = """
+Costa et al., Optimal Scaling Quantum Linear Systems Solver via Discrete Adiabatic Theorem,
+PRX Quantum 3, 040303, 2022, doi:10.1103/PRXQuantum.3.040303; van Apeldoorn et al.,
+Quantum tomography using state-preparation unitaries, arXiv:2207.08800; Koutis, Miller, and
+Peng, A Nearly-m log n Time Solver for SDD Linear Systems, FOCS 2011,
+doi:10.1109/FOCS.2011.85; Plesch and Brukner, Quantum-state preparation with universal gate
+decompositions, Physical Review A 83, 032302, 2011, doi:10.1103/PhysRevA.83.032302;
+Pareek et al., Limitations of Fault-Tolerant Quantum Linear System
+Solvers for Quantum Power Flow, IEEE Transactions on Power Systems, 2025,
+doi:10.1109/TPWRS.2025.3613139"""
+interface = "PaperClaims.ControlledPreparationHybridBound; PaperClaims.PureStateTomographyBound; PaperClaims.ClassicalSDDSolveBound; PaperClaims.DenseLoadingBound"
+
+[[claim]]
+name = "PaperClaims.proposition3_corridorReadout"
+status = "proved-relative-to-cited-result"
+summary = "Fixed graph readout bound under quadratic condition growth"
+external_dependencies = [
+  "Controlled preparation oracle hybrid progress bound",
+  "Pure state tomography query lower bound",
+  "Classical SDD solve time upper bound",
+  "Dense input loading gate lower bound without QRAM",
+]
+citation = """
+Costa et al., Optimal Scaling Quantum Linear Systems Solver via Discrete Adiabatic Theorem,
+PRX Quantum 3, 040303, 2022, doi:10.1103/PRXQuantum.3.040303; van Apeldoorn et al.,
+Quantum tomography using state-preparation unitaries, arXiv:2207.08800; Koutis, Miller, and
+Peng, A Nearly-m log n Time Solver for SDD Linear Systems, FOCS 2011,
+doi:10.1109/FOCS.2011.85; Plesch and Brukner, Quantum-state preparation with universal gate
+decompositions, Physical Review A 83, 032302, 2011, doi:10.1103/PhysRevA.83.032302;
+Pareek et al., Limitations of Fault-Tolerant Quantum Linear System
+Solvers for Quantum Power Flow, IEEE Transactions on Power Systems, 2025,
+doi:10.1109/TPWRS.2025.3613139"""
+interface = "PaperClaims.ControlledPreparationHybridBound; PaperClaims.PureStateTomographyBound; PaperClaims.ClassicalSDDSolveBound; PaperClaims.DenseLoadingBound"
+
+[[claim]]
+name = "PaperClaims.proposition3_localObservable"
+status = "proved-relative-to-cited-result"
+summary = "Fixed solve query lower bound and separation for a nonzero-gap bus or branch squared observable"
+external_dependencies = ["Controlled preparation oracle hybrid progress bound"]
+citation = "Costa et al., Optimal Scaling Quantum Linear Systems Solver via Discrete Adiabatic Theorem, PRX Quantum 3, 040303, 2022, doi:10.1103/PRXQuantum.3.040303"
+interface = "PaperClaims.ControlledPreparationHybridBound"
+
+[[claim]]
+name = "PaperClaims.groundedConditioningTransfer"
+status = "proved"
+summary = "Corrected trace condition bound for a grounded matrix"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.flatStartACBlock"
+status = "proved"
+summary = "Lossless flat start active-angle block identity"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.dcOpfBarrierBlock"
+status = "proved"
+summary = "Positive DC optimal power flow barrier scales and Laplacian block identity"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.nearPlanarFromCrossingDrawing"
+status = "proved-relative-to-cited-result"
+summary = "Near planar bound from a crossing schedule, planarization, and the cited separator theorem"
+external_dependencies = ["Lipton-Tarjan planar separator theorem"]
+citation = """
+Lipton and Tarjan, A Separator Theorem for Planar Graphs,
+SIAM Journal on Applied Mathematics 36(2), 1979, doi:10.1137/0136016"""
+interface = "LiptonTarjanVertexCostTheorem"
+
+[[nonformal_claim]]
+name = "five_case_condition_table"
+status = "empirical"
+summary = "Five-case empirical condition number table reproduced by the manuscript generator"
+
+[[nonformal_claim]]
+name = "full_ac_newton_systems"
+status = "discussion-not-formalized"
+summary = "Claims about complete nonlinear AC Newton systems beyond the verified flat start angle block"
+
+[[nonformal_claim]]
+name = "full_opf_kkt_ipm_systems"
+status = "discussion-not-formalized"
+summary = "Claims about complete optimal power flow KKT and interior point systems beyond the verified DC barrier block"
+
+[[nonformal_claim]]
+name = "complexity_class_statements"
+status = "discussion-not-formalized"
+summary = "Claims stated in terms of classical and quantum complexity classes"
+
+[[nonformal_claim]]
+name = "unit_commitment"
+status = "discussion-not-formalized"
+summary = "Consequences for unit commitment models"
+
+[[nonformal_claim]]
+name = "hybrid_algorithms"
+status = "discussion-not-formalized"
+summary = "Consequences for hybrid classical and quantum algorithms"

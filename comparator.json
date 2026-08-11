@@ -1,28 +1,30 @@
 {
   "challenge_module": "Challenge",
-  "solution_module": "PowerFlowLimits",
+  "solution_module": "PowerFlowLimits.PaperClaims",
   "theorem_names": [
-    "two_totalWeight_div_le_lambdaMax",
-    "two_mul_weight_le_lambdaMax",
-    "lambda2_le_cut_div",
-    "lambda2_mul_le_cut",
-    "kappaPlus_ge_totalWeight",
-    "kappaPlus_ge_edge",
-    "separator_kappa_bound",
-    "treewidth_kappa_bound",
-    "planar_kappa_bound",
-    "near_planar_kappa_bound",
-    "corridor_kappa_bound",
-    "random_kappa_bound",
-    "e2e_query_lower_bound",
-    "e2e_query_lower_bound_grid",
-    "e2e_query_lower_bound_corridor",
-    "e2e_observable_lower_bound"
+    "PaperClaims.lemma1_weightedCuts",
+    "PaperClaims.theorem1_separator",
+    "PaperClaims.corollary1_treewidth",
+    "PaperClaims.corollary1_planarFromLiptonTarjan",
+    "PaperClaims.proposition1_corridor",
+    "PaperClaims.proposition2_randomSeparator",
+    "PaperClaims.proposition2_randomTreewidth",
+    "PaperClaims.proposition2_randomPlanar",
+    "PaperClaims.proposition2_randomCorridor",
+    "PaperClaims.proposition3_balancedHardPair",
+    "PaperClaims.proposition3_fixedScheduleReadout",
+    "PaperClaims.proposition3_gridReadout",
+    "PaperClaims.proposition3_corridorReadout",
+    "PaperClaims.proposition3_localObservable",
+    "PaperClaims.groundedConditioningTransfer",
+    "PaperClaims.flatStartACBlock",
+    "PaperClaims.dcOpfBarrierBlock",
+    "PaperClaims.nearPlanarFromCrossingDrawing"
   ],
   "permitted_axioms": [
     "propext",
     "Quot.sound",
     "Classical.choice"
   ],
-  "enable_nanoda": false
+  "enable_nanoda": true
 }
