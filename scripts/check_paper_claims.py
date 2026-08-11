@@ -334,7 +334,8 @@ def validate_workflow() -> None:
         "RestrictAddressFamilies=AF_UNIX",
         'cp "$GITHUB_WORKSPACE/lean-toolchain" "$RUNNER_TEMP/comparator/lean-toolchain"',
         "cargo build --locked --release",
-        'lake env "$RUNNER_TEMP/comparator/.lake/build/bin/comparator" comparator.json',
+        'LAKE_BIN="$(command -v lake)"',
+        '"$LAKE_BIN" env "$RUNNER_TEMP/comparator/.lake/build/bin/comparator" comparator.json',
         "experiments/publication_policy.py --check-files",
     )
     missing = [fragment for fragment in required_fragments if fragment not in source]
