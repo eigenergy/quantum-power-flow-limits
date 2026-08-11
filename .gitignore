@@ -14,3 +14,7 @@ htmlcov/
 experiments/.artifacts/
 experiments/build/
 experiments/dist/
+
+# The canonical publication survey is retained as a deterministic gzip with
+# its checksum and generated summaries. The 50 MB readable expansion is local.
+experiments/results/corpus-survey.json

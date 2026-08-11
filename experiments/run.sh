@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -lt 2 || $# -gt 3 ]]; then
-    echo "usage: $0 <powerio-root> <datasets-root> [core|publication]" >&2
+    echo "usage: $0 <powerio-root> <datasets-root> [core|survey|publication]" >&2
     exit 2
 fi
 
@@ -10,7 +10,7 @@ powerio_root=$1
 datasets_root=$2
 mode=${3:-core}
 case "$mode" in
-    core|publication)
+    core|survey|publication)
         ;;
     *)
         echo "unknown mode: $mode" >&2
@@ -89,9 +89,20 @@ run_core() {
         "$@"
 }
 
+run_survey() {
+    run_experiment "$script_dir/run_survey.py" \
+        --powerio-root "$powerio_root" \
+        --datasets-root "$datasets_root" \
+        --expected-powerio-version "$expected_powerio_version" \
+        "$@"
+}
+
 case "$mode" in
     core)
         run_core
+        ;;
+    survey)
+        run_survey
         ;;
     publication)
         publication_dir=$(mktemp -d "${TMPDIR:-/tmp}/power-flow-publication.XXXXXX")
@@ -99,7 +110,28 @@ case "$mode" in
             --publication \
             --output "$publication_dir/results.json" \
             --table-output "$publication_dir/conditions_table.tex"
+        run_survey \
+            --publication \
+            --output "$publication_dir/corpus-survey.json"
+        validation=(
+            "$script_dir/validate_survey.py"
+            "$publication_dir/corpus-survey.json"
+            --publication
+            --core-input "$publication_dir/results.json"
+            --summary-output "$publication_dir/corpus-summary.json"
+            --table-output "$publication_dir/corpus-summary.tex"
+            --compressed-output "$publication_dir/corpus-survey.json.gz"
+            --sha256-output "$publication_dir/corpus-survey.json.gz.sha256"
+        )
+        run_experiment "${validation[@]}"
+        run_experiment "${validation[@]}" --check-derived
+        mkdir -p "$script_dir/results"
         mv "$publication_dir/results.json" "$script_dir/results.json"
         mv "$publication_dir/conditions_table.tex" "$script_dir/conditions_table.tex"
+        mv "$publication_dir/corpus-survey.json" "$script_dir/results/corpus-survey.json"
+        mv "$publication_dir/corpus-summary.json" "$script_dir/results/corpus-summary.json"
+        mv "$publication_dir/corpus-summary.tex" "$script_dir/results/corpus-summary.tex"
+        mv "$publication_dir/corpus-survey.json.gz" "$script_dir/results/corpus-survey.json.gz"
+        mv "$publication_dir/corpus-survey.json.gz.sha256" "$script_dir/results/corpus-survey.json.gz.sha256"
         ;;
 esac

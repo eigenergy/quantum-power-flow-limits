@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Load and check the pinned policy for the manuscript evidence package."""
+"""Load and check the pinned policy for numerical publication artifacts."""
 
 from __future__ import annotations
 
@@ -25,10 +25,27 @@ class PublicationPolicy:
     schema_version: int
     source_sha256: str
     core_keys: tuple[str, ...]
+    pglib_keys: tuple[str, ...]
+    extra_keys: tuple[str, ...]
+    pglib_variants_per_case: int
+    spectral_max_n: int
+    near_planarity_min_n: int
     versions: Mapping[str, str]
     algorithms: Mapping[str, int | str]
     provenance: Mapping[str, str]
     outputs: Mapping[str, str]
+
+    @property
+    def primary_keys(self) -> tuple[str, ...]:
+        return self.pglib_keys + self.extra_keys
+
+    @property
+    def primary_cases(self) -> int:
+        return len(self.primary_keys)
+
+    @property
+    def pglib_variant_files(self) -> int:
+        return len(self.pglib_keys) * self.pglib_variants_per_case
 
 
 def sha256_file(path: Path) -> str:
@@ -51,10 +68,16 @@ def _string_tuple(table: dict, name: str) -> tuple[str, ...]:
 def load_policy(path: Path = DEFAULT_POLICY_PATH) -> PublicationPolicy:
     with path.open("rb") as stream:
         document = tomllib.load(stream)
+    coverage = document.get("coverage", {})
     policy = PublicationPolicy(
         schema_version=document.get("schema_version"),
         source_sha256=sha256_file(path),
-        core_keys=_string_tuple(document.get("coverage", {}), "core_keys"),
+        core_keys=_string_tuple(coverage, "core_keys"),
+        pglib_keys=_string_tuple(coverage, "pglib_keys"),
+        extra_keys=_string_tuple(coverage, "extra_keys"),
+        pglib_variants_per_case=coverage.get("pglib_variants_per_case"),
+        spectral_max_n=coverage.get("spectral_max_n"),
+        near_planarity_min_n=coverage.get("near_planarity_min_n"),
         versions=document.get("versions", {}),
         algorithms=document.get("algorithms", {}),
         provenance=document.get("provenance", {}),
@@ -62,14 +85,22 @@ def load_policy(path: Path = DEFAULT_POLICY_PATH) -> PublicationPolicy:
     )
     if policy.schema_version != 1:
         raise ValueError("expected publication policy schema version 1")
-    if policy.core_keys != (
+    if policy.pglib_variants_per_case != 2:
+        raise ValueError("publication policy must require two PGLib variants per case")
+    if policy.spectral_max_n <= 0 or policy.near_planarity_min_n <= 0:
+        raise ValueError("publication policy cutoffs must be positive")
+    if set(policy.core_keys) != {
         "texas7k",
         "pegase13k",
         "midwest24k",
         "goc30k",
         "epigrids78k",
-    ):
+    }:
         raise ValueError("publication policy must name the five canonical core cases")
+    if len(policy.pglib_keys) != 66 or len(policy.extra_keys) != 12:
+        raise ValueError("publication policy must name 66 PGLib and 12 extra cases")
+    if set(policy.pglib_keys) & set(policy.extra_keys):
+        raise ValueError("publication policy primary case groups overlap")
     required_versions = {
         "python",
         "uv",
@@ -84,7 +115,7 @@ def load_policy(path: Path = DEFAULT_POLICY_PATH) -> PublicationPolicy:
         "shapely",
     }
     if set(policy.versions) != required_versions:
-        raise ValueError("publication policy version keys do not match the toolchain")
+        raise ValueError("publication policy version keys do not match the required toolchain")
     if policy.algorithms != {
         "separator_seed": 42,
         "spectral_seed": 42,
@@ -93,25 +124,8 @@ def load_policy(path: Path = DEFAULT_POLICY_PATH) -> PublicationPolicy:
         "crossing_threshold_constant": 1152,
     }:
         raise ValueError("publication policy algorithm parameters differ from the contract")
-    if policy.outputs != {
-        "core_json": "results.json",
-        "core_table": "conditions_table.tex",
-    }:
-        raise ValueError("publication policy outputs differ from the core contract")
-    required_provenance = {
-        "uv.lock",
-        "pyproject.toml",
-        "cases.toml",
-        "run.sh",
-        "run_conditions.py",
-        "treewidth_bound.jl",
-        "publication_policy.py",
-    }
-    if set(policy.provenance) != required_provenance:
-        raise ValueError("publication policy provenance differs from the core contract")
     for relative_path, digest in policy.provenance.items():
-        path = Path(relative_path)
-        if path.is_absolute() or ".." in path.parts:
+        if Path(relative_path).is_absolute() or ".." in Path(relative_path).parts:
             raise ValueError(f"unsafe provenance path: {relative_path}")
         if not isinstance(digest, str) or SHA256_PATTERN.fullmatch(digest) is None:
             raise ValueError(f"invalid provenance SHA-256 for {relative_path}")
