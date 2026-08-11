@@ -143,7 +143,6 @@ theorem exists_route_walk (e : Fin m) :
   exact S.route_isChain e
 
 /-- The planarization has exactly `n + c` vertices. -/
-@[simp]
 theorem card_planarizedVertex : Fintype.card (PlanarizedVertex n c) = n + c := by
   simp [PlanarizedVertex]
 

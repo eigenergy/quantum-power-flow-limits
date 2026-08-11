@@ -28,8 +28,11 @@ abbrev PlanarityPredicate := (V : Type) → SimpleGraph V → Prop
 /-- Quantitative output of the vertex-cost planar separator theorem. -/
 structure VertexCostPartition {V : Type} [Fintype V] [DecidableEq V]
     (H : SimpleGraph V) (cost : V → ℝ) where
+  /-- Vertices on the first side of the separator. -/
   left : Finset V
+  /-- Vertices in the separator. -/
   separator : Finset V
+  /-- Vertices on the second side of the separator. -/
   right : Finset V
   cover : left ∪ separator ∪ right = Finset.univ
   disjoint_left_separator : Disjoint left separator
@@ -61,7 +64,6 @@ theorem busCost_inr (x : Fin c) : busCost (Sum.inr x : PlanarizedVertex n c) = 0
 theorem busCost_nonnegative (z : PlanarizedVertex n c) : 0 ≤ busCost z := by
   cases z <;> simp
 
-@[simp]
 theorem sum_busCost_univ (hn : 0 < n) : ∑ z : PlanarizedVertex n c, busCost z = 1 := by
   rw [Fintype.sum_sum_type]
   simp [busCost, hn.ne']
@@ -132,8 +134,11 @@ end CrossingSchedule
 
 /-- A separator of the original bus graph obtained from a planarized separator. -/
 structure ProjectedNearPlanarPartition (G : WeightedGraph n m) (c : ℕ) where
+  /-- Original buses on the first projected side. -/
   left : Finset (Fin n)
+  /-- Original buses in the projected separator. -/
   separator : Finset (Fin n)
+  /-- Original buses on the second projected side. -/
   right : Finset (Fin n)
   cover : left ∪ separator ∪ right = Finset.univ
   disjoint_union_right : Disjoint (left ∪ separator) right
@@ -381,8 +386,11 @@ end CrossingSchedule
 
 /-- Exact output needed from Lipton--Tarjan when the original bus graph itself is planar. -/
 structure OriginalPlanarPartition (G : WeightedGraph n m) where
+  /-- Original buses on the first side. -/
   left : Finset (Fin n)
+  /-- Original buses in the planar separator. -/
   separator : Finset (Fin n)
+  /-- Original buses on the second side. -/
   right : Finset (Fin n)
   cover : left ∪ separator ∪ right = Finset.univ
   disjoint_union_right : Disjoint (left ∪ separator) right
@@ -394,7 +402,8 @@ structure OriginalPlanarPartition (G : WeightedGraph n m) where
   right_card_le : (right.card : ℝ) ≤ 2 * n / 3
 
 /-- Normalized vertex cost `1 / n` for the exact planar corollary. -/
-def unitVertexCost (_v : Fin n) : ℝ := 1 / n
+@[nolint unusedArguments]
+def unitVertexCost : Fin n → ℝ := fun _ ↦ 1 / n
 
 theorem unitVertexCost_nonnegative (v : Fin n) : 0 ≤ unitVertexCost v := by
   exact div_nonneg (by norm_num) (Nat.cast_nonneg n)
