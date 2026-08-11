@@ -1,1 +1,16 @@
 .lake/
+**/.venv/
+**/.pytest_cache/
+**/__pycache__/
+**/.mypy_cache/
+**/.ruff_cache/
+*.py[cod]
+*.egg-info/
+.coverage
+htmlcov/
+.DS_Store
+.idea/
+.vscode/
+experiments/.artifacts/
+experiments/build/
+experiments/dist/

@@ -1,0 +1,43 @@
+schema_version = 1
+
+[coverage]
+core_keys = [
+  "texas7k",
+  "pegase13k",
+  "midwest24k",
+  "goc30k",
+  "epigrids78k",
+]
+
+[versions]
+python = "3.13.14"
+uv = "0.12.3"
+julia = "1.12.6"
+graphviz = "15.1.0"
+powerio = "0.7.3"
+powerio_commit = "f0b79d787f3ee594a27b7858770ee646d4c368ab"
+networkx = "3.5"
+numpy = "2.5.1"
+pymetis = "2025.2.2"
+scipy = "1.18.0"
+shapely = "2.1.1"
+
+[algorithms]
+separator_seed = 42
+spectral_seed = 42
+graphviz_start = "42"
+graphviz_overlap = "scale"
+crossing_threshold_constant = 1152
+
+[provenance]
+"uv.lock" = "20e296dae2df533a2573812a16b47945a56da33c5e702a361bf4527ad71e6382"
+"pyproject.toml" = "0ef0dbcc8bba5029dca99efdb42edc525379ecc73e677c6b7404bc9421da024b"
+"cases.toml" = "7ee520ae53655d4d876c9dad7ac6579169568c65a6aab3be17c1568a5e55efba"
+"run.sh" = "d3b9e0f80ab6c3625a582c0987ae4b402eacb54d775f2b7caa10bf6d6a3b7251"
+"run_conditions.py" = "e8e280394dead2c19c4fa91e9256b36f41d5c458d2c15780ae40967ef47efa85"
+"treewidth_bound.jl" = "882040d47db2b6011779ca315b89d6123b05c2490f44fb830080409601be105a"
+"publication_policy.py" = "c12d6c3a878bcd9cb82d37570c3333b78fb5e4eda05f557b7bee5013928990bb"
+
+[outputs]
+core_json = "results.json"
+core_table = "conditions_table.tex"

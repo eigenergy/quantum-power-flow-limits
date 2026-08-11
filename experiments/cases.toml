@@ -1,0 +1,69 @@
+[[case]]
+key = "texas7k"
+label = "Texas7k"
+path = "Texas7k_20210804_Plus2023/Texas7k_20210804.m"
+expected_n = 6717
+expected_source_sha256 = "a8995693b793adba4ecc874268dd6f48d05f01b7dc96ceb5f3d3b2c5d265a016"
+expected_active_branches = 9140
+expected_simple_edges = 8646
+expected_components = 1
+expected_excluded_buses = 0
+expected_nonpositive_reactances = 0
+expected_separator = 26
+expected_treewidth_upper = 46
+
+[[case]]
+key = "pegase13k"
+label = "PEGASE13k"
+path = "pglib-opf/pglib_opf_case13659_pegase.m"
+expected_n = 13659
+expected_source_sha256 = "778ccf66f026798392340ce24967b7b1262ecc9d7524643edcd489dbdf573831"
+expected_active_branches = 20467
+expected_simple_edges = 18625
+expected_components = 1
+expected_excluded_buses = 0
+expected_nonpositive_reactances = 16
+expected_separator = 15
+expected_treewidth_upper = 34
+
+[[case]]
+key = "midwest24k"
+label = "Midwest24k"
+path = "Midwest24k/Midwest24k_20220923.m"
+expected_n = 23643
+expected_source_sha256 = "d7e200edf15557102fedbef03c07e855cec7e3514ecaa241e0a3520534ec41da"
+expected_active_branches = 33739
+expected_simple_edges = 31609
+expected_components = 1
+expected_excluded_buses = 0
+expected_nonpositive_reactances = 279
+expected_separator = 51
+expected_treewidth_upper = 82
+
+[[case]]
+key = "goc30k"
+label = "GOC30k"
+path = "pglib-opf/pglib_opf_case30000_goc.m"
+expected_n = 30000
+expected_source_sha256 = "30e100ad8f2d25291223d5bc130407a4b5b603dcadb60f0fa0b0a0ce795c872a"
+expected_active_branches = 35393
+expected_simple_edges = 35233
+expected_components = 1
+expected_excluded_buses = 0
+expected_nonpositive_reactances = 0
+expected_separator = 33
+expected_treewidth_upper = 67
+
+[[case]]
+key = "epigrids78k"
+label = "EPIGRIDS78k"
+path = "pglib-opf/pglib_opf_case78484_epigrids.m"
+expected_n = 78478
+expected_source_sha256 = "b9d8f673e4e409747f67ccb9989a38609d8327f800e8d18caf3eb4575eb3a7f2"
+expected_active_branches = 126015
+expected_simple_edges = 107957
+expected_components = 7
+expected_excluded_buses = 6
+expected_nonpositive_reactances = 0
+expected_separator = 57
+expected_treewidth_upper = 108

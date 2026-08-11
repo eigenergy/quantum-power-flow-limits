@@ -1,0 +1,331 @@
+{
+  "cases": [
+    {
+      "graph": {
+        "active_branches": 9140,
+        "bus_order_hash": "336b498ec0e35346320b41d18b733cb3d8406622877264d79dc14fb0e4f6a612",
+        "components": 1,
+        "excluded_buses": 0,
+        "largest_component_buses": 6717,
+        "parsed_buses": 6717,
+        "simple_edges": 8646
+      },
+      "key": "texas7k",
+      "label": "Texas7k",
+      "near_planar": {
+        "complete": true,
+        "crossing_limit": 32448,
+        "crossings": 5416,
+        "crossings_at_least": 5416,
+        "graphviz_overlap": "scale",
+        "graphviz_start": "42",
+        "graphviz_version": "15.1.0",
+        "holds": true,
+        "marker": "check",
+        "position_hash": "44fdf367f019b37f09d496c92c4eabdce21364329e946d05c4806cab05801750"
+      },
+      "planar": false,
+      "separator": {
+        "beta": 0.4999255620068483,
+        "beta_denominator": 6717,
+        "beta_numerator": 3358,
+        "edge_cut": 27,
+        "holds": true,
+        "partition_hash": "eb28a6410197d172e6864f636a249dc7621c11587d0e8bf6c2bd6ca7ca058356",
+        "s": 26,
+        "s_limit": 231,
+        "seed": 42
+      },
+      "series_reactance": {
+        "maximum_branch_degree": 20,
+        "maximum_susceptance": 6666.666666666667,
+        "mean_susceptance": 64.35350759342938,
+        "mean_to_maximum_ratio": 0.009653026139014408,
+        "model": "b_e = 1/x_e on each retained active ordinary branch",
+        "negative_reactances": 0,
+        "nonfinite_reactances": 0,
+        "nonpositive_reactances": 0,
+        "positive_reactances": 9140,
+        "positive_weight_assumption_holds": true,
+        "retained_active_branches": 9140,
+        "zero_reactances": 0
+      },
+      "source_path": "Texas7k_20210804_Plus2023/Texas7k_20210804.m",
+      "source_sha256": "a8995693b793adba4ecc874268dd6f48d05f01b7dc96ceb5f3d3b2c5d265a016",
+      "treewidth": {
+        "decomposition_hash": "8be2bba0d9bf2dbfaf5853a51eab69cec81cacf7a0cb333d2a5d07138f26c5c6",
+        "holds": true,
+        "ordering_hash": "376852e72c55811b0a68e4f455bcfa4951890907441d6835d053752daf4c4145",
+        "upper_bound": 46
+      }
+    },
+    {
+      "graph": {
+        "active_branches": 20467,
+        "bus_order_hash": "4a56d1fced898932ec590338e7c50c836339d17d1042d9669c48f511dc86e881",
+        "components": 1,
+        "excluded_buses": 0,
+        "largest_component_buses": 13659,
+        "parsed_buses": 13659,
+        "simple_edges": 18625
+      },
+      "key": "pegase13k",
+      "label": "PEGASE13k",
+      "near_planar": {
+        "complete": true,
+        "crossing_limit": 148292,
+        "crossings": 31511,
+        "crossings_at_least": 31511,
+        "graphviz_overlap": "scale",
+        "graphviz_start": "42",
+        "graphviz_version": "15.1.0",
+        "holds": true,
+        "marker": "check",
+        "position_hash": "c120a0dbb742a13e997066eff812fc03a6c81a291059530a821b1f47e0e0d92d"
+      },
+      "planar": false,
+      "separator": {
+        "beta": 0.49996339409912877,
+        "beta_denominator": 13659,
+        "beta_numerator": 6829,
+        "edge_cut": 17,
+        "holds": true,
+        "partition_hash": "f8034ca450cebe5e1aefd0bd1c2f5018f04c739c4af59f1fd18921ba44097961",
+        "s": 15,
+        "s_limit": 330,
+        "seed": 42
+      },
+      "series_reactance": {
+        "maximum_branch_degree": 46,
+        "model": "b_e = 1/x_e on each retained active ordinary branch",
+        "negative_reactances": 16,
+        "nonfinite_reactances": 0,
+        "nonpositive_reactances": 16,
+        "positive_reactances": 20451,
+        "positive_weight_assumption_holds": false,
+        "retained_active_branches": 20467,
+        "zero_reactances": 0
+      },
+      "source_path": "pglib-opf/pglib_opf_case13659_pegase.m",
+      "source_sha256": "778ccf66f026798392340ce24967b7b1262ecc9d7524643edcd489dbdf573831",
+      "treewidth": {
+        "decomposition_hash": "71a746c70a5613ff22b489f28cccab1dc2e7099b5dbf5e85aa5e3553cd9885c8",
+        "holds": true,
+        "ordering_hash": "24161fc0c0db51f570fb6540678e476de3af6b450b436576cf38b900b765be38",
+        "upper_bound": 34
+      }
+    },
+    {
+      "graph": {
+        "active_branches": 33739,
+        "bus_order_hash": "68efea98d5c212cdf5859d8c362f98158447db9ac4af985938ece066ef37aa26",
+        "components": 1,
+        "excluded_buses": 0,
+        "largest_component_buses": 23643,
+        "parsed_buses": 23643,
+        "simple_edges": 31609
+      },
+      "key": "midwest24k",
+      "label": "Midwest24k",
+      "near_planar": {
+        "complete": true,
+        "crossing_limit": 461592,
+        "crossings": 17734,
+        "crossings_at_least": 17734,
+        "graphviz_overlap": "scale",
+        "graphviz_start": "42",
+        "graphviz_version": "15.1.0",
+        "holds": true,
+        "marker": "check",
+        "position_hash": "160b4d66e9f1dc6448972361d40e8b83ee6fbe9294ee42d1894ab92d55ea99c7"
+      },
+      "planar": false,
+      "separator": {
+        "beta": 0.49997885209152815,
+        "beta_denominator": 23643,
+        "beta_numerator": 11821,
+        "edge_cut": 56,
+        "holds": true,
+        "partition_hash": "7a8a4fa79406afdada19ce4f1025a1fc466704d7b0cdffc76ae456967ddfbee5",
+        "s": 51,
+        "s_limit": 434,
+        "seed": 42
+      },
+      "series_reactance": {
+        "maximum_branch_degree": 23,
+        "model": "b_e = 1/x_e on each retained active ordinary branch",
+        "negative_reactances": 279,
+        "nonfinite_reactances": 0,
+        "nonpositive_reactances": 279,
+        "positive_reactances": 33460,
+        "positive_weight_assumption_holds": false,
+        "retained_active_branches": 33739,
+        "zero_reactances": 0
+      },
+      "source_path": "Midwest24k/Midwest24k_20220923.m",
+      "source_sha256": "d7e200edf15557102fedbef03c07e855cec7e3514ecaa241e0a3520534ec41da",
+      "treewidth": {
+        "decomposition_hash": "ed45ddd8d4fb8c80c76705903d954ca76cfa8f7daf2be4f96492aa356acc0aef",
+        "holds": true,
+        "ordering_hash": "2700d7a8d5fb9e4caa0460b2b9272196f44bfe6591366408909e1dc09f4f5e1c",
+        "upper_bound": 82
+      }
+    },
+    {
+      "graph": {
+        "active_branches": 35393,
+        "bus_order_hash": "5bc81dbc42fe0b86fd1c103f37dfa3de5bd7e8a1767fd1bd4a2471aa8be7a06e",
+        "components": 1,
+        "excluded_buses": 0,
+        "largest_component_buses": 30000,
+        "parsed_buses": 30000,
+        "simple_edges": 35233
+      },
+      "key": "goc30k",
+      "label": "GOC30k",
+      "near_planar": {
+        "complete": true,
+        "crossing_limit": 751250,
+        "crossings": 17584,
+        "crossings_at_least": 17584,
+        "graphviz_overlap": "scale",
+        "graphviz_start": "42",
+        "graphviz_version": "15.1.0",
+        "holds": true,
+        "marker": "check",
+        "position_hash": "b3d920d86111ed8238c476caf47ad731584fd572b53bdabf24b954c45148480b"
+      },
+      "planar": false,
+      "separator": {
+        "beta": 0.5,
+        "beta_denominator": 30000,
+        "beta_numerator": 15000,
+        "edge_cut": 36,
+        "holds": true,
+        "partition_hash": "903099d0c90feeb7614b7eab1a205d456175f566dc23ee26b232efab33fb1882",
+        "s": 33,
+        "s_limit": 489,
+        "seed": 42
+      },
+      "series_reactance": {
+        "maximum_branch_degree": 14,
+        "maximum_susceptance": 4916.469188487596,
+        "mean_susceptance": 441.53120983413453,
+        "mean_to_maximum_ratio": 0.0898065650178433,
+        "model": "b_e = 1/x_e on each retained active ordinary branch",
+        "negative_reactances": 0,
+        "nonfinite_reactances": 0,
+        "nonpositive_reactances": 0,
+        "positive_reactances": 35393,
+        "positive_weight_assumption_holds": true,
+        "retained_active_branches": 35393,
+        "zero_reactances": 0
+      },
+      "source_path": "pglib-opf/pglib_opf_case30000_goc.m",
+      "source_sha256": "30e100ad8f2d25291223d5bc130407a4b5b603dcadb60f0fa0b0a0ce795c872a",
+      "treewidth": {
+        "decomposition_hash": "be04d1ce083084b86ef9ebf31e78db0d36e8e80086571892fb0ca2e78f6454eb",
+        "holds": true,
+        "ordering_hash": "fb0216758cdbad1433a5443dc5ac07bc17f04c538de88702a212b95339cb32cc",
+        "upper_bound": 67
+      }
+    },
+    {
+      "graph": {
+        "active_branches": 126015,
+        "bus_order_hash": "a4e03f01b85ef7d053afdfddd5a45e749a2dbe98fc536f72d4b8a9a730202e09",
+        "components": 7,
+        "excluded_buses": 6,
+        "largest_component_buses": 78478,
+        "parsed_buses": 78484,
+        "simple_edges": 107957
+      },
+      "key": "epigrids78k",
+      "label": "EPIGRIDS78k",
+      "near_planar": {
+        "complete": true,
+        "crossing_limit": 5267699,
+        "crossings": 108940,
+        "crossings_at_least": 108940,
+        "graphviz_overlap": "scale",
+        "graphviz_start": "42",
+        "graphviz_version": "15.1.0",
+        "holds": true,
+        "marker": "check",
+        "position_hash": "8f0312b244f21b5a045b717f6abfe7bb9a57d3a0d6bd4599ca74296208cf2d42"
+      },
+      "planar": false,
+      "separator": {
+        "beta": 0.5,
+        "beta_denominator": 78478,
+        "beta_numerator": 39239,
+        "edge_cut": 63,
+        "holds": true,
+        "partition_hash": "66968b20471fce0b9d3cd7a01e04865390447424b5d1328c4090059bdf8f838d",
+        "s": 57,
+        "s_limit": 792,
+        "seed": 42
+      },
+      "series_reactance": {
+        "maximum_branch_degree": 17,
+        "maximum_susceptance": 99999.99999999999,
+        "mean_susceptance": 98.10677111137278,
+        "mean_to_maximum_ratio": 0.000981067711113728,
+        "model": "b_e = 1/x_e on each retained active ordinary branch",
+        "negative_reactances": 0,
+        "nonfinite_reactances": 0,
+        "nonpositive_reactances": 0,
+        "positive_reactances": 126015,
+        "positive_weight_assumption_holds": true,
+        "retained_active_branches": 126015,
+        "zero_reactances": 0
+      },
+      "source_path": "pglib-opf/pglib_opf_case78484_epigrids.m",
+      "source_sha256": "b9d8f673e4e409747f67ccb9989a38609d8327f800e8d18caf3eb4575eb3a7f2",
+      "treewidth": {
+        "decomposition_hash": "ff1eb67db829c48c453884021bf627deb0b7f8e7c1e20e4c8c7edcf8d8325b91",
+        "holds": true,
+        "ordering_hash": "51c63a1d44563583ce50c14bc4f47025f8942e4cb71d612adddd44be2db6669e",
+        "upper_bound": 108
+      }
+    }
+  ],
+  "criteria": {
+    "near_planar": "1152 * (n + c_hat) <= n^2",
+    "separator": "beta >= 1/4 and s^2 <= 8n",
+    "treewidth": "4 * (U + 1) <= n"
+  },
+  "environment": {
+    "graphviz": "15.1.0",
+    "julia": "1.12.6",
+    "networkx": "3.5",
+    "numpy": "2.5.1",
+    "powerio_commit": "f0b79d787f3ee594a27b7858770ee646d4c368ab",
+    "powerio_dirty": false,
+    "powerio_tracked_dirty": false,
+    "powerio_version": "0.7.3",
+    "pymetis": "2025.2.2",
+    "python": "3.13.14",
+    "scipy": "1.18.0",
+    "shapely": "2.1.1",
+    "uv": "0.12.3"
+  },
+  "parameters": {
+    "crossing_threshold_constant": 1152,
+    "graphviz_overlap": "scale",
+    "graphviz_start": "42",
+    "separator_seed": 42,
+    "spectral_seed": 42
+  },
+  "provenance": {
+    "cases.toml": "7ee520ae53655d4d876c9dad7ac6579169568c65a6aab3be17c1568a5e55efba",
+    "publication_policy.py": "c12d6c3a878bcd9cb82d37570c3333b78fb5e4eda05f557b7bee5013928990bb",
+    "pyproject.toml": "0ef0dbcc8bba5029dca99efdb42edc525379ecc73e677c6b7404bc9421da024b",
+    "run.sh": "d3b9e0f80ab6c3625a582c0987ae4b402eacb54d775f2b7caa10bf6d6a3b7251",
+    "run_conditions.py": "e8e280394dead2c19c4fa91e9256b36f41d5c458d2c15780ae40967ef47efa85",
+    "treewidth_bound.jl": "882040d47db2b6011779ca315b89d6123b05c2490f44fb830080409601be105a",
+    "uv.lock": "20e296dae2df533a2573812a16b47945a56da33c5e702a361bf4527ad71e6382"
+  },
+  "publication_policy_sha256": "15b8880629203a903fe36cf8d4b8b918b3da3976ce81081809ef93a0684ab680",
+  "schema_version": 1
+}

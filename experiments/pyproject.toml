@@ -1,0 +1,21 @@
+[project]
+name = "quantum-power-flow-conditions"
+version = "0.2.0"
+description = "Structural and conditioning validation for quantum power flow limits"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "maturin==1.14.1",
+    "networkx==3.5",
+    "numpy==2.5.1",
+    "pymetis==2025.2.2",
+    "shapely==2.1.1",
+    "scipy>=1.16,<2",
+]
+
+[dependency-groups]
+dev = ["pytest==9.0.2"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+pythonpath = ["."]
