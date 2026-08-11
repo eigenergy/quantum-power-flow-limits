@@ -46,7 +46,7 @@ def LiptonTarjanVertexCostTheorem (Planar : PlanarityPredicate) : Prop :=
     (∀ v, 0 ≤ cost v) → (∑ v, cost v) ≤ 1 → Planar V H →
       Nonempty (VertexCostPartition H cost)
 
-/-- Cost one on an original bus and zero on an inserted crossing. -/
+/-- Normalized bus cost `1 / n` on an original bus and zero on an inserted crossing. -/
 def busCost : PlanarizedVertex n c → ℝ
   | Sum.inl _ => 1 / n
   | Sum.inr _ => 0
@@ -393,7 +393,7 @@ structure OriginalPlanarPartition (G : WeightedGraph n m) where
   left_card_le : (left.card : ℝ) ≤ 2 * n / 3
   right_card_le : (right.card : ℝ) ≤ 2 * n / 3
 
-/-- Unit vertex cost for the exact planar corollary. -/
+/-- Normalized vertex cost `1 / n` for the exact planar corollary. -/
 def unitVertexCost (_v : Fin n) : ℝ := 1 / n
 
 theorem unitVertexCost_nonnegative (v : Fin n) : 0 ≤ unitVertexCost v := by
