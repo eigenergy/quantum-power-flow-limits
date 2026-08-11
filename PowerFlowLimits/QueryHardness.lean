@@ -9,8 +9,9 @@ import Mathlib.Algebra.Order.Chebyshev
 /-!
 # Right hand side oracle hardness and local observables
 
-This module isolates the balanced hard input, coded phase family, and local observable algebra for
-Proposition 3. Matrix and right hand side oracle calls are tracked separately. The two-state hard
+This module isolates the balanced hard input, controlled preparation rotations, and local
+observable algebra for Proposition 3. Matrix and right hand side oracle calls are tracked
+separately. The two-state hard
 pair changes only the prepared right hand side: its input states approach one another as the
 condition number grows, while the normalized solution states remain a fixed distance apart.
 
