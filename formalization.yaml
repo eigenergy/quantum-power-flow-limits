@@ -1,4 +1,4 @@
-# formalization.yaml (v0.3): repo-root metadata for formalization projects.
+# formalization.yaml (v0.3): repository metadata for the manuscript formalization.
 version: "v0.3"
 
 project:
@@ -19,129 +19,167 @@ sources:
 
 status:
   scope: >-
-    Lean 4 verification of the numbered claims in the manuscript: Lemma 1,
-    Theorem 1, Corollary 1, and Propositions 1--3, together with the stated
-    grid, corridor, planar, and near-planar specializations.
+    Lean 4 verification of Lemma 1, Theorem 1, Corollary 1,
+    Propositions 1--3, the grounded correction, the flat start lossless AC
+    active angle block, and the DC optimal power flow branch barrier angle
+    Hessian stated in main_letter_v4.tex. The public Comparator surface has 18
+    claims. The combinatorial planarization and separator projection are proved
+    internally. Planarity of the constructed graph and the vertex cost
+    Lipton--Tarjan theorem are explicit premises.
   sorry_count: 0
   sorry_in_definitions: 0
   notes: >-
-    Challenge.lean contains intentional statement placeholders for Comparator;
-    they are not part of the proof implementation counted above.
+    Challenge.lean contains 18 intentional statement placeholders for
+    Comparator and is excluded from the implementation sorry count. The finite
+    random weight lemmas retain the exact Hoeffding exponent without a mean
+    ratio assumption; public family wrappers add rho > 0 and the corresponding
+    uniform mean lower bound. Proposition 3 uses balanced targets in the zero
+    sum subspace, whose dimension is proved to be n - 1.
   axioms:
     - "propext"
     - "Quot.sound"
     - "Classical.choice"
   main_results:
-    - declaration: "two_totalWeight_div_le_lambdaMax"
-      file: "PowerFlowLimits/Eigenvalues.lean"
+    - declaration: "PaperClaims.lemma1_weightedCuts"
+      file: "PowerFlowLimits/PaperClaims.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
-    - declaration: "two_mul_weight_le_lambdaMax"
-      file: "PowerFlowLimits/Eigenvalues.lean"
+    - declaration: "PaperClaims.theorem1_separator"
+      file: "PowerFlowLimits/PaperClaims.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
-    - declaration: "lambda2_le_cut_div"
-      file: "PowerFlowLimits/CutBounds.lean"
+    - declaration: "PaperClaims.corollary1_treewidth"
+      file: "PowerFlowLimits/PaperClaims.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
-    - declaration: "lambda2_mul_le_cut"
-      file: "PowerFlowLimits/CutBounds.lean"
-      sorry_count: 0
-      axioms: ["propext", "Quot.sound", "Classical.choice"]
-      comparator_config: "comparator.json"
-    - declaration: "kappaPlus_ge_totalWeight"
-      file: "PowerFlowLimits/CutBounds.lean"
-      sorry_count: 0
-      axioms: ["propext", "Quot.sound", "Classical.choice"]
-      comparator_config: "comparator.json"
-    - declaration: "kappaPlus_ge_edge"
-      file: "PowerFlowLimits/CutBounds.lean"
-      sorry_count: 0
-      axioms: ["propext", "Quot.sound", "Classical.choice"]
-      comparator_config: "comparator.json"
-    - declaration: "separator_kappa_bound"
-      file: "PowerFlowLimits/Separators.lean"
-      sorry_count: 0
-      axioms: ["propext", "Quot.sound", "Classical.choice"]
-      comparator_config: "comparator.json"
-    - declaration: "treewidth_kappa_bound"
-      file: "PowerFlowLimits/Separators.lean"
+    - declaration: "PaperClaims.corollary1_planarFromLiptonTarjan"
+      file: "PowerFlowLimits/PaperClaims.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
       literature_dependencies:
-        - statement: "Existence of a balanced separator from bounded treewidth, supplied as hypotheses."
-          source: "The Limits of Quantum Computers for Power Flow"
-    - declaration: "planar_kappa_bound"
-      file: "PowerFlowLimits/Separators.lean"
+        - statement: "Vertex cost planar separator theorem."
+          source: "Lipton and Tarjan, A Separator Theorem for Planar Graphs, 1979"
+    - declaration: "PaperClaims.nearPlanarFromCrossingDrawing"
+      file: "PowerFlowLimits/PaperClaims.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
       literature_dependencies:
-        - statement: "Existence of a balanced planar separator, supplied as hypotheses."
-          source: "The Limits of Quantum Computers for Power Flow"
-    - declaration: "near_planar_kappa_bound"
-      file: "PowerFlowLimits/Separators.lean"
+        - statement: "Vertex cost planar separator theorem."
+          source: "Lipton and Tarjan, A Separator Theorem for Planar Graphs, 1979"
+    - declaration: "PaperClaims.proposition1_corridor"
+      file: "PowerFlowLimits/PaperClaims.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "PaperClaims.proposition2_randomSeparator"
+      file: "PowerFlowLimits/PaperClaims.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "PaperClaims.proposition2_randomTreewidth"
+      file: "PowerFlowLimits/PaperClaims.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "PaperClaims.proposition2_randomPlanar"
+      file: "PowerFlowLimits/PaperClaims.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
       literature_dependencies:
-        - statement: "Existence of the stated near-planar separator, supplied as hypotheses."
-          source: "The Limits of Quantum Computers for Power Flow"
-    - declaration: "corridor_kappa_bound"
-      file: "PowerFlowLimits/Corridors.lean"
+        - statement: "Vertex cost planar separator theorem."
+          source: "Lipton and Tarjan, A Separator Theorem for Planar Graphs, 1979"
+    - declaration: "PaperClaims.proposition2_randomCorridor"
+      file: "PowerFlowLimits/PaperClaims.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
-    - declaration: "random_kappa_bound"
-      file: "PowerFlowLimits/Random.lean"
+    - declaration: "PaperClaims.proposition3_balancedHardPair"
+      file: "PowerFlowLimits/PaperClaims.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
-    - declaration: "e2e_query_lower_bound"
-      file: "PowerFlowLimits/EndToEnd.lean"
-      sorry_count: 0
-      axioms: ["propext", "Quot.sound", "Classical.choice"]
-      comparator_config: "comparator.json"
-      literature_dependencies:
-        - statement: "The quantum query and state-preparation lower bounds are explicit hypotheses."
-          source: "The Limits of Quantum Computers for Power Flow"
-    - declaration: "e2e_query_lower_bound_grid"
-      file: "PowerFlowLimits/EndToEnd.lean"
-      sorry_count: 0
-      axioms: ["propext", "Quot.sound", "Classical.choice"]
-      comparator_config: "comparator.json"
-    - declaration: "e2e_query_lower_bound_corridor"
-      file: "PowerFlowLimits/EndToEnd.lean"
-      sorry_count: 0
-      axioms: ["propext", "Quot.sound", "Classical.choice"]
-      comparator_config: "comparator.json"
-    - declaration: "e2e_observable_lower_bound"
-      file: "PowerFlowLimits/EndToEnd.lean"
+    - declaration: "PaperClaims.proposition3_fixedScheduleReadout"
+      file: "PowerFlowLimits/PaperClaims.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
       literature_dependencies:
-        - statement: "The quantum linear-system solve lower bound is an explicit hypothesis."
-          source: "The Limits of Quantum Computers for Power Flow"
+        - statement: "Controlled preparation hybrid progress bound."
+          source: "Standard quantum query hybrid argument"
+        - statement: "Pure state tomography query lower bound."
+          source: "van Apeldoorn et al., Quantum tomography using state-preparation unitaries"
+        - statement: "Classical SDD solve and dense loading bounds."
+          source: "Cited classical solver and state preparation results"
+    - declaration: "PaperClaims.proposition3_gridReadout"
+      file: "PowerFlowLimits/PaperClaims.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: "Quantum query, tomography, and classical comparison bounds."
+          source: "Cited results listed in paper_claims.toml"
+    - declaration: "PaperClaims.proposition3_corridorReadout"
+      file: "PowerFlowLimits/PaperClaims.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: "Quantum query, tomography, and classical comparison bounds."
+          source: "Cited results listed in paper_claims.toml"
+    - declaration: "PaperClaims.proposition3_localObservable"
+      file: "PowerFlowLimits/PaperClaims.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: "Controlled preparation hybrid progress bound."
+          source: "Standard quantum query hybrid argument"
+    - declaration: "PaperClaims.groundedConditioningTransfer"
+      file: "PowerFlowLimits/PaperClaims.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "PaperClaims.flatStartACBlock"
+      file: "PowerFlowLimits/PaperClaims.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "PaperClaims.dcOpfBarrierBlock"
+      file: "PowerFlowLimits/PaperClaims.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
 
 automation:
   methods:
     - method: "other"
-      tool_setup: "The formalization process is not recorded in the repository metadata."
-  notes: "Update this section if a more detailed process record becomes available."
+      tool_setup: >-
+        Lake builds the Lean modules; repository scripts check the claim
+        manifest and axiom closure; Comparator checks the independent statement
+        surface.
+  notes: "The pinned Ubuntu workflow runs both configured kernels."
 
 fidelity:
   divergences: >-
-    The separator-existence inputs behind Corollary 1 and the quantum query
-    facts behind Proposition 3 are represented as explicit hypotheses, as in
-    the manuscript's proofs. Proposition 2 makes pointwise boundedness,
-    per-outcome connectivity, and positivity regularity assumptions explicit.
-    The repository also proves a sharper interface-stiffness separator bound
-    and a weighted-degree hub bound beyond the manuscript's numbered claims.
+    The planar and near planar wrappers take an explicit planarity predicate,
+    a certificate for the relevant graph, and the theorem valued
+    LiptonTarjanVertexCostTheorem premise. Lean proves the crossing schedule,
+    planarized graph, branch routes, zero cost crossing weighting, separator
+    projection, factor two size bound, original bus balance, and final condition
+    bound. The public random family wrappers assume rho > 0 and a uniform
+    mean-to-maximum lower bound; the exact finite concentration lemmas do not.
+    Proposition 3 recovers the readout product for a fixed coherent QLS schedule
+    on the balanced zero sum space, relative to the cited hybrid and tomography
+    lower bounds. The local observable result applies to the manuscript's bus
+    and branch observables when the displayed gap is positive. Flat start AC
+    and DC optimal power flow declarations cover only the modeled Laplacian
+    blocks; broader Beyond DC statements remain discussion.
 
 review:
   status: "self-assessed"
@@ -149,82 +187,85 @@ review:
     - "Cameron Khanpour"
     - "Samuel Talkington"
   notes: >-
-    The proof modules build without sorry and report only Lean's standard
-    axioms. Comparator independently checks the manuscript-facing declarations.
+    Proof modules contain no sorry. Comparator, the claim manifest checker,
+    LeanChecker, and the axiom audit form the publication verification boundary.
 
 alignment:
-  namespace: "root"
+  namespace: "PaperClaims"
   statements:
-    - source: "Lemma 1(i), trace form"
-      lean: "two_totalWeight_div_le_lambdaMax"
-      module: "PowerFlowLimits.Eigenvalues"
-      status: "proved"
-    - source: "Lemma 1(i), edge form"
-      lean: "two_mul_weight_le_lambdaMax"
-      module: "PowerFlowLimits.Eigenvalues"
-      status: "proved"
-    - source: "Lemma 1(ii), quotient form"
-      lean: "lambda2_le_cut_div"
-      module: "PowerFlowLimits.CutBounds"
-      status: "proved"
-    - source: "Lemma 1(ii), denominator-free form"
-      lean: "lambda2_mul_le_cut"
-      module: "PowerFlowLimits.CutBounds"
-      status: "proved"
-    - source: "Lemma 1, equation (2), total-weight form"
-      lean: "kappaPlus_ge_totalWeight"
-      module: "PowerFlowLimits.CutBounds"
-      status: "proved"
-    - source: "Lemma 1, equation (2), per-edge form"
-      lean: "kappaPlus_ge_edge"
-      module: "PowerFlowLimits.CutBounds"
+    - source: "Lemma 1"
+      lean: "PaperClaims.lemma1_weightedCuts"
+      module: "PowerFlowLimits.PaperClaims"
       status: "proved"
     - source: "Theorem 1"
-      lean: "separator_kappa_bound"
-      module: "PowerFlowLimits.Separators"
+      lean: "PaperClaims.theorem1_separator"
+      module: "PowerFlowLimits.PaperClaims"
       status: "proved"
     - source: "Corollary 1(i)"
-      lean: "treewidth_kappa_bound"
-      module: "PowerFlowLimits.Separators"
-      status: "literature-dependency"
-      note: "The separator partition is supplied as hypotheses."
+      lean: "PaperClaims.corollary1_treewidth"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved"
     - source: "Corollary 1(ii)"
-      lean: "planar_kappa_bound"
-      module: "PowerFlowLimits.Separators"
-      status: "literature-dependency"
-      note: "The separator partition is supplied as hypotheses."
-    - source: "Near-planar remark"
-      lean: "near_planar_kappa_bound"
-      module: "PowerFlowLimits.Separators"
-      status: "literature-dependency"
-      note: "The separator partition is supplied as hypotheses."
+      lean: "PaperClaims.corollary1_planarFromLiptonTarjan"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved-relative-to-cited-result"
+    - source: "Near planar extension"
+      lean: "PaperClaims.nearPlanarFromCrossingDrawing"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved-relative-to-cited-result"
     - source: "Proposition 1"
-      lean: "corridor_kappa_bound"
-      module: "PowerFlowLimits.Corridors"
+      lean: "PaperClaims.proposition1_corridor"
+      module: "PowerFlowLimits.PaperClaims"
       status: "proved"
-    - source: "Proposition 2"
-      lean: "random_kappa_bound"
-      module: "PowerFlowLimits.Random"
+    - source: "Proposition 2, separator"
+      lean: "PaperClaims.proposition2_randomSeparator"
+      module: "PowerFlowLimits.PaperClaims"
       status: "proved"
-    - source: "Proposition 3(i), abstract form"
-      lean: "e2e_query_lower_bound"
-      module: "PowerFlowLimits.EndToEnd"
-      status: "literature-dependency"
-      note: "The quantum query inputs are supplied as hypotheses."
-    - source: "Proposition 3(i), grid specialization"
-      lean: "e2e_query_lower_bound_grid"
-      module: "PowerFlowLimits.EndToEnd"
+    - source: "Proposition 2, treewidth"
+      lean: "PaperClaims.proposition2_randomTreewidth"
+      module: "PowerFlowLimits.PaperClaims"
       status: "proved"
-    - source: "Proposition 3(i), corridor specialization"
-      lean: "e2e_query_lower_bound_corridor"
-      module: "PowerFlowLimits.EndToEnd"
+    - source: "Proposition 2, planar"
+      lean: "PaperClaims.proposition2_randomPlanar"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved-relative-to-cited-result"
+    - source: "Proposition 2, corridor"
+      lean: "PaperClaims.proposition2_randomCorridor"
+      module: "PowerFlowLimits.PaperClaims"
       status: "proved"
-    - source: "Proposition 3(ii)"
-      lean: "e2e_observable_lower_bound"
-      module: "PowerFlowLimits.EndToEnd"
-      status: "literature-dependency"
-      note: "The quantum solve-cost input is supplied as a hypothesis."
+    - source: "Proposition 3, balanced hard pair"
+      lean: "PaperClaims.proposition3_balancedHardPair"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved"
+    - source: "Proposition 3, fixed schedule readout"
+      lean: "PaperClaims.proposition3_fixedScheduleReadout"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved-relative-to-cited-result"
+    - source: "Proposition 3, grid readout"
+      lean: "PaperClaims.proposition3_gridReadout"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved-relative-to-cited-result"
+    - source: "Proposition 3, corridor readout"
+      lean: "PaperClaims.proposition3_corridorReadout"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved-relative-to-cited-result"
+    - source: "Proposition 3, local observable"
+      lean: "PaperClaims.proposition3_localObservable"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved-relative-to-cited-result"
+    - source: "Grounded condition transfer"
+      lean: "PaperClaims.groundedConditioningTransfer"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved"
+    - source: "Flat start AC block"
+      lean: "PaperClaims.flatStartACBlock"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved-for-modeled-block"
+    - source: "DC optimal power flow barrier block"
+      lean: "PaperClaims.dcOpfBarrierBlock"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved-for-modeled-block"
 
 acknowledgements: >-
-  Built with Lean 4 and Mathlib; independent statement and axiom checking is
-  configured for leanprover/comparator.
+  Built with Lean 4 and mathlib; independent statement and axiom checking is
+  configured with leanprover/comparator.
