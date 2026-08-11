@@ -687,4 +687,132 @@ theorem kappa_bound_of_near_planar_partition (G : WeightedGraph n m)
         ring
     _ ≤ effectiveConditionNumber G (fun _ => 1) := h
 
+/-- Sharper cut bound than Theorem 1's counting estimate: the weighted cut of
+    `A ∪ X` is at most the total *interface stiffness* Σ_{x∈X} d_x. The
+    paper's b(∂S) ≤ s·Δ·b_max follows since each d_x ≤ Δ·b_max. -/
+theorem cutWeight_le_sum_weightedDegree (G : WeightedGraph n m)
+    (A X Bv : Finset (Fin n)) (hcover : A ∪ X ∪ Bv = Finset.univ)
+    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
+      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A)) :
+    G.cutWeight (A ∪ X) ≤ ∑ x ∈ X, G.weightedDegree x := by
+  rw [sum_weightedDegree_eq]
+  unfold WeightedGraph.cutWeight
+  refine Finset.sum_le_sum fun e _ => ?_
+  have hw := (G.weights_pos e).le
+  have hmemBv : ∀ i : Fin n, i ∉ A ∪ X → i ∈ Bv := by
+    intro i hi
+    have hu := Finset.mem_univ i
+    rw [← hcover] at hu
+    rcases Finset.mem_union.mp hu with h | h
+    · exact absurd h hi
+    · exact h
+  by_cases hp : G.posEndpoint e ∈ A ∪ X <;> by_cases hq : G.negEndpoint e ∈ A ∪ X
+  · -- interior edge: cut contribution 0
+    rw [if_pos hp, if_pos hq]
+    have : (0 : ℝ) ≤ (if G.posEndpoint e ∈ X then (1 : ℝ) else 0) +
+        (if G.negEndpoint e ∈ X then (1 : ℝ) else 0) := by positivity
+    nlinarith
+  · -- boundary, S-side endpoint is pos; it must lie in X
+    have hqBv := hmemBv _ hq
+    have hpX : G.posEndpoint e ∈ X := by
+      rcases Finset.mem_union.mp hp with hpA | hpX
+      · exact absurd ⟨hpA, hqBv⟩ (hnoAB e).1
+      · exact hpX
+    rw [if_pos hp, if_neg hq, if_pos hpX]
+    have : (0 : ℝ) ≤ if G.negEndpoint e ∈ X then (1 : ℝ) else 0 := by positivity
+    nlinarith
+  · -- boundary, S-side endpoint is neg; it must lie in X
+    have hpBv := hmemBv _ hp
+    have hqX : G.negEndpoint e ∈ X := by
+      rcases Finset.mem_union.mp hq with hqA | hqX
+      · exact absurd ⟨hpBv, hqA⟩ (hnoAB e).2
+      · exact hqX
+    rw [if_neg hp, if_pos hq, if_pos hqX]
+    have : (0 : ℝ) ≤ if G.posEndpoint e ∈ X then (1 : ℝ) else 0 := by positivity
+    nlinarith
+  · -- both endpoints in Bv: cut contribution 0
+    rw [if_neg hp, if_neg hq]
+    have : (0 : ℝ) ≤ (if G.posEndpoint e ∈ X then (1 : ℝ) else 0) +
+        (if G.negEndpoint e ∈ X then (1 : ℝ) else 0) := by positivity
+    nlinarith
+
+/-- Strengthening of Theorem 1: the denominator s·Δ·b_max is replaced by the
+    interface stiffness Σ_{x∈X} d_x, which it always dominates. Strictly
+    sharper whenever the separator is electrically weaker than the worst-case
+    count s·Δ·b_max — the slow-coherency regime the paper appeals to. -/
+theorem separator_kappa_bound_sharp (G : WeightedGraph n m)
+    (A X Bv : Finset (Fin n)) (β : ℝ)
+    (hcover : A ∪ X ∪ Bv = Finset.univ)
+    (hdisj : Disjoint (A ∪ X) Bv)
+    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
+      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
+    (hβ : 0 < β) (hβ' : β ≤ 1 / 2)
+    (hA_size : β * n ≤ ((A ∪ X).card : ℝ)) (hB_size : β * n ≤ (Bv.card : ℝ))
+    (hconn : G.CombinatoriallyConnected) :
+    2 * β * (1 - β) * G.totalWeight / (∑ x ∈ X, G.weightedDegree x) ≤
+      effectiveConditionNumber G (fun _ => 1) := by
+  change G.toSimpleGraph.Connected at hconn
+  have hn : 0 < n := Fin.pos_iff_nonempty.mpr hconn.nonempty
+  have hn_pos : (0 : ℝ) < n := by
+    exact_mod_cast hn
+  set S : Finset (Fin n) := A ∪ X with hS_def
+  have hβn_pos : (0 : ℝ) < β * n := mul_pos hβ hn_pos
+  have hS_ne : S.Nonempty := by
+    rw [← Finset.card_pos]
+    have hcard_pos : (0 : ℝ) < (S.card : ℝ) := lt_of_lt_of_le hβn_pos hA_size
+    exact_mod_cast hcard_pos
+  have hS_proper : S ≠ Finset.univ := by
+    intro h
+    have hBv_empty : Bv = ∅ := by
+      rw [← Finset.subset_empty]
+      intro b hb
+      exact absurd (h ▸ Finset.mem_univ b : b ∈ S)
+        (Finset.disjoint_right.mp hdisj hb)
+    rw [hBv_empty] at hB_size
+    simp only [Finset.card_empty, Nat.cast_zero] at hB_size
+    linarith
+  have hcard_lt : S.card < n := by
+    have h := Finset.card_lt_card (Finset.ssubset_univ_iff.mpr hS_proper)
+    simpa using h
+  have hn2 : 1 < n := lt_of_le_of_lt (Finset.one_le_card.mpr hS_ne) hcard_lt
+  have hspec := combinatoriallyConnected_implies_spectralConnected G hconn hn2
+  have hcw_le : G.cutWeight S ≤ ∑ x ∈ X, G.weightedDegree x :=
+    cutWeight_le_sum_weightedDegree G A X Bv hcover hnoAB
+  have hγ_lo : β ≤ (S.card : ℝ) / n := (le_div_iff₀ hn_pos).mpr (by linarith)
+  have hγ_hi : (S.card : ℝ) / n ≤ 1 - β := by
+    rw [div_le_iff₀ hn_pos]
+    have hcard_sum : (S.card : ℝ) + Bv.card ≤ n := by
+      have hunion := Finset.card_union_of_disjoint hdisj
+      have hle : (S ∪ Bv).card ≤ n := by
+        have := Finset.card_le_card (Finset.subset_univ (S ∪ Bv))
+        simpa using this
+      rw [hunion] at hle
+      exact_mod_cast hle
+    nlinarith
+  have hcw_pos : 0 < G.cutWeight S := by
+    have hT3 := lambda2_mul_le_cut G S hS_ne hS_proper
+    have hconn' := hspec
+    unfold WeightedGraph.Connected at hconn'
+    have hA_pos : (0 : ℝ) < (S.card : ℝ) * ((n : ℝ) - S.card) := by
+      have h1 : (0 : ℝ) < S.card := lt_of_lt_of_le hβn_pos hA_size
+      have h2 : (S.card : ℝ) < n := Nat.cast_lt.mpr hcard_lt
+      exact mul_pos h1 (by linarith)
+    nlinarith [mul_pos hconn' hA_pos]
+  have hden_pos : 0 < ∑ x ∈ X, G.weightedDegree x :=
+    lt_of_lt_of_le hcw_pos hcw_le
+  have hW_nn : 0 ≤ G.totalWeight :=
+    Finset.sum_nonneg fun e _ => (G.weights_pos e).le
+  refine le_trans ?_ (kappaPlus_ge_totalWeight G S hS_ne hS_proper hconn)
+  have hnum : 2 * β * (1 - β) * G.totalWeight ≤
+      2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) * G.totalWeight := by
+    apply mul_le_mul_of_nonneg_right _ hW_nn
+    nlinarith
+  have hc_nonneg : 0 ≤ 2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+      G.totalWeight := by
+    have h1 : (0 : ℝ) ≤ (S.card : ℝ) / n := le_trans hβ.le hγ_lo
+    have h2 : (0 : ℝ) ≤ 1 - (S.card : ℝ) / n := by linarith
+    positivity
+  rw [div_le_div_iff₀ hden_pos hcw_pos]
+  exact mul_le_mul hnum hcw_le hcw_pos.le hc_nonneg
+
 end

@@ -209,4 +209,50 @@ theorem exists_maxWeight_kappa_bound (G : WeightedGraph n m) (S : Finset (Fin n)
   obtain ⟨e, he, _⟩ := exists_maxWeight_lambdaMax_bound G hm
   exact ⟨e, he, kappaPlus_ge_edge G S hne hproper hconn e⟩
 
+/-- Hub bound, beyond the paper's eq. (2): κ₊(B) ≥ γ(1-γ)·n·d_i/b(∂S) for
+    every node i, since λ_max(B) ≥ d_i (diagonal Rayleigh quotient). For a
+    node of weighted degree d_i > 2·max_e b_e — any hub with three or more
+    comparably stiff branches — this beats the paper's per-edge term. -/
+theorem kappaPlus_ge_weightedDegree (G : WeightedGraph n m)
+    (S : Finset (Fin n)) (hne : S.Nonempty) (hproper : S ≠ Finset.univ)
+    (hconn : G.CombinatoriallyConnected) (i : Fin n) :
+    ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+        ((n : ℝ) * G.weightedDegree i) / G.cutWeight S ≤
+      effectiveConditionNumber G (fun _ => 1) := by
+  have hn : 0 < n := hne.choose.pos
+  have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr hn
+  have hcard_lt : S.card < n := by
+    have h := Finset.card_lt_card (Finset.ssubset_univ_iff.mpr hproper)
+    simpa using h
+  have hn2 : 1 < n := lt_of_le_of_lt (Finset.one_le_card.mpr hne) hcard_lt
+  have hspec := combinatoriallyConnected_implies_spectralConnected G hconn hn2
+  have hc_pos : (0 : ℝ) < S.card := Nat.cast_pos.mpr (Finset.card_pos.mpr hne)
+  have hc_lt : (S.card : ℝ) < n := Nat.cast_lt.mpr hcard_lt
+  have hA_pos : (0 : ℝ) < (S.card : ℝ) * ((n : ℝ) - S.card) :=
+    mul_pos hc_pos (by linarith)
+  unfold WeightedGraph.Connected at hspec
+  have hT3 := lambda2_mul_le_cut G S hne hproper
+  have hcw_pos : 0 < G.cutWeight S := by
+    have hpos := mul_pos hspec hA_pos
+    nlinarith
+  have hd_nn : 0 ≤ G.weightedDegree i :=
+    Finset.sum_nonneg fun e _ => (G.weights_pos e).le
+  have hlmax : G.weightedDegree i ≤ laplacianEigenvalueMax G (fun _ => 1) := by
+    rw [weightedDegree_eq_diag]
+    exact diag_le_lambdaMax G _ i
+  unfold effectiveConditionNumber
+  rw [div_le_div_iff₀ hcw_pos hspec]
+  calc ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+        ((n : ℝ) * G.weightedDegree i) * laplacian_eigenvalue₂ G (fun _ => 1)
+      = (G.weightedDegree i / n) *
+        (laplacian_eigenvalue₂ G (fun _ => 1) *
+          ((S.card : ℝ) * ((n : ℝ) - S.card))) := by
+        field_simp
+    _ ≤ (G.weightedDegree i / n) * ((n : ℝ) * G.cutWeight S) :=
+        mul_le_mul_of_nonneg_left hT3 (div_nonneg hd_nn hn_pos.le)
+    _ = G.weightedDegree i * G.cutWeight S := by
+        field_simp
+    _ ≤ laplacianEigenvalueMax G (fun _ => 1) * G.cutWeight S :=
+        mul_le_mul_of_nonneg_right hlmax hcw_pos.le
+
 end
