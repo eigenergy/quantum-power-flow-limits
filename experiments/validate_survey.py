@@ -175,6 +175,7 @@ def _publication_errors(
     policy: PublicationPolicy,
     *,
     verify_policy_files: bool,
+    generation_policy: PublicationPolicy | None,
 ) -> list[str]:
     errors: list[str] = []
     scope = document.get("scope", {})
@@ -217,10 +218,38 @@ def _publication_errors(
         elif isinstance(value, str) and _contains_absolute_path(value):
             errors.append(f"{location}: absolute path fragment is not permitted")
 
+    identity_policy = generation_policy or policy
+    if generation_policy is not None:
+        pinned_generation_hash = policy.retained_generation_policy_sha256
+        if generation_policy.source_sha256 != pinned_generation_hash:
+            errors.append(
+                "generation policy is not pinned by the current publication policy"
+            )
+        compatible_fields = {
+            "schema version": generation_policy.schema_version == policy.schema_version,
+            "case coverage": generation_policy.core_keys == policy.core_keys
+            and generation_policy.pglib_keys == policy.pglib_keys
+            and generation_policy.extra_keys == policy.extra_keys
+            and generation_policy.pglib_variants_per_case
+            == policy.pglib_variants_per_case,
+            "analysis cutoffs": generation_policy.spectral_max_n == policy.spectral_max_n
+            and generation_policy.near_planarity_min_n
+            == policy.near_planarity_min_n,
+            "dependency versions": dict(generation_policy.versions)
+            == dict(policy.versions),
+            "algorithm parameters": dict(generation_policy.algorithms)
+            == dict(policy.algorithms),
+        }
+        for field, compatible in compatible_fields.items():
+            if not compatible:
+                errors.append(
+                    f"generation policy {field} differs from current semantic policy"
+                )
+
     recorded_provenance = document.get("provenance")
-    if recorded_provenance != dict(policy.provenance):
+    if recorded_provenance != dict(identity_policy.provenance):
         errors.append("artifact provenance does not match publication policy")
-    if document.get("publication_policy_sha256") != policy.source_sha256:
+    if document.get("publication_policy_sha256") != identity_policy.source_sha256:
         errors.append("artifact publication policy hash does not match")
     if document.get("parameters") != dict(policy.algorithms):
         errors.append("artifact algorithm parameters do not match publication policy")
@@ -274,6 +303,7 @@ def validate(
     publication: bool = False,
     policy: PublicationPolicy | None = None,
     verify_policy_files: bool = True,
+    generation_policy: PublicationPolicy | None = None,
 ) -> dict:
     """Validate one survey document and return its derived count summary."""
     errors: list[str] = []
@@ -358,6 +388,7 @@ def validate(
                 document,
                 policy,
                 verify_policy_files=verify_policy_files,
+                generation_policy=generation_policy,
             )
         )
     if errors:
@@ -661,14 +692,23 @@ def main() -> None:
     parser.add_argument("--core-input", type=Path)
     parser.add_argument("--publication", action="store_true")
     parser.add_argument("--publication-policy", type=Path, default=DEFAULT_POLICY_PATH)
+    parser.add_argument("--generation-policy", type=Path)
     parser.add_argument("--check-derived", action="store_true")
     args = parser.parse_args()
 
     policy = load_policy(args.publication_policy)
+    generation_policy = (
+        load_policy(args.generation_policy) if args.generation_policy is not None else None
+    )
     if args.publication and args.core_input is None:
         parser.error("--publication requires --core-input")
     document = json.loads(args.input.read_text())
-    summary = validate(document, publication=args.publication, policy=policy)
+    summary = validate(
+        document,
+        publication=args.publication,
+        policy=policy,
+        generation_policy=generation_policy,
+    )
     if args.core_input is not None:
         validate_core(json.loads(args.core_input.read_text()), policy)
 

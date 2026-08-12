@@ -286,6 +286,34 @@ def zeroSumSubspace (n : ℕ) : Submodule ℝ (EuclideanSpace ℝ (Fin n)) where
     simp only [Set.mem_setOf_eq, PiLp.smul_apply, smul_eq_mul]
     rw [← Finset.mul_sum, hx, mul_zero]
 
+/-- The exact graph data asserted by Proposition 1's corridor prose. The path branches are
+indexed once, the bus sets form a disjoint cover, and every other branch stays inside one bulk
+together with its adjacent corridor endpoint. -/
+structure CorridorTopology (G : WeightedGraph n m)
+    (VS VT : Finset (Fin n)) (ℓ : ℕ) (p : Fin ℓ → Fin n)
+    (EP : Finset (Fin m)) where
+  length_two : 2 ≤ ℓ
+  path_injective : Function.Injective p
+  /-- The branch joining each consecutive pair of path vertices. -/
+  pathEdge : Fin (ℓ - 1) → Fin m
+  pathEdge_injective : Function.Injective pathEdge
+  pathEdge_range : EP = Finset.univ.image pathEdge
+  pathEdge_endpoints : ∀ i, ∃ j : Fin ℓ, ∃ h : j.val + 1 < ℓ,
+    j.val = i.val ∧
+      ((G.posEndpoint (pathEdge i) = p j ∧
+          G.negEndpoint (pathEdge i) = p ⟨j.val + 1, h⟩) ∨
+        (G.posEndpoint (pathEdge i) = p ⟨j.val + 1, h⟩ ∧
+          G.negEndpoint (pathEdge i) = p j))
+  path_disjoint_left : ∀ i, p i ∉ VS
+  path_disjoint_right : ∀ i, p i ∉ VT
+  bulks_disjoint : Disjoint VS VT
+  vertex_cover : VS ∪ Finset.univ.image p ∪ VT = Finset.univ
+  nonpath_internal : ∀ e ∉ EP,
+    ((G.posEndpoint e ∈ VS ∨ G.posEndpoint e = p ⟨0, by omega⟩) ∧
+      (G.negEndpoint e ∈ VS ∨ G.negEndpoint e = p ⟨0, by omega⟩)) ∨
+    ((G.posEndpoint e ∈ VT ∨ G.posEndpoint e = p ⟨ℓ - 1, by omega⟩) ∧
+      (G.negEndpoint e ∈ VT ∨ G.negEndpoint e = p ⟨ℓ - 1, by omega⟩))
+
 /-- Original buses together with the vertices inserted at crossings. -/
 abbrev PlanarizedVertex (n c : ℕ) := Fin n ⊕ Fin c
 

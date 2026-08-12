@@ -33,6 +33,7 @@ class PublicationPolicy:
     versions: Mapping[str, str]
     algorithms: Mapping[str, int | str]
     provenance: Mapping[str, str]
+    retained_generation_policy_sha256: str | None
     outputs: Mapping[str, str]
 
     @property
@@ -81,6 +82,9 @@ def load_policy(path: Path = DEFAULT_POLICY_PATH) -> PublicationPolicy:
         versions=document.get("versions", {}),
         algorithms=document.get("algorithms", {}),
         provenance=document.get("provenance", {}),
+        retained_generation_policy_sha256=document.get("retained_artifacts", {}).get(
+            "corpus_generation_policy_sha256"
+        ),
         outputs=document.get("outputs", {}),
     )
     if policy.schema_version != 1:
@@ -129,6 +133,11 @@ def load_policy(path: Path = DEFAULT_POLICY_PATH) -> PublicationPolicy:
             raise ValueError(f"unsafe provenance path: {relative_path}")
         if not isinstance(digest, str) or SHA256_PATTERN.fullmatch(digest) is None:
             raise ValueError(f"invalid provenance SHA-256 for {relative_path}")
+    if (
+        policy.retained_generation_policy_sha256 is not None
+        and SHA256_PATTERN.fullmatch(policy.retained_generation_policy_sha256) is None
+    ):
+        raise ValueError("invalid retained corpus generation policy SHA-256")
     return policy
 
 

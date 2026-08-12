@@ -1,8 +1,8 @@
 # Structural condition experiments
 
-The runner parses each power system case with PowerIO, reduces the in service
-branch topology to its largest connected simple graph, and emits independently
-validated structural certificates.
+The runner parses the five power system cases used in `main_letter_v5.tex`
+with PowerIO, reduces each in service branch topology to its largest connected
+simple graph, and emits independently checked structural certificates.
 
 The `core` mode reproduces the five structural rows. Pass the PowerIO 0.7.3
 checkout at the commit pinned in `publication.toml`:
@@ -25,7 +25,8 @@ are pinned in `uv.lock` and `publication.toml`.
 
 - `Planar` is the exact planarity decision for the underlying simple graph.
 - `Near planar` is checked only when a deterministic straight line drawing has
-  a fully verified crossing count `c_hat` satisfying
+  a fully verified count `c_hat` of proper pairwise crossing events, with no
+  self or triple crossing, satisfying
   `1152 * (n + c_hat) <= n^2`. Failure to find such a drawing is unavailable
   evidence, not a proof that no qualifying drawing exists.
 - `Separator` is a PyMetis bisection converted into an `(s,beta)` vertex
@@ -110,6 +111,7 @@ gzip --decompress --stdout experiments/results/corpus-survey.json.gz \
 experiments/.venv/bin/python experiments/validate_survey.py \
   "$artifact_json" \
   --publication \
+  --generation-policy experiments/results/corpus-generation-policy.toml \
   --core-input experiments/results.json \
   --summary-output experiments/results/corpus-summary.json \
   --table-output experiments/results/corpus-summary.tex \
@@ -117,6 +119,14 @@ experiments/.venv/bin/python experiments/validate_survey.py \
   --sha256-output experiments/results/corpus-survey.json.gz.sha256 \
   --check-derived
 ```
+
+`corpus-generation-policy.toml` is the exact policy file recorded by the
+retained corpus run, and the current policy pins the snapshot's SHA-256. The
+validator uses that snapshot only to authenticate the artifact's generation
+hash and input hashes. It uses the current `publication.toml` for coverage,
+dependency, algorithm, and semantic checks, and checks the current policy
+inputs for drift. This distinction does not claim that the retained 78 case
+corpus was rerun with the current generator.
 
 The retained compressed survey is not promoted by changing metadata. A run
 with disabled analyses or nondeterministic fields remains a smoke artifact and

@@ -335,6 +335,18 @@ theorem twice_sqrt_eight_crossing_card_le_sixth (n c : ℕ)
       8 * ((n : ℝ) + c) := Real.sq_sqrt hnonneg
   nlinarith
 
+/-- A linear crossing bound implies the finite near-planar balance hypothesis once `n` is large
+enough relative to its constant. -/
+theorem nearPlanar_balance_of_crossings_le_linear (n c C : ℕ)
+    (hc : c ≤ C * n) (hn : 1152 * (C + 1) ≤ n) :
+    1152 * (n + c) ≤ n ^ 2 := by
+  calc
+    1152 * (n + c) ≤ 1152 * (n + C * n) :=
+      Nat.mul_le_mul_left 1152 (Nat.add_le_add_left hc n)
+    _ = (1152 * (C + 1)) * n := by ring
+    _ ≤ n * n := Nat.mul_le_mul_right n hn
+    _ = n ^ 2 := by ring
+
 namespace CrossingSchedule
 
 variable {G : WeightedGraph n m} (S : CrossingSchedule G c)
@@ -381,6 +393,65 @@ theorem nearPlanar_kappa_bound (Planar : PlanarityPredicate)
   exact kappa_bound_of_near_planar_partition G Q.left Q.separator Q.right Δ bmax c
     Q.cover Q.disjoint_union_right Q.no_left_right_branch Q.separator_card_le hdeg hbmax
     hleft_size hright_size hconn
+
+/-- Topology-only near-planar condition-number bound obtained from an explicit crossing schedule,
+a planarity certificate for its planarization, and Lipton--Tarjan. -/
+theorem nearPlanar_kappa_bound_topological (Planar : PlanarityPredicate)
+    (hLT : LiptonTarjanVertexCostTheorem Planar) (hplanar : Planar _ S.planarizedGraph)
+    (hsmall : 1152 * (n + c) ≤ n ^ 2) (Δ : ℝ)
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hconn : G.CombinatoriallyConnected) :
+    5 / 36 * n / (Real.sqrt (8 * ((n : ℝ) + c)) * Δ) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  have hn : 0 < n := Fin.pos_iff_nonempty.mpr hconn.nonempty
+  rcases S.exists_projectedNearPlanarPartition Planar hLT hn hplanar with ⟨Q⟩
+  have hseparator_sixth : (Q.separator.card : ℝ) ≤ (n : ℝ) / 6 :=
+    Q.separator_card_le.trans (twice_sqrt_eight_crossing_card_le_sixth n c hsmall)
+  have hcard_nat : (Q.left ∪ Q.separator).card + Q.right.card = n := by
+    rw [← Finset.card_union_of_disjoint Q.disjoint_union_right, Q.cover,
+      Finset.card_univ, Fintype.card_fin]
+  have hcard : ((Q.left ∪ Q.separator).card : ℝ) + (Q.right.card : ℝ) = n := by
+    exact_mod_cast hcard_nat
+  have hunion_le_nat : (Q.left ∪ Q.separator).card ≤ Q.left.card + Q.separator.card :=
+    Finset.card_union_le _ _
+  have hunion_le : ((Q.left ∪ Q.separator).card : ℝ) ≤
+      (Q.left.card : ℝ) + Q.separator.card := by
+    exact_mod_cast hunion_le_nat
+  have hleft_size : (n : ℝ) / 6 ≤ ((Q.left ∪ Q.separator).card : ℝ) := by
+    nlinarith [Q.right_card_le]
+  have hright_size : (n : ℝ) / 6 ≤ (Q.right.card : ℝ) := by
+    nlinarith [Q.left_card_le, hseparator_sixth, hunion_le]
+  exact kappa_bound_of_near_planar_partition_topological G Q.left Q.separator Q.right Δ c
+    Q.cover Q.disjoint_union_right Q.no_left_right_branch Q.separator_card_le hdeg
+    hleft_size hright_size hconn
+
+/-- The weighted and topology-only near-planar bounds hold simultaneously. -/
+theorem nearPlanar_kappa_bound_combined (Planar : PlanarityPredicate)
+    (hLT : LiptonTarjanVertexCostTheorem Planar) (hplanar : Planar _ S.planarizedGraph)
+    (hsmall : 1152 * (n + c) ≤ n ^ 2) (Δ bmax : ℝ)
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hbmax : ∀ e, G.weights e ≤ bmax)
+    (hconn : G.CombinatoriallyConnected) :
+    max (5 / 36 * G.totalWeight /
+          (Real.sqrt (8 * ((n : ℝ) + c)) * Δ * bmax))
+        (5 / 36 * n / (Real.sqrt (8 * ((n : ℝ) + c)) * Δ)) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  apply max_le
+  · exact S.nearPlanar_kappa_bound Planar hLT hplanar hsmall Δ bmax hdeg hbmax hconn
+  · exact S.nearPlanar_kappa_bound_topological Planar hLT hplanar hsmall Δ hdeg hconn
+
+/-- A linear crossing bound supplies the numerical hypothesis of the topology-only near-planar
+bound for all sufficiently large graphs. -/
+theorem nearPlanar_kappa_bound_of_linear_crossings_topological
+    (Planar : PlanarityPredicate) (hLT : LiptonTarjanVertexCostTheorem Planar)
+    (hplanar : Planar _ S.planarizedGraph) (C : ℕ) (hc : c ≤ C * n)
+    (hn : 1152 * (C + 1) ≤ n) (Δ : ℝ)
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hconn : G.CombinatoriallyConnected) :
+    5 / 36 * n / (Real.sqrt (8 * ((n : ℝ) + c)) * Δ) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  exact S.nearPlanar_kappa_bound_topological Planar hLT hplanar
+    (nearPlanar_balance_of_crossings_le_linear n c C hc hn) Δ hdeg hconn
 
 end CrossingSchedule
 
@@ -459,3 +530,33 @@ theorem planar_kappa_bound_from_lipton_tarjan (Planar : PlanarityPredicate)
   exact planar_kappa_bound_of_lipton_partition G Q.left Q.separator Q.right Δ bmax hn
     Q.cover Q.disjoint_union_right Q.no_left_right_branch Q.separator_card_le Q.left_card_le
     Q.right_card_le hdeg hbmax hconn
+
+/-- Topology-only exact planar bound from a planarity certificate and Lipton--Tarjan. -/
+theorem planar_kappa_bound_from_lipton_tarjan_topological (Planar : PlanarityPredicate)
+    (hLT : LiptonTarjanVertexCostTheorem Planar) (G : WeightedGraph n m)
+    (hplanar : Planar _ G.toSimpleGraph) (hn : 288 ≤ n) (Δ : ℝ)
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hconn : G.CombinatoriallyConnected) :
+    5 / 18 * n / (Real.sqrt (8 * n) * Δ) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  have hnpos : 0 < n := lt_of_lt_of_le (by norm_num) hn
+  rcases exists_originalPlanarPartition Planar hLT G hnpos hplanar with ⟨Q⟩
+  exact planar_kappa_bound_of_lipton_partition_topological G Q.left Q.separator Q.right Δ hn
+    Q.cover Q.disjoint_union_right Q.no_left_right_branch Q.separator_card_le Q.left_card_le
+    Q.right_card_le hdeg hconn
+
+/-- The weighted and topology-only exact planar bounds hold simultaneously. -/
+theorem planar_kappa_bound_from_lipton_tarjan_combined (Planar : PlanarityPredicate)
+    (hLT : LiptonTarjanVertexCostTheorem Planar) (G : WeightedGraph n m)
+    (hplanar : Planar _ G.toSimpleGraph) (hn : 288 ≤ n) (Δ bmax : ℝ)
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hbmax : ∀ e, G.weights e ≤ bmax)
+    (hconn : G.CombinatoriallyConnected) :
+    max (5 / 18 * G.totalWeight / (Real.sqrt (8 * n) * Δ * bmax))
+        (5 / 18 * n / (Real.sqrt (8 * n) * Δ)) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  apply max_le
+  · exact planar_kappa_bound_from_lipton_tarjan Planar hLT G hplanar hn Δ bmax hdeg hbmax
+      hconn
+  · exact planar_kappa_bound_from_lipton_tarjan_topological Planar hLT G hplanar hn Δ hdeg
+      hconn

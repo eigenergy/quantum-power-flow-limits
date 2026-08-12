@@ -142,6 +142,7 @@ experiments/run.sh /path/to/powerio-v0.7.3 /path/to/datasets publication
 experiments/.venv/bin/python experiments/validate_survey.py \
   experiments/results/corpus-survey.json \
   --publication \
+  --generation-policy experiments/results/corpus-generation-policy.toml \
   --core-input experiments/results.json \
   --summary-output experiments/results/corpus-summary.json \
   --table-output experiments/results/corpus-summary.tex \
@@ -154,6 +155,11 @@ experiments/.venv/bin/python -m pytest -q experiments/tests
 Publication mode writes all retained outputs transactionally after validation. The final command
 also checks that the readable summary, TeX table, deterministic gzip, and SHA-256 file are exact
 derivatives of the retained survey JSON.
+
+The retained generation policy is byte for byte the policy recorded inside the
+compressed corpus, and its SHA-256 is pinned by the current publication policy.
+The current validator checks the retained numerical content under current
+semantics without claiming that the 78 case corpus was regenerated.
 
 ## Next experiments
 

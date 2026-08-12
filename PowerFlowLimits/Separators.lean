@@ -191,6 +191,143 @@ theorem separator_kappa_bound (G : WeightedGraph n m)
   rw [div_le_div_iff₀ hden_pos hcw_pos]
   exact mul_le_mul hnum hcw_le hcw_pos.le hc_nonneg
 
+/-- The maximum-edge branch of Lemma 1 removes all dependence on the edge-weight spread.
+    Every balanced separator forces a linear-in-`n` condition bound for every positive weighting. -/
+theorem separator_kappa_bound_topological (G : WeightedGraph n m)
+    (A X Bv : Finset (Fin n)) (s Δ β : ℝ)
+    (hcover : A ∪ X ∪ Bv = Finset.univ)
+    (hdisj : Disjoint (A ∪ X) Bv)
+    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
+      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
+    (hX : (X.card : ℝ) ≤ s)
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hβ : 0 < β) (hβ' : β ≤ 1 / 2)
+    (hA_size : β * n ≤ ((A ∪ X).card : ℝ)) (hB_size : β * n ≤ (Bv.card : ℝ))
+    (hconn : G.CombinatoriallyConnected) :
+    2 * β * (1 - β) * n / (s * Δ) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  change G.toSimpleGraph.Connected at hconn
+  have hn : 0 < n := Fin.pos_iff_nonempty.mpr hconn.nonempty
+  have hn_pos : (0 : ℝ) < n := by exact_mod_cast hn
+  set S : Finset (Fin n) := A ∪ X with hS_def
+  have hβn_pos : (0 : ℝ) < β * n := mul_pos hβ hn_pos
+  have hS_ne : S.Nonempty := by
+    rw [← Finset.card_pos]
+    have hcard_pos : (0 : ℝ) < (S.card : ℝ) := lt_of_lt_of_le hβn_pos hA_size
+    exact_mod_cast hcard_pos
+  have hS_proper : S ≠ Finset.univ := by
+    intro h
+    have hBv_empty : Bv = ∅ := by
+      rw [← Finset.subset_empty]
+      intro b hb
+      exact absurd (h ▸ Finset.mem_univ b : b ∈ S)
+        (Finset.disjoint_right.mp hdisj hb)
+    rw [hBv_empty] at hB_size
+    simp only [Finset.card_empty, Nat.cast_zero] at hB_size
+    linarith
+  have hcard_lt : S.card < n := by
+    simpa using Finset.card_lt_card (Finset.ssubset_univ_iff.mpr hS_proper)
+  have hn2 : 1 < n := lt_of_le_of_lt (Finset.one_le_card.mpr hS_ne) hcard_lt
+  have hspec := combinatoriallyConnected_implies_spectralConnected G hconn hn2
+  have hm_pos : 0 < m := by
+    have hm := G.card_sub_one_le_edges hconn
+    omega
+  obtain ⟨emax, hmax, _⟩ := exists_maxWeight_lambdaMax_bound G hm_pos
+  have hmax_pos : 0 < G.weights emax := G.weights_pos emax
+  have hΔ_nn : 0 ≤ Δ := le_trans (Nat.cast_nonneg _) (hdeg ⟨0, hn⟩)
+  have hcw_le : G.cutWeight S ≤ s * Δ * G.weights emax := by
+    rw [cutWeight_eq_sum_boundary]
+    have hcard_le : ((G.boundaryEdges S).card : ℝ) ≤ s * Δ := by
+      have h1 : (G.boundaryEdges S).card ≤ ∑ x ∈ X, (G.incidentEdges x).card :=
+        le_trans
+          (Finset.card_le_card
+            (boundaryEdges_subset_incident G A X Bv hcover hnoAB))
+          Finset.card_biUnion_le
+      calc
+        ((G.boundaryEdges S).card : ℝ) ≤
+            ((∑ x ∈ X, (G.incidentEdges x).card : ℕ) : ℝ) := by exact_mod_cast h1
+        _ = ∑ x ∈ X, ((G.incidentEdges x).card : ℝ) := by push_cast; rfl
+        _ ≤ ∑ _x ∈ X, Δ := Finset.sum_le_sum fun x _ ↦ hdeg x
+        _ = (X.card : ℝ) * Δ := by rw [Finset.sum_const, nsmul_eq_mul]
+        _ ≤ s * Δ := mul_le_mul_of_nonneg_right hX hΔ_nn
+    calc
+      ∑ e ∈ G.boundaryEdges S, G.weights e ≤
+          ∑ _e ∈ G.boundaryEdges S, G.weights emax :=
+        Finset.sum_le_sum fun e _ ↦ hmax e
+      _ = ((G.boundaryEdges S).card : ℝ) * G.weights emax := by
+        rw [Finset.sum_const, nsmul_eq_mul]
+      _ ≤ s * Δ * G.weights emax :=
+        mul_le_mul_of_nonneg_right hcard_le hmax_pos.le
+  have hγ_lo : β ≤ (S.card : ℝ) / n := (le_div_iff₀ hn_pos).mpr (by linarith)
+  have hγ_hi : (S.card : ℝ) / n ≤ 1 - β := by
+    rw [div_le_iff₀ hn_pos]
+    have hcard_sum : (S.card : ℝ) + Bv.card ≤ n := by
+      have hunion := Finset.card_union_of_disjoint hdisj
+      have hle : (S ∪ Bv).card ≤ n := by
+        simpa using Finset.card_le_card (Finset.subset_univ (S ∪ Bv))
+      rw [hunion] at hle
+      exact_mod_cast hle
+    nlinarith
+  have hcw_pos : 0 < G.cutWeight S := by
+    have hT3 := lambda2_mul_le_cut G S hS_ne hS_proper
+    have hconn' := hspec
+    unfold WeightedGraph.Connected at hconn'
+    have hA_pos : (0 : ℝ) < (S.card : ℝ) * ((n : ℝ) - S.card) := by
+      have h1 : (0 : ℝ) < S.card := lt_of_lt_of_le hβn_pos hA_size
+      have h2 : (S.card : ℝ) < n := Nat.cast_lt.mpr hcard_lt
+      exact mul_pos h1 (by linarith)
+    nlinarith [mul_pos hconn' hA_pos]
+  have hden_pos : 0 < s * Δ * G.weights emax := lt_of_lt_of_le hcw_pos hcw_le
+  have hsΔ_pos : 0 < s * Δ := by
+    rw [mul_pos_iff] at hden_pos
+    rcases hden_pos with h | h
+    · exact h.1
+    · exact (not_lt_of_ge hmax_pos.le h.2).elim
+  have hcoeff : 2 * β * (1 - β) ≤
+      2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) := by
+    nlinarith
+  have hnum_nonneg : 0 ≤
+      2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+        ((n : ℝ) * G.weights emax) := by
+    have hγ_nn : 0 ≤ (S.card : ℝ) / n := hβ.le.trans hγ_lo
+    have hγ_one : 0 ≤ 1 - (S.card : ℝ) / n := by linarith
+    positivity
+  have hkappa := kappaPlus_ge_edge G S hS_ne hS_proper hconn emax
+  calc
+    2 * β * (1 - β) * n / (s * Δ) ≤
+        2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) * n / (s * Δ) := by
+      rw [div_le_div_iff_of_pos_right hsΔ_pos]
+      exact mul_le_mul_of_nonneg_right hcoeff (Nat.cast_nonneg n)
+    _ = 2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+        ((n : ℝ) * G.weights emax) / (s * Δ * G.weights emax) := by
+      field_simp
+    _ ≤ 2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+        ((n : ℝ) * G.weights emax) / G.cutWeight S :=
+      div_le_div_of_nonneg_left hnum_nonneg hcw_pos hcw_le
+    _ ≤ effectiveConditionNumber G (fun _ ↦ 1) := hkappa
+
+/-- The paper's weighted separator bound and its topology-only strengthening hold simultaneously. -/
+theorem separator_kappa_bound_combined (G : WeightedGraph n m)
+    (A X Bv : Finset (Fin n)) (s Δ bmax β : ℝ)
+    (hcover : A ∪ X ∪ Bv = Finset.univ)
+    (hdisj : Disjoint (A ∪ X) Bv)
+    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
+      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
+    (hX : (X.card : ℝ) ≤ s)
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hbmax : ∀ e, G.weights e ≤ bmax)
+    (hβ : 0 < β) (hβ' : β ≤ 1 / 2)
+    (hA_size : β * n ≤ ((A ∪ X).card : ℝ)) (hB_size : β * n ≤ (Bv.card : ℝ))
+    (hconn : G.CombinatoriallyConnected) :
+    max (2 * β * (1 - β) * G.totalWeight / (s * Δ * bmax))
+        (2 * β * (1 - β) * n / (s * Δ)) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  apply max_le
+  · exact separator_kappa_bound G A X Bv s Δ bmax β hcover hdisj hnoAB hX hdeg
+      hbmax hβ hβ' hA_size hB_size hconn
+  · exact separator_kappa_bound_topological G A X Bv s Δ β hcover hdisj hnoAB hX
+      hdeg hβ hβ' hA_size hB_size hconn
+
 /-- Finite linear-growth consequence of Theorem 1. A connected graph supplies `m ≥ n - 1`,
 while a positive lower bound `ρ` on mean-to-maximum branch weight supplies total stiffness. -/
 theorem separator_kappa_linear_bound (G : WeightedGraph n m)
@@ -291,6 +428,42 @@ theorem separator_family_isBigOmega_linear
       (hcover k hk) (hdisj k hk) (hnoAB k hk) (hX k hk) (hdeg k hk)
       (hbmax k hk) hs hΔ hbmax_pos hβ hβ' hρ (hA_size k hk) (hB_size k hk)
       (hmean k hk) (hconn k hk)
+
+/-- Uniformly bounded balanced separators and degree force `Ω(n)` conditioning for every
+    positive edge weighting. No mean-to-maximum weight ratio is needed. -/
+theorem separator_family_isBigOmega_linear_topological
+    (edgeCount : ℕ → ℕ)
+    (G : (k : ℕ) → WeightedGraph k (edgeCount k))
+    (A X Bv : (k : ℕ) → Finset (Fin k))
+    (N : ℕ) (s Δ β : ℝ)
+    (hs : 0 < s) (hΔ : 0 < Δ)
+    (hβ : 0 < β) (hβ' : β ≤ 1 / 2)
+    (hcover : ∀ k : ℕ, N ≤ k → A k ∪ X k ∪ Bv k = Finset.univ)
+    (hdisj : ∀ k : ℕ, N ≤ k → Disjoint (A k ∪ X k) (Bv k))
+    (hnoAB : ∀ k : ℕ, N ≤ k → ∀ e,
+      ¬((G k).posEndpoint e ∈ A k ∧ (G k).negEndpoint e ∈ Bv k) ∧
+        ¬((G k).posEndpoint e ∈ Bv k ∧ (G k).negEndpoint e ∈ A k))
+    (hX : ∀ k : ℕ, N ≤ k → ((X k).card : ℝ) ≤ s)
+    (hdeg : ∀ k : ℕ, N ≤ k → ∀ i,
+      (((G k).incidentEdges i).card : ℝ) ≤ Δ)
+    (hA_size : ∀ k : ℕ, N ≤ k → β * k ≤ ((A k ∪ X k).card : ℝ))
+    (hB_size : ∀ k : ℕ, N ≤ k → β * k ≤ ((Bv k).card : ℝ))
+    (hconn : ∀ k : ℕ, N ≤ k → (G k).CombinatoriallyConnected) :
+    (fun k : ℕ ↦ (k : ℝ)) =O[atTop]
+      (fun k ↦ effectiveConditionNumber (G k) (fun _ ↦ 1)) := by
+  apply isBigOmega_natCast_of_eventually_linear_lower_bound _
+    (2 * β * (1 - β) / (s * Δ))
+  · have hβone : 0 < 1 - β := by linarith
+    positivity
+  · rw [Filter.eventually_atTop]
+    refine ⟨N, fun k hk ↦ ?_⟩
+    calc
+      (2 * β * (1 - β) / (s * Δ)) * (k : ℝ) =
+          2 * β * (1 - β) * k / (s * Δ) := by ring
+      _ ≤ effectiveConditionNumber (G k) (fun _ ↦ 1) :=
+        separator_kappa_bound_topological (G k) (A k) (X k) (Bv k) s Δ β
+          (hcover k hk) (hdisj k hk) (hnoAB k hk) (hX k hk) (hdeg k hk)
+          hβ hβ' (hA_size k hk) (hB_size k hk) (hconn k hk)
 
 /-- Greedy grouping lemma used in the treewidth corollary. If every component has size at most
 `N/2` and their total size is at least `3N/4`, some subcollection has size in `[N/4, N/2]`. -/
@@ -484,6 +657,28 @@ theorem treewidth_kappa_bound (G : WeightedGraph n m)
         ring
     _ ≤ effectiveConditionNumber G (fun _ => 1) := h
 
+/-- The topology-only treewidth separator bound, valid for every positive edge weighting. -/
+theorem treewidth_kappa_bound_topological (G : WeightedGraph n m)
+    (A X Bv : Finset (Fin n)) (τ Δ : ℝ)
+    (hcover : A ∪ X ∪ Bv = Finset.univ)
+    (hdisj : Disjoint (A ∪ X) Bv)
+    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
+      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
+    (hX : (X.card : ℝ) ≤ τ + 1)
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hA_size : (n : ℝ) / 4 ≤ ((A ∪ X).card : ℝ))
+    (hB_size : (n : ℝ) / 4 ≤ (Bv.card : ℝ))
+    (hconn : G.CombinatoriallyConnected) :
+    3 / 8 * n / ((τ + 1) * Δ) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  have h := separator_kappa_bound_topological G A X Bv (τ + 1) Δ (1 / 4)
+    hcover hdisj hnoAB hX hdeg (by norm_num) (by norm_num)
+    (by linarith) (by linarith) hconn
+  calc
+    3 / 8 * n / ((τ + 1) * Δ) =
+        2 * (1 / 4) * (1 - 1 / 4) * n / ((τ + 1) * Δ) := by ring
+    _ ≤ effectiveConditionNumber G (fun _ ↦ 1) := h
+
 /-- Corollary 1(i) from a small bag and the component partition left by deleting it. The remaining
 external dependency is the tree-decomposition theorem producing such a bag. -/
 theorem treewidth_kappa_bound_of_component_partition (G : WeightedGraph n m)
@@ -507,6 +702,28 @@ theorem treewidth_kappa_bound_of_component_partition (G : WeightedGraph n m)
       hcover hX_quarter hcomponent_half hedge_component
   exact treewidth_kappa_bound G A X Bv τ Δ bmax hcover' hdisj hnoAB hX_tau
     hdeg hbmax hA_size hB_size hconn
+
+/-- The topology-only treewidth bound from a balanced component partition. -/
+theorem treewidth_kappa_bound_of_component_partition_topological (G : WeightedGraph n m)
+    (X : Finset (Fin n)) (k : ℕ) (component : Fin k → Finset (Fin n))
+    (τ Δ : ℝ) (hn : 0 < n)
+    (hparts : ∀ i j, i ≠ j → Disjoint (component i) (component j))
+    (hXparts : ∀ i, Disjoint X (component i))
+    (hcover : X ∪ Finset.univ.biUnion component = Finset.univ)
+    (hX_tau : (X.card : ℝ) ≤ τ + 1)
+    (hX_quarter : (X.card : ℝ) ≤ (n : ℝ) / 4)
+    (hcomponent_half : ∀ i, (component i).card ≤ n / 2)
+    (hedge_component : ∀ e, G.posEndpoint e ∉ X → G.negEndpoint e ∉ X →
+      ∃ i, G.posEndpoint e ∈ component i ∧ G.negEndpoint e ∈ component i)
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hconn : G.CombinatoriallyConnected) :
+    3 / 8 * n / ((τ + 1) * Δ) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  obtain ⟨A, Bv, hcover', hdisj, hnoAB, hA_size, hB_size⟩ :=
+    component_partition_has_quarter_separation G X k component hn hparts hXparts
+      hcover hX_quarter hcomponent_half hedge_component
+  exact treewidth_kappa_bound_topological G A X Bv τ Δ hcover' hdisj hnoAB hX_tau
+    hdeg hA_size hB_size hconn
 
 /-- Corollary 1(i) from one balanced bag. Connected components of the graph after deleting the bag
 are constructed from mathlib's quotient by reachability, so disjointness, cover, and the absence of
@@ -586,6 +803,80 @@ theorem treewidth_kappa_bound_of_balanced_bag (G : WeightedGraph n m)
     (Fintype.card H.ConnectedComponent) component τ Δ bmax hn hparts hXparts hcover
     hX_tau hX_quarter hcomponent_half' hedge_component hdeg hbmax hconn
 
+/-- The topology-only treewidth bound from one balanced bag. -/
+theorem treewidth_kappa_bound_of_balanced_bag_topological (G : WeightedGraph n m)
+    (X : Finset (Fin n)) (τ Δ : ℝ) (hn : 0 < n)
+    (hX_tau : (X.card : ℝ) ≤ τ + 1)
+    (hX_quarter : (X.card : ℝ) ≤ (n : ℝ) / 4)
+    (hcomponent_half : ∀ c : (G.graphOff X).ConnectedComponent,
+      (G.componentVerticesOff X c).card ≤ n / 2)
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hconn : G.CombinatoriallyConnected) :
+    3 / 8 * n / ((τ + 1) * Δ) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  classical
+  let H := G.graphOff X
+  let equivComponent : H.ConnectedComponent ≃ Fin (Fintype.card H.ConnectedComponent) :=
+    Fintype.equivFin H.ConnectedComponent
+  let component : Fin (Fintype.card H.ConnectedComponent) → Finset (Fin n) :=
+    fun i ↦ G.componentVerticesOff X (equivComponent.symm i)
+  have hparts : ∀ i j, i ≠ j → Disjoint (component i) (component j) := by
+    intro i j hij
+    rw [Finset.disjoint_left]
+    intro v hvi hvj
+    simp only [component, WeightedGraph.componentVerticesOff, Finset.mem_filter,
+      Finset.mem_univ, true_and] at hvi hvj
+    obtain ⟨_, hi⟩ := hvi
+    obtain ⟨_, hj⟩ := hvj
+    exact hij (equivComponent.symm.injective (hi.symm.trans hj))
+  have hXparts : ∀ i, Disjoint X (component i) := by
+    intro i
+    rw [Finset.disjoint_left]
+    intro v hvX hvi
+    simp only [component, WeightedGraph.componentVerticesOff, Finset.mem_filter,
+      Finset.mem_univ, true_and] at hvi
+    exact hvi.1 hvX
+  have hcover : X ∪ Finset.univ.biUnion component = Finset.univ :=
+    Finset.eq_univ_of_forall fun v ↦ by
+      by_cases hvX : v ∈ X
+      · exact Finset.mem_union_left _ hvX
+      · apply Finset.mem_union_right
+        rw [Finset.mem_biUnion]
+        let c : H.ConnectedComponent := H.connectedComponentMk ⟨v, hvX⟩
+        let i : Fin (Fintype.card H.ConnectedComponent) := equivComponent c
+        refine ⟨i, Finset.mem_univ i, ?_⟩
+        change v ∈ G.componentVerticesOff X (equivComponent.symm i)
+        unfold WeightedGraph.componentVerticesOff
+        simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+        refine ⟨hvX, ?_⟩
+        simp [H, i, c]
+  have hcomponent_half' : ∀ i, (component i).card ≤ n / 2 :=
+    fun i ↦ hcomponent_half (equivComponent.symm i)
+  have hedge_component : ∀ e, G.posEndpoint e ∉ X → G.negEndpoint e ∉ X →
+      ∃ i, G.posEndpoint e ∈ component i ∧ G.negEndpoint e ∈ component i := by
+    intro e hposX hnegX
+    let u : {v : Fin n // v ∉ X} := ⟨G.posEndpoint e, hposX⟩
+    let v : {v : Fin n // v ∉ X} := ⟨G.negEndpoint e, hnegX⟩
+    have huv : H.Adj u v := ⟨e, Or.inl ⟨rfl, rfl⟩⟩
+    let c : H.ConnectedComponent := H.connectedComponentMk u
+    let i : Fin (Fintype.card H.ConnectedComponent) := equivComponent c
+    refine ⟨i, ?_, ?_⟩
+    · change G.posEndpoint e ∈ G.componentVerticesOff X (equivComponent.symm i)
+      unfold WeightedGraph.componentVerticesOff
+      simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+      refine ⟨hposX, ?_⟩
+      simp [H, i, c, u]
+    · have hcomp : H.connectedComponentMk v = H.connectedComponentMk u :=
+        (SimpleGraph.ConnectedComponent.connectedComponentMk_eq_of_adj huv).symm
+      change G.negEndpoint e ∈ G.componentVerticesOff X (equivComponent.symm i)
+      unfold WeightedGraph.componentVerticesOff
+      simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+      refine ⟨hnegX, ?_⟩
+      simpa [H, i, c, v, u] using hcomp
+  exact treewidth_kappa_bound_of_component_partition_topological G X
+    (Fintype.card H.ConnectedComponent) component τ Δ hn hparts hXparts hcover
+    hX_tau hX_quarter hcomponent_half' hedge_component hdeg hconn
+
 /-- The numerical threshold in the planar part of Corollary 1. -/
 theorem sqrt_eight_mul_card_le_sixth (n : ℕ) (hn : 288 ≤ n) :
     Real.sqrt (8 * n) ≤ (n : ℝ) / 6 := by
@@ -626,6 +917,28 @@ theorem kappa_bound_of_sqrt_separator_partition (G : WeightedGraph n m)
         (Real.sqrt (8 * n) * Δ * bmax) := by ring
     _ ≤ effectiveConditionNumber G (fun _ => 1) := h
 
+/-- The topology-only planar-separator bound, valid for every positive edge weighting. -/
+theorem kappa_bound_of_sqrt_separator_partition_topological (G : WeightedGraph n m)
+    (A X Bv : Finset (Fin n)) (Δ : ℝ)
+    (hcover : A ∪ X ∪ Bv = Finset.univ)
+    (hdisj : Disjoint (A ∪ X) Bv)
+    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
+      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
+    (hX : (X.card : ℝ) ≤ Real.sqrt (8 * n))
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hA_size : (n : ℝ) / 6 ≤ ((A ∪ X).card : ℝ))
+    (hB_size : (n : ℝ) / 6 ≤ (Bv.card : ℝ))
+    (hconn : G.CombinatoriallyConnected) :
+    5 / 18 * n / (Real.sqrt (8 * n) * Δ) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  have h := separator_kappa_bound_topological G A X Bv (Real.sqrt (8 * n)) Δ
+    (1 / 6) hcover hdisj hnoAB hX hdeg (by norm_num) (by norm_num)
+    (by linarith) (by linarith) hconn
+  calc
+    5 / 18 * n / (Real.sqrt (8 * n) * Δ) =
+        2 * (1 / 6) * (1 - 1 / 6) * n / (Real.sqrt (8 * n) * Δ) := by ring
+    _ ≤ effectiveConditionNumber G (fun _ ↦ 1) := h
+
 /-- Corollary 1(ii) from the quantitative output of a Lipton--Tarjan partition. The planar
 separator existence theorem itself remains an external graph-theoretic dependency. -/
 theorem planar_kappa_bound_of_lipton_partition (G : WeightedGraph n m)
@@ -659,6 +972,35 @@ theorem planar_kappa_bound_of_lipton_partition (G : WeightedGraph n m)
   exact kappa_bound_of_sqrt_separator_partition G A X Bv Δ bmax hcover hdisj hnoAB hX
     hdeg hbmax
     hA_size hB_size hconn
+
+/-- The topology-only planar bound from a quantitative Lipton--Tarjan partition. -/
+theorem planar_kappa_bound_of_lipton_partition_topological (G : WeightedGraph n m)
+    (A X Bv : Finset (Fin n)) (Δ : ℝ) (hn : 288 ≤ n)
+    (hcover : A ∪ X ∪ Bv = Finset.univ)
+    (hdisj : Disjoint (A ∪ X) Bv)
+    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
+      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
+    (hX : (X.card : ℝ) ≤ Real.sqrt (8 * n))
+    (hA_upper : (A.card : ℝ) ≤ 2 * n / 3)
+    (hB_upper : (Bv.card : ℝ) ≤ 2 * n / 3)
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hconn : G.CombinatoriallyConnected) :
+    5 / 18 * n / (Real.sqrt (8 * n) * Δ) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  have hcard_nat : (A ∪ X).card + Bv.card = n := by
+    rw [← Finset.card_union_of_disjoint hdisj, hcover, Finset.card_univ,
+      Fintype.card_fin]
+  have hcard : ((A ∪ X).card : ℝ) + (Bv.card : ℝ) = n := by
+    exact_mod_cast hcard_nat
+  have hA_size : (n : ℝ) / 6 ≤ ((A ∪ X).card : ℝ) := by linarith
+  have hX_sixth : (X.card : ℝ) ≤ (n : ℝ) / 6 :=
+    hX.trans (sqrt_eight_mul_card_le_sixth n hn)
+  have hunion_le_nat : (A ∪ X).card ≤ A.card + X.card := Finset.card_union_le A X
+  have hunion_le : ((A ∪ X).card : ℝ) ≤ (A.card : ℝ) + X.card := by
+    exact_mod_cast hunion_le_nat
+  have hB_size : (n : ℝ) / 6 ≤ (Bv.card : ℝ) := by linarith
+  exact kappa_bound_of_sqrt_separator_partition_topological G A X Bv Δ hcover hdisj
+    hnoAB hX hdeg hA_size hB_size hconn
 
 /-- Near-planar extension (remark after cor:tw): planarizing c line crossings and applying the
     vertex-cost form of Lipton–Tarjan yields balanced separators of size ≤ 2√(8(n+c)), so part (ii)
@@ -814,5 +1156,28 @@ theorem separator_kappa_bound_sharp (G : WeightedGraph n m)
     positivity
   rw [div_le_div_iff₀ hden_pos hcw_pos]
   exact mul_le_mul hnum hcw_le hcw_pos.le hc_nonneg
+
+/-- The topology-only near-planar separator bound, valid for every positive edge weighting. -/
+theorem kappa_bound_of_near_planar_partition_topological (G : WeightedGraph n m)
+    (A X Bv : Finset (Fin n)) (Δ c : ℝ)
+    (hcover : A ∪ X ∪ Bv = Finset.univ)
+    (hdisj : Disjoint (A ∪ X) Bv)
+    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
+      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
+    (hX : (X.card : ℝ) ≤ 2 * Real.sqrt (8 * ((n : ℝ) + c)))
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hA_size : (n : ℝ) / 6 ≤ ((A ∪ X).card : ℝ))
+    (hB_size : (n : ℝ) / 6 ≤ (Bv.card : ℝ))
+    (hconn : G.CombinatoriallyConnected) :
+    5 / 36 * n / (Real.sqrt (8 * ((n : ℝ) + c)) * Δ) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  have h := separator_kappa_bound_topological G A X Bv
+    (2 * Real.sqrt (8 * ((n : ℝ) + c))) Δ (1 / 6) hcover hdisj hnoAB hX hdeg
+    (by norm_num) (by norm_num) (by linarith) (by linarith) hconn
+  calc
+    5 / 36 * n / (Real.sqrt (8 * ((n : ℝ) + c)) * Δ) =
+        2 * (1 / 6) * (1 - 1 / 6) * n /
+          (2 * Real.sqrt (8 * ((n : ℝ) + c)) * Δ) := by ring
+    _ ≤ effectiveConditionNumber G (fun _ ↦ 1) := h
 
 end

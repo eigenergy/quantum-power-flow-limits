@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import replace
 import gzip
 import hashlib
+import json
+from pathlib import Path
 
 import pytest
 
-from publication_policy import load_policy, provenance_errors
+from publication_policy import environment_errors, load_policy, provenance_errors
 from validate_survey import (
     canonical_artifact,
     deterministic_gzip,
@@ -15,6 +18,13 @@ from validate_survey import (
     sha256_manifest,
     validate,
 )
+
+
+EXPERIMENT_DIR = Path(__file__).resolve().parents[1]
+RETAINED_GENERATION_POLICY = (
+    EXPERIMENT_DIR / "results" / "corpus-generation-policy.toml"
+)
+RETAINED_CORPUS = EXPERIMENT_DIR / "results" / "corpus-survey.json.gz"
 
 
 def relative_source(key: str) -> str:
@@ -311,3 +321,98 @@ def test_summary_table_has_three_columns(publication_document, policy) -> None:
 
 def test_pinned_repository_inputs_match_policy() -> None:
     assert provenance_errors(load_policy()) == []
+
+
+def test_retained_corpus_generation_policy_is_pinned(policy) -> None:
+    generation_policy = load_policy(RETAINED_GENERATION_POLICY)
+    assert policy.retained_generation_policy_sha256 == (
+        generation_policy.source_sha256
+    )
+
+
+def test_unpinned_generation_policy_is_rejected(publication_document, policy) -> None:
+    generation_policy = replace(policy, source_sha256="0" * 64)
+    with pytest.raises(ValueError, match="generation policy is not pinned"):
+        validate(
+            publication_document,
+            publication=True,
+            policy=policy,
+            verify_policy_files=False,
+            generation_policy=generation_policy,
+        )
+
+
+def test_retained_corpus_passes_current_semantic_validation(policy) -> None:
+    generation_policy = load_policy(RETAINED_GENERATION_POLICY)
+    document = json.loads(gzip.decompress(RETAINED_CORPUS.read_bytes()))
+    with pytest.raises(ValueError, match="artifact provenance"):
+        validate(document, publication=True, policy=policy)
+    summary = validate(
+        document,
+        publication=True,
+        policy=policy,
+        generation_policy=generation_policy,
+    )
+    assert summary["cases"] == 78
+    assert summary["treewidth_tested"] == 78
+
+
+def test_retained_result_matches_policy() -> None:
+    policy = load_policy()
+    result = json.loads((EXPERIMENT_DIR / "results.json").read_text())
+    assert tuple(case["key"] for case in result["cases"]) == policy.core_keys
+    assert result["publication_policy_sha256"] == policy.source_sha256
+    assert result["provenance"] == policy.provenance
+    assert result["parameters"] == policy.algorithms
+
+
+def test_retained_result_has_only_core_scope() -> None:
+    result = json.loads((EXPERIMENT_DIR / "results.json").read_text())
+    assert set(result) == {
+        "schema_version",
+        "criteria",
+        "parameters",
+        "environment",
+        "publication_policy_sha256",
+        "provenance",
+        "cases",
+    }
+    assert len(result["cases"]) == 5
+
+
+def test_environment_contract_accepts_retained_result() -> None:
+    policy = load_policy()
+    result = json.loads((EXPERIMENT_DIR / "results.json").read_text())
+    assert environment_errors(result["environment"], policy) == []
+
+
+def test_environment_contract_rejects_version_drift() -> None:
+    policy = load_policy()
+    result = json.loads((EXPERIMENT_DIR / "results.json").read_text())
+    environment = deepcopy(result["environment"])
+    environment["scipy"] = "0.0.0"
+    assert environment_errors(environment, policy) == [
+        "scipy version drift: expected 1.18.0, got 0.0.0"
+    ]
+
+
+def test_environment_contract_rejects_dirty_powerio() -> None:
+    policy = load_policy()
+    result = json.loads((EXPERIMENT_DIR / "results.json").read_text())
+    environment = deepcopy(result["environment"])
+    environment["powerio_tracked_dirty"] = True
+    assert "PowerIO source must have no tracked modifications" in environment_errors(
+        environment, policy
+    )
+
+
+def test_table_declares_manuscript_column_layout() -> None:
+    table = (EXPERIMENT_DIR / "conditions_table.tex").read_text()
+    assert r"\begin{tabular}{lcccrr}" in table
+    assert r"\begin{tabular}{lcccrrr}" not in table
+    assert r"\begin{tabular}{lrrrrrr}" not in table
+    assert r"$\hat c$: certified proper crossing count" in table
+    assert r"Near Plan.: $1152(n+\hat c)\leq n^2$" in table
+    assert r"Sep.: $\beta\geq1/4$ and $s^2\leq8n$" in table
+    assert r"treewidth: $4(U+1)\leq n$" in table
+    assert r"$\times$ means the positive weight model fails" in table
