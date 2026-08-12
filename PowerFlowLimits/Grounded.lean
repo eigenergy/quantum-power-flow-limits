@@ -255,6 +255,38 @@ theorem grounded_diag_le_eigenvalueMax (G : WeightedGraph n m) (r : Fin n)
   rw [hquad, hsq, mul_one] at h
   exact h
 
+/-- Every branch has a retained endpoint, so its weight bounds the largest grounded eigenvalue
+from below. Unlike the full Laplacian bound, grounding need not retain the factor two. -/
+theorem edgeWeight_le_groundedEigenvalueMax (G : WeightedGraph n m) (r : Fin n)
+    (e : Fin m) :
+    G.weights e ≤ groundedLaplacianEigenvalueMax G r := by
+  have hweight_degree : ∀ i : Fin n,
+      (i = G.posEndpoint e ∨ i = G.negEndpoint e) →
+        G.weights e ≤ G.weightedDegree i := by
+    intro i hi
+    unfold WeightedGraph.weightedDegree
+    exact Finset.single_le_sum (fun f _ ↦ (G.weights_pos f).le) (by
+      simp only [WeightedGraph.incidentEdges, Finset.mem_filter, Finset.mem_univ, true_and]
+      exact hi)
+  by_cases hpos : G.posEndpoint e = r
+  · have hneg : G.negEndpoint e ≠ r := by
+      intro h
+      exact G.endpoints_ne e (hpos.trans h.symm)
+    let i : GroundedIndex r := ⟨G.negEndpoint e, hneg⟩
+    calc
+      G.weights e ≤ G.weightedDegree i := hweight_degree i (Or.inr rfl)
+      _ = groundedLaplacian G r i i := by
+        rw [groundedLaplacian_apply, weightedDegree_eq_diag]
+      _ ≤ groundedLaplacianEigenvalueMax G r :=
+        grounded_diag_le_eigenvalueMax G r i
+  · let i : GroundedIndex r := ⟨G.posEndpoint e, hpos⟩
+    calc
+      G.weights e ≤ G.weightedDegree i := hweight_degree i (Or.inl rfl)
+      _ = groundedLaplacian G r i i := by
+        rw [groundedLaplacian_apply, weightedDegree_eq_diag]
+      _ ≤ groundedLaplacianEigenvalueMax G r :=
+        grounded_diag_le_eigenvalueMax G r i
+
 private theorem card_groundedIndex (r : Fin n) :
     Fintype.card (GroundedIndex r) = n - 1 := by
   simp [GroundedIndex, Fintype.card_subtype_compl]
@@ -354,6 +386,48 @@ theorem groundedEigenvalueMin_le_lambda2 (G : WeightedGraph n m) (r : Fin n)
     unfold laplacian_eigenvalue₂
     exact le_csSup (lambda2_set_bddAbove G hn) ha_lambda
   · exact le_trans (le_of_not_ge ha_nonneg) (lambda2_nonneg G hn)
+
+/-- The maximum-edge quotient transfers from the full Laplacian's `λ₂` to every grounded
+condition number. -/
+theorem edgeWeight_div_lambda2_le_groundedConditionNumber
+    (G : WeightedGraph n m) (r : Fin n) (e : Fin m)
+    (hconn : G.CombinatoriallyConnected) (hn : 1 < n) :
+    G.weights e / laplacian_eigenvalue₂ G (fun _ ↦ 1) ≤
+      groundedConditionNumber G r := by
+  have hnum_nonneg : 0 ≤ G.weights e := (G.weights_pos e).le
+  have hmin_pos := groundedEigenvalueMin_pos G r hconn hn
+  have hlambda_pos := combinatoriallyConnected_implies_spectralConnected G hconn hn
+  have hinterlace := groundedEigenvalueMin_le_lambda2 G r hn
+  have hmax := edgeWeight_le_groundedEigenvalueMax G r e
+  unfold WeightedGraph.Connected at hlambda_pos
+  unfold groundedConditionNumber
+  exact (div_le_div_of_nonneg_left hnum_nonneg hmin_pos hinterlace).trans
+    (div_le_div_of_nonneg_right hmax hmin_pos.le)
+
+/-- Any lower bound proved through `2 b_max / λ₂` transfers to the grounded matrix with the
+factor two removed. -/
+theorem half_maxEdge_bound_le_groundedConditionNumber
+    (G : WeightedGraph n m) (r : Fin n) (e : Fin m) (q : ℝ)
+    (hconn : G.CombinatoriallyConnected) (hn : 1 < n)
+    (hq : q ≤ 2 * G.weights e / laplacian_eigenvalue₂ G (fun _ ↦ 1)) :
+    q / 2 ≤ groundedConditionNumber G r := by
+  calc
+    q / 2 ≤ (2 * G.weights e / laplacian_eigenvalue₂ G (fun _ ↦ 1)) / 2 := by
+      gcongr
+    _ = G.weights e / laplacian_eigenvalue₂ G (fun _ ↦ 1) := by ring
+    _ ≤ groundedConditionNumber G r :=
+      edgeWeight_div_lambda2_le_groundedConditionNumber G r e hconn hn
+
+/-- A finite nonempty branch set has a realized maximum weight whose quotient transfers to every
+grounded condition number. -/
+theorem exists_maxWeight_groundedConditionNumber_bound
+    (G : WeightedGraph n m) (r : Fin n) (hm : 0 < m)
+    (hconn : G.CombinatoriallyConnected) (hn : 1 < n) :
+    ∃ e : Fin m, (∀ f, G.weights f ≤ G.weights e) ∧
+      G.weights e / laplacian_eigenvalue₂ G (fun _ ↦ 1) ≤
+        groundedConditionNumber G r := by
+  obtain ⟨e, hmax, _⟩ := exists_maxWeight_lambdaMax_bound G hm
+  exact ⟨e, hmax, edgeWeight_div_lambda2_le_groundedConditionNumber G r e hconn hn⟩
 
 /-- Grounding removes exactly the slack bus weighted degree from the trace. -/
 theorem groundedLaplacian_trace_eq (G : WeightedGraph n m) (r : Fin n) :
