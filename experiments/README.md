@@ -1,6 +1,6 @@
 # Structural condition experiments
 
-The runner parses the five power system cases used in `main_letter_v5.tex`
+The core runner parses the five power system cases used in the manuscript
 with PowerIO, reduces each in service branch topology to its largest connected
 simple graph, and emits independently checked structural certificates.
 
@@ -68,3 +68,28 @@ Run the unit suite independently with:
 ```sh
 experiments/.venv/bin/python -m pytest -q experiments/tests
 ```
+
+## PGLib corpus table
+
+`results/pglib-structural.json` retains the paper-facing evidence for all 66
+canonical PGLib v23.07 cases. It excludes the broader corpus, format
+comparisons, and query diagnostics. `pglib_corpus.py` validates every retained
+count and renders `results/pglib-corpus-summary.tex`, which is byte identical
+to the optional fourth-page table in the manuscript.
+
+The balanced separator row accepts either the direct METIS certificate or the
+separator implied by a validated tree decomposition when
+`(U + 1)^2 <= 8n`. This gives 66/66 combined certificates while retaining the
+direct METIS count of 61/66.
+
+Validate the retained PGLib evidence and generated table with:
+
+```sh
+experiments/.venv/bin/python experiments/pglib_corpus.py --check-derived
+```
+
+The compact artifact was projected from the reviewed retained corpus snapshot
+whose SHA-256 is recorded in both the artifact and validator. The environment,
+algorithm parameters, case sources, and certificate hashes remain in the
+compact artifact. Full raw case regeneration requires the pinned PowerIO,
+data, Julia, and Graphviz inputs recorded there.

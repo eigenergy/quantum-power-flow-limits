@@ -130,4 +130,6 @@ jobs:
         run: uv run --project experiments --no-sync python -m pytest -q experiments/tests
 
       - name: Validate the manuscript evidence files
-        run: uv run --project experiments --no-sync python experiments/publication_policy.py --check-files
+        run: |
+          uv run --project experiments --no-sync python experiments/publication_policy.py --check-files
+          uv run --project experiments --no-sync python experiments/pglib_corpus.py --check-derived

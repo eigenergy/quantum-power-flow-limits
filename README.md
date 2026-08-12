@@ -15,11 +15,10 @@ The formalization covers:
 
 - weighted and topology only separator, treewidth, planar, near planar, and
   corridor condition number bounds;
-- pathwise random weight bounds and Cameron's exact finite Hoeffding
+- pathwise random weight bounds and the exact finite Hoeffding
   refinement, without a mean to maximum ratio assumption;
 - grounded separator and corridor transfers and the exact trace correction;
-- balanced fixed schedule query, tomography, grid, corridor, and local
-  observable bounds; and
+- balanced QLS query, tomography, grid, corridor, and local observable bounds;
 - the lossless unit voltage flat start AC active angle block and the positive
   DC optimal power flow barrier angle block.
 
@@ -37,7 +36,7 @@ AC Newton or optimal power flow KKT system.
 - `Challenge.lean`: independent statements used by Comparator
 - `paper_claims.toml`: claim and dependency ledger
 - `docs/claim-alignment.md`: claim by claim alignment notes
-- `experiments/`: pinned five case evidence and generated condition table
+- `experiments/`: pinned five-case and PGLib corpus evidence and generated tables
 
 ## Verification
 
@@ -58,5 +57,3 @@ closure is limited to `propext`, `Quot.sound`, and `Classical.choice`.
 
 See `docs/proposition-3-recovery.md` for the query model and
 `docs/lean-library-survey.md` for external theorem dependencies.
-
-MIT license.

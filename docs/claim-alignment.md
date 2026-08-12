@@ -100,8 +100,8 @@ AC Newton systems, complete optimal
 power flow KKT systems, unit commitment, or hybrid algorithms remain
 discussion in the letter and are not promoted to Lean theorems.
 
-The five case numerical table is reproducible Python evidence. It is not one
-of the 18 Comparator claims.
+The five-case numerical table and the 66-case PGLib corpus summary are
+reproducible Python evidence. They are not among the 18 Comparator claims.
 
 ## Trust checks
 

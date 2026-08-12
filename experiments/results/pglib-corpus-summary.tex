@@ -1,0 +1,65 @@
+\begin{table}[!t]
+  \centering
+  \caption{Structural certificates and operating point diagnostics for the
+    66 canonical PGLib v23.07 cases.}
+  \label{tab:pglib-corpus-summary}
+  \begin{tabular}{@{}p{0.55\linewidth}rr@{}}
+    \toprule
+    Check & Satisfies/tested & Percent \\
+    \midrule
+    Balanced separator certificate\textsuperscript{a}
+      & $66/66$ & $100.0\%$ \\
+    Direct METIS separator certificate
+      & $61/66$ & $92.4\%$ \\
+    Validated tree decomposition sufficient condition
+      & $64/66$ & $97.0\%$ \\
+    Qualifying near planar drawing\textsuperscript{b}
+      & $39/45$ & $86.7\%$ \\
+    Exactly planar topology
+      & $9/66$ & $13.6\%$ \\
+    Direct positive susceptance model applicable\textsuperscript{c}
+      & $46/66$ & $69.7\%$ \\
+    Direct METIS separator among positive model cases
+      & $46/46$ & $100.0\%$ \\
+    Recorded base operating point diagnostic\textsuperscript{d}
+      & $35/36$ & $97.2\%$ \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.45em}
+  \begin{minipage}{0.92\linewidth}
+    \footnotesize
+    \textsuperscript{a}The balanced separator row accepts a direct METIS
+    certificate or one implied by a validated tree decomposition.  In all 64
+    decomposition cases counted here, $4(U+1)\leq n$ and
+    $(U+1)^2\leq8n$; hence the treewidth separator theorem gives
+    $\beta\geq1/4$ and $s\leq U+1$.  Five cases pass only by this implication,
+    while two small cases pass only by the direct certificate.
+
+    \smallskip
+    \textsuperscript{b}The near planar condition is applicable to the
+    45 cases with at least 1,152 retained buses.  It requires a fully checked
+    straight line drawing with crossing count $\widehat c$ satisfying
+    $1152(n+\widehat c)\leq n^2$.  The other 21 cases are below the minimum
+    size at which this inequality can hold.  Failure of the tested drawing is
+    not a proof that no qualifying drawing exists.
+
+    \smallskip
+    \textsuperscript{c}The direct model assigns $b_e=1/x_e$ to each active
+    ordinary branch and requires every resulting edge weight to be finite and
+    positive.  The conditional $46/46$ row shows that every case satisfying
+    this weight model also has a direct METIS separator certificate.
+
+    \smallskip
+    \textsuperscript{d}The diagnostic was computed for the 36 PGLib cases with
+    an applicable weight model and spectrum within the numerical size limit.
+    A pass means
+    $\kappa_{\mathrm{eff}}(0.01)/\kappa\geq 1/2$ for the recorded balanced base
+    injection.  This is an operating point diagnostic, not a query lower bound.
+
+    \smallskip
+    The certificate rows check finite sufficient conditions used by the
+    structural theorems.  They support applicability to this corpus; they do
+    not replace the theorem hypotheses or establish an asymptotic growth law.
+  \end{minipage}
+\end{table}

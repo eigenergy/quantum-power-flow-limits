@@ -2,7 +2,7 @@ schema_version = 1
 challenge_module = "Challenge"
 solution_module = "PowerFlowLimits.PaperClaims"
 expected_claim_count = 18
-expected_nonformal_claim_count = 6
+expected_nonformal_claim_count = 7
 permitted_axioms = ["propext", "Quot.sound", "Classical.choice"]
 enable_nanoda = true
 
@@ -180,6 +180,11 @@ interface = "LiptonTarjanVertexCostTheorem"
 name = "five_case_condition_table"
 status = "empirical"
 summary = "Five-case empirical condition number table reproduced by the manuscript generator"
+
+[[nonformal_claim]]
+name = "pglib_corpus_summary_table"
+status = "empirical"
+summary = "Sixty-six-case PGLib structural and operating point summary reproduced by the manuscript generator"
 
 [[nonformal_claim]]
 name = "full_ac_newton_systems"

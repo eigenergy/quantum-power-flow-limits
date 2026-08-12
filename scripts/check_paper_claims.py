@@ -45,6 +45,7 @@ EXPECTED_TOOL_PINS = {
 }
 EXPECTED_NONFORMAL_CLAIMS = [
     ("five_case_condition_table", "empirical"),
+    ("pglib_corpus_summary_table", "empirical"),
     ("full_ac_newton_systems", "discussion-not-formalized"),
     ("full_opf_kkt_ipm_systems", "discussion-not-formalized"),
     ("complexity_class_statements", "discussion-not-formalized"),
@@ -410,6 +411,7 @@ def validate_workflow() -> None:
         'LAKE_BIN="$(command -v lake)"',
         '"$LAKE_BIN" env "$RUNNER_TEMP/comparator/.lake/build/bin/comparator" comparator.json',
         "experiments/publication_policy.py --check-files",
+        "experiments/pglib_corpus.py --check-derived",
     )
     missing = [fragment for fragment in required_fragments if fragment not in source]
     if missing:
