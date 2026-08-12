@@ -1,6 +1,6 @@
 # Structural condition experiments
 
-The runner parses the five power system cases used in `main_letter_v4.tex`
+The runner parses the five power system cases used in `main_letter_v5.tex`
 with PowerIO, reduces each in service branch topology to its largest connected
 simple graph, and emits independently checked structural certificates.
 
@@ -23,7 +23,8 @@ are pinned in `uv.lock` and `publication.toml`.
 
 - `Planar` is the exact planarity decision for the underlying simple graph.
 - `Near planar` is checked only when a deterministic straight line drawing has
-  a fully verified crossing count `c_hat` satisfying
+  a fully verified count `c_hat` of proper pairwise crossing events, with no
+  self or triple crossing, satisfying
   `1152 * (n + c_hat) <= n^2`. Failure to find such a drawing is unavailable
   evidence, not a proof that no qualifying drawing exists.
 - `Separator` is a PyMetis bisection converted into an `(s,beta)` vertex

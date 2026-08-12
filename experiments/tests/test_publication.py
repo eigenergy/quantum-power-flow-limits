@@ -84,5 +84,11 @@ def test_environment_contract_rejects_dirty_powerio() -> None:
 
 def test_table_declares_manuscript_column_layout() -> None:
     table = (EXPERIMENT_DIR / "conditions_table.tex").read_text()
-    assert r"\begin{tabular}{lcccrrr}" in table
+    assert r"\begin{tabular}{lcccrr}" in table
+    assert r"\begin{tabular}{lcccrrr}" not in table
     assert r"\begin{tabular}{lrrrrrr}" not in table
+    assert r"$\hat c$: certified proper crossing count" in table
+    assert r"Near Plan.: $1152(n+\hat c)\leq n^2$" in table
+    assert r"Sep.: $\beta\geq1/4$ and $s^2\leq8n$" in table
+    assert r"treewidth: $4(U+1)\leq n$" in table
+    assert r"$\times$ means the positive weight model fails" in table

@@ -7,21 +7,21 @@ theorem is not represented as a local axiom.
 | # | Manuscript claim | Public declaration | Status and boundary |
 |---:|---|---|---|
 | 1 | Lemma 1 | `PaperClaims.lemma1_weightedCuts` | Proved |
-| 2 | Theorem 1 | `PaperClaims.theorem1_separator` | Proved from an explicit separator |
-| 3 | Corollary 1(i) | `PaperClaims.corollary1_treewidth` | Proved from the standard tree decomposition axioms |
-| 4 | Corollary 1(ii) | `PaperClaims.corollary1_planarFromLiptonTarjan` | Relative to the Lipton–Tarjan vertex cost theorem and a planarity certificate |
-| 5 | Near planar extension | `PaperClaims.nearPlanarFromCrossingDrawing` | Relative to the same cited theorem and a certificate for the constructed planarization |
-| 6 | Proposition 1 | `PaperClaims.proposition1_corridor` | Proved |
-| 7 | Proposition 2, separator | `PaperClaims.proposition2_randomSeparator` | Proved with the public `rho` family premise |
-| 8 | Proposition 2, treewidth | `PaperClaims.proposition2_randomTreewidth` | Proved with the public `rho` family premise |
-| 9 | Proposition 2, planar | `PaperClaims.proposition2_randomPlanar` | Relative to Lipton–Tarjan, with the public `rho` family premise |
-| 10 | Proposition 2, corridor | `PaperClaims.proposition2_randomCorridor` | Proved with the public `rho` family premise |
+| 2 | Theorem 1 | `PaperClaims.theorem1_separator` | Proved from an explicit separator, including the topology only term |
+| 3 | Corollary 1(i) | `PaperClaims.corollary1_treewidth` | Proved from the standard tree decomposition axioms, including the topology only term |
+| 4 | Corollary 1(ii) | `PaperClaims.corollary1_planarFromLiptonTarjan` | Relative to the Lipton–Tarjan vertex cost theorem and a planarity certificate; includes both weighted and topology only terms |
+| 5 | Near planar extension | `PaperClaims.nearPlanarFromCrossingDrawing` | Relative to the same cited theorem and a certificate for the constructed planarization; includes both terms |
+| 6 | Proposition 1 | `PaperClaims.proposition1_corridor` | Proved in the exact maximum-edge weighted form and its topology only consequence |
+| 7 | Proposition 2, separator | `PaperClaims.proposition2_randomSeparator` | Proved pathwise for every positive realization, with the exact Hoeffding refinement |
+| 8 | Proposition 2, treewidth | `PaperClaims.proposition2_randomTreewidth` | Proved pathwise for every positive realization, with the exact Hoeffding refinement |
+| 9 | Proposition 2, planar | `PaperClaims.proposition2_randomPlanar` | Relative to Lipton–Tarjan; pathwise topology bound plus exact Hoeffding refinement |
+| 10 | Proposition 2, corridor | `PaperClaims.proposition2_randomCorridor` | Proved pathwise for every positive realization, with the exact Hoeffding refinement |
 | 11 | Proposition 3, hard pair | `PaperClaims.proposition3_balancedHardPair` | Proved on the balanced subspace |
 | 12 | Proposition 3, fixed schedule readout | `PaperClaims.proposition3_fixedScheduleReadout` | Relative to the cited hybrid, tomography, classical solve, and loading bounds |
 | 13 | Proposition 3, grid readout | `PaperClaims.proposition3_gridReadout` | Relative to the same cited bounds |
 | 14 | Proposition 3, corridor readout | `PaperClaims.proposition3_corridorReadout` | Relative to the same cited bounds |
 | 15 | Proposition 3, local observable | `PaperClaims.proposition3_localObservable` | Relative to the controlled preparation hybrid bound; assumes a positive displayed gap |
-| 16 | Grounded transfer | `PaperClaims.groundedConditioningTransfer` | Proved with the exact slack degree correction |
+| 16 | Grounded transfer | `PaperClaims.groundedConditioningTransfer` | Direct separator and corridor half transfers, with the exact slack degree correction |
 | 17 | Flat start AC block | `PaperClaims.flatStartACBlock` | Proved for the lossless unit voltage active angle block |
 | 18 | DC optimal power flow barrier block | `PaperClaims.dcOpfBarrierBlock` | Proved for the two sided branch barrier angle Hessian |
 
@@ -55,27 +55,23 @@ projected partition.
 
 ## Random susceptance quantifiers
 
-The finite lemmas `random_totalWeight_lower_tail`, `random_kappa_bound`,
+The separator and corridor modules first prove their topology only bounds for
+every positive weighting. These bounds are pathwise and require neither
+independence nor a mean to maximum ratio condition.
+
+The public Proposition 2 wrappers call `random_kappa_bound`,
 `random_treewidth_kappa_bound`,
 `random_kappa_bound_of_sqrt_separator_partition`, and
-`random_corridor_kappa_bound` retain the exact Hoeffding exponent. They need no
-mean-to-maximum ratio assumption for a fixed finite graph.
-
-The public family claims quantify a constant `rho > 0` and assume
+`random_corridor_kappa_bound` directly. Each wrapper retains the exact
+Hoeffding probability
 
 ```text
-rho * m * b_max <= sum_e E[b_e].
+1 - exp(-2 * epsilon^2 * (sum_e E[b_e])^2 / (m * b_max^2)).
 ```
 
-They weaken the exact probability to
-
-```text
-1 - exp(-2 * epsilon^2 * rho^2 * m).
-```
-
-Putting this premise in each public Proposition 2 wrapper makes both the
-uniform exponential probability and the retained `Omega(m/(s Delta))` scale
-explicit.
+No public Proposition 2 wrapper introduces `rho` or a mean to maximum ratio
+premise. The separate exponential corollaries in `Random.lean` remain
+available to clients that have such a uniform family assumption.
 
 ## Proposition 3 quantifiers
 
