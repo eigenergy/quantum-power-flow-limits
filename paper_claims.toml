@@ -15,19 +15,19 @@ external_dependencies = []
 [[claim]]
 name = "PaperClaims.theorem1_separator"
 status = "proved"
-summary = "Condition number lower bound from a quantitative separator"
+summary = "Weighted and topology only condition number lower bounds from a quantitative separator"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.corollary1_treewidth"
 status = "proved"
-summary = "Treewidth bound from a standard rooted tree decomposition"
+summary = "Weighted and topology only bounds from a standard rooted tree decomposition"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.corollary1_planarFromLiptonTarjan"
 status = "proved-relative-to-cited-result"
-summary = "Planar specialization from a planarity certificate and the cited separator theorem"
+summary = "Weighted and topology only planar bounds from a certificate and the cited separator theorem"
 external_dependencies = ["Lipton-Tarjan planar separator theorem"]
 citation = """
 Lipton and Tarjan, A Separator Theorem for Planar Graphs,
@@ -37,25 +37,25 @@ interface = "LiptonTarjanVertexCostTheorem"
 [[claim]]
 name = "PaperClaims.proposition1_corridor"
 status = "proved"
-summary = "Condition number lower bound for a macroscopic corridor"
+summary = "Exact maximum-edge weighted bound and its topology only consequence for a macroscopic corridor"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.proposition2_randomSeparator"
 status = "proved"
-summary = "Exact Hoeffding probability bound for independent bounded weights"
+summary = "Pathwise topology bound and exact Hoeffding probability for independent bounded weights"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.proposition2_randomTreewidth"
 status = "proved"
-summary = "Exact random weight transfer from a rooted tree decomposition"
+summary = "Pathwise topology bound and exact random transfer from a rooted tree decomposition"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.proposition2_randomPlanar"
 status = "proved-relative-to-cited-result"
-summary = "Exact random weight transfer from a planarity certificate and the cited separator theorem"
+summary = "Pathwise topology bound and exact random transfer from a certificate and the cited separator theorem"
 external_dependencies = ["Lipton-Tarjan planar separator theorem"]
 citation = """
 Lipton and Tarjan, A Separator Theorem for Planar Graphs,
@@ -65,7 +65,7 @@ interface = "LiptonTarjanVertexCostTheorem"
 [[claim]]
 name = "PaperClaims.proposition2_randomCorridor"
 status = "proved"
-summary = "Exact random weight transfer for the corridor bound"
+summary = "Pathwise topology bound and exact random transfer for the corridor bound"
 external_dependencies = []
 
 [[claim]]
@@ -151,7 +151,7 @@ interface = "PaperClaims.ControlledPreparationHybridBound"
 [[claim]]
 name = "PaperClaims.groundedConditioningTransfer"
 status = "proved"
-summary = "Corrected trace condition bound for a grounded matrix"
+summary = "Direct separator and corridor half transfers with the corrected grounded trace bound"
 external_dependencies = []
 
 [[claim]]
@@ -169,7 +169,7 @@ external_dependencies = []
 [[claim]]
 name = "PaperClaims.nearPlanarFromCrossingDrawing"
 status = "proved-relative-to-cited-result"
-summary = "Near planar bound from a crossing schedule, planarization, and the cited separator theorem"
+summary = "Weighted and topology only near planar bounds from a crossing schedule and cited separator theorem"
 external_dependencies = ["Lipton-Tarjan planar separator theorem"]
 citation = """
 Lipton and Tarjan, A Separator Theorem for Planar Graphs,

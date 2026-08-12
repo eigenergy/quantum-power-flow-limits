@@ -52,7 +52,8 @@ theorem theorem1_separator (G : WeightedGraph n m)
     (hβ : 0 < β) (hβhalf : β ≤ 1 / 2)
     (hA : β * n ≤ ((A ∪ X).card : ℝ)) (hB : β * n ≤ (B.card : ℝ))
     (hconn : G.CombinatoriallyConnected) :
-    2 * β * (1 - β) * G.totalWeight / (s * Δ * bmax) ≤
+    max (2 * β * (1 - β) * G.totalWeight / (s * Δ * bmax))
+        (2 * β * (1 - β) * n / (s * Δ)) ≤
       effectiveConditionNumber G (fun _ ↦ 1) := by
   sorry
 
@@ -63,7 +64,8 @@ theorem corollary1_treewidth {k τ : ℕ} (G : WeightedGraph n m)
     (hdegree : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
     (hweight : ∀ e, G.weights e ≤ bmax)
     (hconn : G.CombinatoriallyConnected) :
-    3 / 8 * G.totalWeight / (((τ : ℝ) + 1) * Δ * bmax) ≤
+    max (3 / 8 * G.totalWeight / (((τ : ℝ) + 1) * Δ * bmax))
+        (3 / 8 * n / (((τ : ℝ) + 1) * Δ)) ≤
       effectiveConditionNumber G (fun _ ↦ 1) := by
   sorry
 
@@ -73,31 +75,30 @@ theorem corollary1_planarFromLiptonTarjan (Planar : PlanarityPredicate)
     (hdegree : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
     (hweight : ∀ e, G.weights e ≤ bmax)
     (hconn : G.CombinatoriallyConnected) :
-    5 / 18 * G.totalWeight / (Real.sqrt (8 * n) * Δ * bmax) ≤
+    max (5 / 18 * G.totalWeight / (Real.sqrt (8 * n) * Δ * bmax))
+        (5 / 18 * n / (Real.sqrt (8 * n) * Δ)) ≤
       effectiveConditionNumber G (fun _ ↦ 1) := by
   sorry
 
 theorem proposition1_corridor (G : WeightedGraph n m)
-    (left right : Finset (Fin n)) (ℓ : ℕ) (hℓ : 2 ≤ ℓ)
-    (path : Fin ℓ → Fin n) (pathEdges : Finset (Fin m)) (β : ℝ)
-    (hpathInjective : Function.Injective path)
-    (hleft : ∀ i, path i ∉ left) (hright : ∀ i, path i ∉ right)
-    (hdisjoint : Disjoint left right)
-    (hpath : ∀ e ∈ pathEdges, ∃ i : Fin ℓ, ∃ h : i.val + 1 < ℓ,
-      (G.posEndpoint e = path i ∧ G.negEndpoint e = path ⟨i.val + 1, h⟩) ∨
-      (G.posEndpoint e = path ⟨i.val + 1, h⟩ ∧ G.negEndpoint e = path i))
-    (hnonpath : ∀ e ∉ pathEdges,
-      ((G.posEndpoint e ∈ left ∨ G.posEndpoint e = path ⟨0, by omega⟩) ∧
-       (G.negEndpoint e ∈ left ∨ G.negEndpoint e = path ⟨0, by omega⟩)) ∨
-      ((G.posEndpoint e ∈ right ∨ G.posEndpoint e = path ⟨ℓ - 1, by omega⟩) ∧
-       (G.negEndpoint e ∈ right ∨ G.negEndpoint e = path ⟨ℓ - 1, by omega⟩)))
-    (hβ : 0 < β)
+    (left right : Finset (Fin n)) (ℓ : ℕ) (path : Fin ℓ → Fin n)
+    (pathEdges : Finset (Fin m))
+    (corridor : CorridorTopology G left right ℓ path pathEdges)
+    (β : ℝ) (hβ : 0 < β)
     (hleftSize : β * n ≤ (left.card : ℝ))
     (hrightSize : β * n ≤ (right.card : ℝ))
+    (emax : Fin m) (hmax : ∀ e, G.weights e ≤ G.weights emax)
     (hconn : G.CombinatoriallyConnected) :
-    2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 * G.totalWeight /
-        (∑ e ∈ pathEdges, G.weights e) ≤
-      effectiveConditionNumber G (fun _ ↦ 1) := by
+    2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 *
+        max G.totalWeight ((n : ℝ) * G.weights emax) /
+          (∑ e ∈ pathEdges, G.weights e) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) ∧
+      2 * β ^ 2 * n * ((ℓ : ℝ) - 1) ≤
+        2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 *
+          max G.totalWeight ((n : ℝ) * G.weights emax) /
+            (∑ e ∈ pathEdges, G.weights e) ∧
+      2 * β ^ 2 * n * ((ℓ : ℝ) - 1) ≤
+        effectiveConditionNumber G (fun _ ↦ 1) := by
   sorry
 
 theorem proposition2_randomSeparator {sample : Type*} [MeasurableSpace sample]
@@ -117,13 +118,17 @@ theorem proposition2_randomSeparator {sample : Type*} [MeasurableSpace sample]
     (hA : β * n ≤ ((A ∪ X).card : ℝ)) (hB : β * n ≤ (B.card : ℝ))
     (hdenominator : 0 < s * Δ * bmax) (hε : 0 < ε)
     (hconn : G.CombinatoriallyConnected) :
-    1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
-        (m * bmax ^ 2)) ≤
-      measure.real {ω | 2 * β * (1 - β) *
-          ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) / (s * Δ * bmax) ≤
-        effectiveConditionNumber
-          (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
-          (fun _ ↦ 1)} := by
+    (∀ ω, 2 * β * (1 - β) * n / (s * Δ) ≤
+      effectiveConditionNumber
+        (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
+        (fun _ ↦ 1)) ∧
+      1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
+          (m * bmax ^ 2)) ≤
+        measure.real {ω | 2 * β * (1 - β) *
+            ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) / (s * Δ * bmax) ≤
+          effectiveConditionNumber
+            (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
+            (fun _ ↦ 1)} := by
   sorry
 
 theorem proposition2_randomTreewidth {sample : Type*} [MeasurableSpace sample]
@@ -140,13 +145,18 @@ theorem proposition2_randomTreewidth {sample : Type*} [MeasurableSpace sample]
     (hdenominator : 0 < (((τ : ℝ) + 1) * Δ * bmax))
     (hε : 0 < ε)
     (hconn : G.CombinatoriallyConnected) :
-    1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
-        (m * bmax ^ 2)) ≤
-      measure.real {ω | 3 / 8 * ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) /
-          (((τ : ℝ) + 1) * Δ * bmax) ≤
-        effectiveConditionNumber
-          (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
-          (fun _ ↦ 1)} := by
+    (∀ ω, 3 / 8 * n / (((τ : ℝ) + 1) * Δ) ≤
+      effectiveConditionNumber
+        (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
+        (fun _ ↦ 1)) ∧
+      1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
+          (m * bmax ^ 2)) ≤
+        measure.real {ω | 3 / 8 *
+            ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) /
+            (((τ : ℝ) + 1) * Δ * bmax) ≤
+          effectiveConditionNumber
+            (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
+            (fun _ ↦ 1)} := by
   sorry
 
 theorem proposition2_randomPlanar {sample : Type*} [MeasurableSpace sample]
@@ -161,13 +171,18 @@ theorem proposition2_randomPlanar {sample : Type*} [MeasurableSpace sample]
     (hdenominator : 0 < Real.sqrt (8 * n) * Δ * bmax)
     (hε : 0 < ε)
     (hconn : G.CombinatoriallyConnected) :
-    1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
-        (m * bmax ^ 2)) ≤
-      measure.real {ω | 5 / 18 * ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) /
-          (Real.sqrt (8 * n) * Δ * bmax) ≤
-        effectiveConditionNumber
-          (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
-          (fun _ ↦ 1)} := by
+    (∀ ω, 5 / 18 * n / (Real.sqrt (8 * n) * Δ) ≤
+      effectiveConditionNumber
+        (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
+        (fun _ ↦ 1)) ∧
+      1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
+          (m * bmax ^ 2)) ≤
+        measure.real {ω | 5 / 18 *
+            ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) /
+            (Real.sqrt (8 * n) * Δ * bmax) ≤
+          effectiveConditionNumber
+            (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
+            (fun _ ↦ 1)} := by
   sorry
 
 theorem proposition2_randomCorridor {sample : Type*} [MeasurableSpace sample]
@@ -176,31 +191,26 @@ theorem proposition2_randomCorridor {sample : Type*} [MeasurableSpace sample]
     (hmeasurable : ∀ e, Measurable (weight e))
     (hindependent : ProbabilityTheory.iIndepFun weight measure)
     (bmax : ℝ) (hbounded : ∀ ω, ∀ e, weight e ω ∈ Set.Ioc 0 bmax)
-    (left right : Finset (Fin n)) (ℓ : ℕ) (hℓ : 2 ≤ ℓ)
-    (path : Fin ℓ → Fin n) (pathEdges : Finset (Fin m)) (hpathEdges : pathEdges.Nonempty)
-    (β ε : ℝ) (hpathInjective : Function.Injective path)
-    (hleft : ∀ i, path i ∉ left) (hright : ∀ i, path i ∉ right)
-    (hdisjoint : Disjoint left right)
-    (hpath : ∀ e ∈ pathEdges, ∃ i : Fin ℓ, ∃ h : i.val + 1 < ℓ,
-      (G.posEndpoint e = path i ∧ G.negEndpoint e = path ⟨i.val + 1, h⟩) ∨
-      (G.posEndpoint e = path ⟨i.val + 1, h⟩ ∧ G.negEndpoint e = path i))
-    (hnonpath : ∀ e ∉ pathEdges,
-      ((G.posEndpoint e ∈ left ∨ G.posEndpoint e = path ⟨0, by omega⟩) ∧
-       (G.negEndpoint e ∈ left ∨ G.negEndpoint e = path ⟨0, by omega⟩)) ∨
-      ((G.posEndpoint e ∈ right ∨ G.posEndpoint e = path ⟨ℓ - 1, by omega⟩) ∧
-       (G.negEndpoint e ∈ right ∨ G.negEndpoint e = path ⟨ℓ - 1, by omega⟩)))
+    (left right : Finset (Fin n)) (ℓ : ℕ) (path : Fin ℓ → Fin n)
+    (pathEdges : Finset (Fin m))
+    (corridor : CorridorTopology G left right ℓ path pathEdges)
+    (β ε : ℝ)
     (hβ : 0 < β) (hleftSize : β * n ≤ (left.card : ℝ))
     (hrightSize : β * n ≤ (right.card : ℝ))
     (hε : 0 < ε)
     (hconn : G.CombinatoriallyConnected) :
-    1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
-        (m * bmax ^ 2)) ≤
-      measure.real {ω | 2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 *
-          ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) /
-            (∑ e ∈ pathEdges, weight e ω) ≤
-        effectiveConditionNumber
-          (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
-          (fun _ ↦ 1)} := by
+    (∀ ω, 2 * β ^ 2 * n * ((ℓ : ℝ) - 1) ≤
+      effectiveConditionNumber
+        (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
+        (fun _ ↦ 1)) ∧
+      1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
+          (m * bmax ^ 2)) ≤
+        measure.real {ω | 2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 *
+            ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) /
+              (∑ e ∈ pathEdges, weight e ω) ≤
+          effectiveConditionNumber
+            (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
+            (fun _ ↦ 1)} := by
   sorry
 
 theorem proposition3_balancedHardPair (G : WeightedGraph n m)
@@ -356,13 +366,26 @@ theorem proposition3_localObservable
   sorry
 
 theorem groundedConditioningTransfer (G : WeightedGraph n m) (slack : Fin n)
-    (Δ bmax : ℝ) (hconn : G.CombinatoriallyConnected) (hn : 1 < n)
-    (hdegree : ((G.incidentEdges slack).card : ℝ) ≤ Δ)
-    (hbmaxNonnegative : 0 ≤ bmax) (hweight : ∀ e, G.weights e ≤ bmax)
-    (hcorrected : 0 ≤ 2 * G.totalWeight - Δ * bmax) :
-    ((2 * G.totalWeight - Δ * bmax) / ((n : ℝ) - 1)) /
-        laplacian_eigenvalue₂ G (fun _ ↦ 1) ≤
-      groundedConditionNumber G slack := by
+    (hconn : G.CombinatoriallyConnected) (hn : 1 < n) :
+    (∀ (A X Bv : Finset (Fin n)) (s Δ β : ℝ),
+      A ∪ X ∪ Bv = Finset.univ → Disjoint (A ∪ X) Bv →
+      (∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
+        ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A)) →
+      (X.card : ℝ) ≤ s → (∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ) →
+      0 < β → β ≤ 1 / 2 → β * n ≤ ((A ∪ X).card : ℝ) →
+      β * n ≤ (Bv.card : ℝ) →
+      β * (1 - β) * n / (s * Δ) ≤ groundedConditionNumber G slack) ∧
+      (∀ (left right : Finset (Fin n)) (ℓ : ℕ) (path : Fin ℓ → Fin n)
+        (pathEdges : Finset (Fin m)), CorridorTopology G left right ℓ path pathEdges →
+        ∀ βc : ℝ, 0 < βc → βc * n ≤ (left.card : ℝ) →
+        βc * n ≤ (right.card : ℝ) →
+        βc ^ 2 * n * ((ℓ : ℝ) - 1) ≤ groundedConditionNumber G slack) ∧
+      (∀ Δr bmax : ℝ, ((G.incidentEdges slack).card : ℝ) ≤ Δr →
+        0 ≤ bmax → (∀ e, G.weights e ≤ bmax) →
+        0 ≤ 2 * G.totalWeight - Δr * bmax →
+        ((2 * G.totalWeight - Δr * bmax) / ((n : ℝ) - 1)) /
+            laplacian_eigenvalue₂ G (fun _ ↦ 1) ≤
+          groundedConditionNumber G slack) := by
   sorry
 
 theorem flatStartACBlock (G : WeightedGraph n m) :
@@ -387,7 +410,9 @@ theorem nearPlanarFromCrossingDrawing {c : ℕ} (Planar : PlanarityPredicate)
     (hdegree : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
     (hweight : ∀ e, G.weights e ≤ bmax)
     (hconn : G.CombinatoriallyConnected) :
-    5 / 36 * G.totalWeight / (Real.sqrt (8 * ((n : ℝ) + c)) * Δ * bmax) ≤
+    max (5 / 36 * G.totalWeight /
+          (Real.sqrt (8 * ((n : ℝ) + c)) * Δ * bmax))
+        (5 / 36 * n / (Real.sqrt (8 * ((n : ℝ) + c)) * Δ)) ≤
       effectiveConditionNumber G (fun _ ↦ 1) := by
   sorry
 

@@ -21,6 +21,7 @@ import PowerFlowLimits.OptimalPowerFlow
 import PowerFlowLimits.EndToEnd
 import PowerFlowLimits.QueryHardness
 import PowerFlowLimits.SpectralHardPair
+import PowerFlowLimits.TopologyOnlyExamples
 import PowerFlowLimits.PaperClaims
 
 /-!

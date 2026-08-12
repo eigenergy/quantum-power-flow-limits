@@ -22,7 +22,7 @@ status:
     Lean 4 verification of Lemma 1, Theorem 1, Corollary 1,
     Propositions 1--3, the grounded correction, the flat start lossless AC
     active angle block, and the DC optimal power flow branch barrier angle
-    Hessian stated in main_letter_v4.tex. The public Comparator surface has 18
+    Hessian stated in main_letter_v5.tex. The public Comparator surface has 18
     claims. The combinatorial planarization and separator projection are proved
     internally. Planarity of the constructed graph and the vertex cost
     Lipton--Tarjan theorem are explicit premises.
@@ -31,8 +31,9 @@ status:
   notes: >-
     Challenge.lean contains 18 intentional statement placeholders for
     Comparator and is excluded from the implementation sorry count. The public
-    random weight wrappers retain the exact Hoeffding exponent without a mean
-    ratio assumption. Proposition 3 uses balanced targets in the zero sum
+    random weight wrappers return a topology only bound for every positive
+    realization and retain the exact Hoeffding exponent without a mean ratio
+    assumption. Proposition 3 uses balanced targets in the zero sum
     subspace, whose dimension is proved to be n - 1.
   axioms:
     - "propext"
@@ -171,8 +172,9 @@ fidelity:
     LiptonTarjanVertexCostTheorem premise. Lean proves the crossing schedule,
     planarized graph, branch routes, zero cost crossing weighting, separator
     projection, factor two size bound, original bus balance, and final condition
-    bound. The public random wrappers expose the exact finite Hoeffding exponent
-    and impose no mean to maximum ratio assumption.
+    bound. The public random wrappers expose both the pathwise topology bound
+    and the exact finite Hoeffding exponent, and impose no mean to maximum
+    ratio assumption.
     Proposition 3 recovers the readout product for a fixed coherent QLS schedule
     on the balanced zero sum space, relative to the cited hybrid and tomography
     lower bounds. The local observable result applies to the manuscript's bus

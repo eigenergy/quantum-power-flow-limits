@@ -3,7 +3,8 @@ Copyright (c) 2026 Cameron Khanpour and Samuel Talkington. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Cameron Khanpour, Samuel Talkington
 -/
-import PowerFlowLimits.Eigenvalues
+import PowerFlowLimits.Corridors
+import PowerFlowLimits.Separators
 
 /-!
 # Grounded susceptance matrices
@@ -428,6 +429,242 @@ theorem exists_maxWeight_groundedConditionNumber_bound
         groundedConditionNumber G r := by
   obtain ⟨e, hmax, _⟩ := exists_maxWeight_lambdaMax_bound G hm
   exact ⟨e, hmax, edgeWeight_div_lambda2_le_groundedConditionNumber G r e hconn hn⟩
+
+/-- The maximum-edge cut witness transfers to a grounded matrix with half the constant from
+`kappaPlus_ge_edge`. -/
+theorem cut_edge_bound_le_groundedConditionNumber
+    (G : WeightedGraph n m) (r : Fin n) (S : Finset (Fin n)) (e : Fin m)
+    (hne : S.Nonempty) (hproper : S ≠ Finset.univ)
+    (hconn : G.CombinatoriallyConnected) :
+    ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+        ((n : ℝ) * G.weights e) / G.cutWeight S ≤ groundedConditionNumber G r := by
+  have hn : 0 < n := hne.choose.pos
+  have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr hn
+  have hcard_lt : S.card < n := by
+    simpa using Finset.card_lt_card (Finset.ssubset_univ_iff.mpr hproper)
+  have hn2 : 1 < n := lt_of_le_of_lt (Finset.one_le_card.mpr hne) hcard_lt
+  have hlambda_pos := combinatoriallyConnected_implies_spectralConnected G hconn hn2
+  have hcard_pos : (0 : ℝ) < S.card := Nat.cast_pos.mpr (Finset.card_pos.mpr hne)
+  have hcard_lt_real : (S.card : ℝ) < n := Nat.cast_lt.mpr hcard_lt
+  have hcard_product_pos : (0 : ℝ) < (S.card : ℝ) * ((n : ℝ) - S.card) :=
+    mul_pos hcard_pos (sub_pos.mpr hcard_lt_real)
+  unfold WeightedGraph.Connected at hlambda_pos
+  have hcut := lambda2_mul_le_cut G S hne hproper
+  have hcut_pos : 0 < G.cutWeight S := by
+    have hpositive := mul_pos hlambda_pos hcard_product_pos
+    nlinarith
+  have hweight_pos := G.weights_pos e
+  have hquotient :
+      2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+          ((n : ℝ) * G.weights e) / G.cutWeight S ≤
+        2 * G.weights e / laplacian_eigenvalue₂ G (fun _ ↦ 1) := by
+    rw [div_le_div_iff₀ hcut_pos hlambda_pos]
+    calc
+      (2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+          ((n : ℝ) * G.weights e)) * laplacian_eigenvalue₂ G (fun _ ↦ 1) =
+          (2 * G.weights e / (n : ℝ)) *
+            (laplacian_eigenvalue₂ G (fun _ ↦ 1) *
+              ((S.card : ℝ) * ((n : ℝ) - S.card))) := by
+        field_simp
+      _ ≤ (2 * G.weights e / (n : ℝ)) * ((n : ℝ) * G.cutWeight S) :=
+        mul_le_mul_of_nonneg_left hcut
+          (div_nonneg (mul_nonneg (by norm_num) hweight_pos.le) hn_pos.le)
+      _ = (2 * G.weights e) * G.cutWeight S := by
+        field_simp
+  have hhalf := half_maxEdge_bound_le_groundedConditionNumber G r e
+    (2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+      ((n : ℝ) * G.weights e) / G.cutWeight S)
+    hconn hn2 hquotient
+  convert hhalf using 1
+  all_goals ring
+
+/-- Every balanced separator gives the topology-only grounded condition bound. The coefficient is
+half the ungrounded coefficient because grounding retains one endpoint of a maximum branch. -/
+theorem grounded_separator_kappa_bound_topological (G : WeightedGraph n m) (r : Fin n)
+    (A X Bv : Finset (Fin n)) (s Δ β : ℝ)
+    (hcover : A ∪ X ∪ Bv = Finset.univ)
+    (hdisj : Disjoint (A ∪ X) Bv)
+    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
+      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
+    (hX : (X.card : ℝ) ≤ s)
+    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hβ : 0 < β) (hβ' : β ≤ 1 / 2)
+    (hA_size : β * n ≤ ((A ∪ X).card : ℝ)) (hB_size : β * n ≤ (Bv.card : ℝ))
+    (hconn : G.CombinatoriallyConnected) :
+    β * (1 - β) * n / (s * Δ) ≤ groundedConditionNumber G r := by
+  have hn : 0 < n := Fin.pos_iff_nonempty.mpr hconn.nonempty
+  have hn_pos : (0 : ℝ) < n := by exact_mod_cast hn
+  set S : Finset (Fin n) := A ∪ X with hS_def
+  have hβn_pos : (0 : ℝ) < β * n := mul_pos hβ hn_pos
+  have hS_ne : S.Nonempty := by
+    rw [← Finset.card_pos]
+    have hcard_pos : (0 : ℝ) < (S.card : ℝ) := lt_of_lt_of_le hβn_pos hA_size
+    exact_mod_cast hcard_pos
+  have hS_proper : S ≠ Finset.univ := by
+    intro hS_univ
+    have hBv_empty : Bv = ∅ := by
+      rw [← Finset.subset_empty]
+      intro b hb
+      exact absurd (hS_univ ▸ Finset.mem_univ b : b ∈ S)
+        (Finset.disjoint_right.mp hdisj hb)
+    rw [hBv_empty] at hB_size
+    simp only [Finset.card_empty, Nat.cast_zero] at hB_size
+    linarith
+  have hcard_lt : S.card < n := by
+    simpa using Finset.card_lt_card (Finset.ssubset_univ_iff.mpr hS_proper)
+  have hn2 : 1 < n := lt_of_le_of_lt (Finset.one_le_card.mpr hS_ne) hcard_lt
+  have hm_pos : 0 < m := by
+    have hm := G.card_sub_one_le_edges hconn
+    omega
+  obtain ⟨emax, hmax, _⟩ := exists_maxWeight_lambdaMax_bound G hm_pos
+  have hmax_pos : 0 < G.weights emax := G.weights_pos emax
+  have hΔ_nonneg : 0 ≤ Δ := le_trans (Nat.cast_nonneg _) (hdeg ⟨0, hn⟩)
+  have hcut_le : G.cutWeight S ≤ s * Δ * G.weights emax := by
+    rw [cutWeight_eq_sum_boundary]
+    have hcard_le : ((G.boundaryEdges S).card : ℝ) ≤ s * Δ := by
+      have hboundary : (G.boundaryEdges S).card ≤
+          ∑ x ∈ X, (G.incidentEdges x).card :=
+        le_trans
+          (Finset.card_le_card
+            (boundaryEdges_subset_incident G A X Bv hcover hnoAB))
+          Finset.card_biUnion_le
+      calc
+        ((G.boundaryEdges S).card : ℝ) ≤
+            ((∑ x ∈ X, (G.incidentEdges x).card : ℕ) : ℝ) := by
+          exact_mod_cast hboundary
+        _ = ∑ x ∈ X, ((G.incidentEdges x).card : ℝ) := by push_cast; rfl
+        _ ≤ ∑ _x ∈ X, Δ := Finset.sum_le_sum fun x _ ↦ hdeg x
+        _ = (X.card : ℝ) * Δ := by rw [Finset.sum_const, nsmul_eq_mul]
+        _ ≤ s * Δ := mul_le_mul_of_nonneg_right hX hΔ_nonneg
+    calc
+      ∑ e ∈ G.boundaryEdges S, G.weights e ≤
+          ∑ _e ∈ G.boundaryEdges S, G.weights emax :=
+        Finset.sum_le_sum fun e _ ↦ hmax e
+      _ = ((G.boundaryEdges S).card : ℝ) * G.weights emax := by
+        rw [Finset.sum_const, nsmul_eq_mul]
+      _ ≤ s * Δ * G.weights emax :=
+        mul_le_mul_of_nonneg_right hcard_le hmax_pos.le
+  have hgamma_lower : β ≤ (S.card : ℝ) / n :=
+    (le_div_iff₀ hn_pos).mpr (by linarith)
+  have hgamma_upper : (S.card : ℝ) / n ≤ 1 - β := by
+    rw [div_le_iff₀ hn_pos]
+    have hcard_sum : (S.card : ℝ) + Bv.card ≤ n := by
+      have hunion := Finset.card_union_of_disjoint hdisj
+      have hle : (S ∪ Bv).card ≤ n := by
+        simpa using Finset.card_le_card (Finset.subset_univ (S ∪ Bv))
+      rw [hunion] at hle
+      exact_mod_cast hle
+    nlinarith
+  have hlambda_pos := combinatoriallyConnected_implies_spectralConnected G hconn hn2
+  unfold WeightedGraph.Connected at hlambda_pos
+  have hcut_pos : 0 < G.cutWeight S := by
+    have hcut := lambda2_mul_le_cut G S hS_ne hS_proper
+    have hcard_product_pos : (0 : ℝ) < (S.card : ℝ) * ((n : ℝ) - S.card) := by
+      have hcard_pos : (0 : ℝ) < S.card := lt_of_lt_of_le hβn_pos hA_size
+      have hcard_lt_real : (S.card : ℝ) < n := Nat.cast_lt.mpr hcard_lt
+      exact mul_pos hcard_pos (sub_pos.mpr hcard_lt_real)
+    nlinarith [mul_pos hlambda_pos hcard_product_pos]
+  have hden_pos : 0 < s * Δ * G.weights emax := lt_of_lt_of_le hcut_pos hcut_le
+  have hsΔ_pos : 0 < s * Δ := by
+    rw [mul_pos_iff] at hden_pos
+    rcases hden_pos with h | h
+    · exact h.1
+    · exact (not_lt_of_ge hmax_pos.le h.2).elim
+  have hcoefficient : β * (1 - β) ≤
+      ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) := by
+    nlinarith
+  have hnum_nonneg : 0 ≤
+      ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+        ((n : ℝ) * G.weights emax) := by
+    have hgamma_nonneg : 0 ≤ (S.card : ℝ) / n := hβ.le.trans hgamma_lower
+    have hone_sub_nonneg : 0 ≤ 1 - (S.card : ℝ) / n := by linarith
+    positivity
+  calc
+    β * (1 - β) * n / (s * Δ) ≤
+        ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) * n / (s * Δ) := by
+      rw [div_le_div_iff_of_pos_right hsΔ_pos]
+      exact mul_le_mul_of_nonneg_right hcoefficient (Nat.cast_nonneg n)
+    _ = ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+        ((n : ℝ) * G.weights emax) / (s * Δ * G.weights emax) := by
+      field_simp
+    _ ≤ ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+        ((n : ℝ) * G.weights emax) / G.cutWeight S :=
+      div_le_div_of_nonneg_left hnum_nonneg hcut_pos hcut_le
+    _ ≤ groundedConditionNumber G r :=
+      cut_edge_bound_le_groundedConditionNumber G r S emax hS_ne hS_proper hconn
+
+/-- Every exact corridor gives the topology-only grounded condition bound. The coefficient is half
+the ungrounded coefficient because the grounded maximum eigenvalue retains one branch endpoint. -/
+theorem grounded_corridor_kappa_bound_topological (G : WeightedGraph n m) (r : Fin n)
+    (VS VT : Finset (Fin n)) (ℓ : ℕ) (p : Fin ℓ → Fin n)
+    (EP : Finset (Fin m)) (C : CorridorTopology G VS VT ℓ p EP)
+    (β : ℝ) (hβ : 0 < β)
+    (hVS_size : β * n ≤ (VS.card : ℝ))
+    (hVT_size : β * n ≤ (VT.card : ℝ))
+    (hconn : G.CombinatoriallyConnected) :
+    β ^ 2 * n * ((ℓ : ℝ) - 1) ≤ groundedConditionNumber G r := by
+  have hℓn : ℓ ≤ n := by
+    simpa using Fintype.card_le_of_injective p C.path_injective
+  have hn2 : 1 < n :=
+    lt_of_lt_of_le (lt_of_lt_of_le (by norm_num : 1 < 2) C.length_two) hℓn
+  have hlambda_pos := combinatoriallyConnected_implies_spectralConnected G hconn hn2
+  unfold WeightedGraph.Connected at hlambda_pos
+  have hlength_pos : (0 : ℝ) < (ℓ : ℝ) - 1 := by
+    exact sub_pos.mpr (by exact_mod_cast C.length_two)
+  have hm_pos : 0 < m := by
+    have hsub : 0 < ℓ - 1 := Nat.sub_pos_iff_lt.mpr
+      (lt_of_lt_of_le (by norm_num : 1 < 2) C.length_two)
+    exact Fin.pos_iff_nonempty.mpr ⟨C.pathEdge ⟨0, hsub⟩⟩
+  obtain ⟨emax, hmax, _⟩ := exists_maxWeight_lambdaMax_bound G hm_pos
+  have hlambda2_corridor := corridor_lambda2_mul_le G VS VT ℓ C.length_two p EP β
+    C.path_injective C.path_disjoint_left C.path_disjoint_right C.bulks_disjoint
+    C.path_branch C.nonpath_internal hβ hVS_size hVT_size
+  have hcorridorWeight : ∑ e ∈ EP, G.weights e ≤
+      ((ℓ : ℝ) - 1) * G.weights emax :=
+    corridorWeight_le_length_mul_bmax G EP ℓ (G.weights emax)
+      (le_trans (by norm_num) C.length_two) C.pathEdge_card hmax
+  have hlambda2_max : laplacian_eigenvalue₂ G (fun _ ↦ 1) *
+      (β ^ 2 * n * ((ℓ : ℝ) - 1)) ≤ G.weights emax := by
+    rw [← mul_le_mul_iff_left₀ hlength_pos]
+    calc
+      (laplacian_eigenvalue₂ G (fun _ ↦ 1) *
+          (β ^ 2 * n * ((ℓ : ℝ) - 1))) * ((ℓ : ℝ) - 1) =
+          laplacian_eigenvalue₂ G (fun _ ↦ 1) *
+            (β ^ 2 * n * ((ℓ : ℝ) - 1) ^ 2) := by ring
+      _ ≤ ∑ e ∈ EP, G.weights e := hlambda2_corridor
+      _ ≤ G.weights emax * ((ℓ : ℝ) - 1) := by
+        simpa [mul_comm] using hcorridorWeight
+  have hquotient : 2 * β ^ 2 * n * ((ℓ : ℝ) - 1) ≤
+      2 * G.weights emax / laplacian_eigenvalue₂ G (fun _ ↦ 1) := by
+    rw [le_div_iff₀ hlambda_pos]
+    calc
+      (2 * β ^ 2 * n * ((ℓ : ℝ) - 1)) *
+          laplacian_eigenvalue₂ G (fun _ ↦ 1) =
+          2 * (laplacian_eigenvalue₂ G (fun _ ↦ 1) *
+            (β ^ 2 * n * ((ℓ : ℝ) - 1))) := by ring
+      _ ≤ 2 * G.weights emax := mul_le_mul_of_nonneg_left hlambda2_max (by norm_num)
+  have hhalf := half_maxEdge_bound_le_groundedConditionNumber G r emax
+    (2 * β ^ 2 * n * ((ℓ : ℝ) - 1)) hconn hn2 hquotient
+  convert hhalf using 1
+  all_goals ring
+
+/-- A macroscopic corridor gives the quadratic topology-only bound for every grounded matrix. -/
+theorem grounded_corridor_kappa_quadratic_bound_topological
+    (G : WeightedGraph n m) (r : Fin n)
+    (VS VT : Finset (Fin n)) (ℓ : ℕ) (p : Fin ℓ → Fin n)
+    (EP : Finset (Fin m)) (C : CorridorTopology G VS VT ℓ p EP)
+    (β α : ℝ) (hβ : 0 < β)
+    (hVS_size : β * n ≤ (VS.card : ℝ))
+    (hVT_size : β * n ≤ (VT.card : ℝ))
+    (hmacro : α * n ≤ (ℓ : ℝ) - 1)
+    (hconn : G.CombinatoriallyConnected) :
+    β ^ 2 * α * (n : ℝ) ^ 2 ≤ groundedConditionNumber G r := by
+  have htop := grounded_corridor_kappa_bound_topological G r VS VT ℓ p EP C β hβ
+    hVS_size hVT_size hconn
+  calc
+    β ^ 2 * α * (n : ℝ) ^ 2 = β ^ 2 * n * (α * n) := by ring
+    _ ≤ β ^ 2 * n * ((ℓ : ℝ) - 1) := by gcongr
+    _ ≤ groundedConditionNumber G r := htop
 
 /-- Grounding removes exactly the slack bus weighted degree from the trace. -/
 theorem groundedLaplacian_trace_eq (G : WeightedGraph n m) (r : Fin n) :

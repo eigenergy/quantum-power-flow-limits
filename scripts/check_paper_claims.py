@@ -57,6 +57,16 @@ EXACT_RANDOM_INTERFACES = {
     "proposition2_randomPlanar": "random_kappa_bound_of_sqrt_separator_partition",
     "proposition2_randomCorridor": "random_corridor_kappa_bound",
 }
+PATHWISE_RANDOM_FRAGMENTS = {
+    "proposition2_randomSeparator":
+        "(∀ ω, 2 * β * (1 - β) * n / (s * Δ) ≤",
+    "proposition2_randomTreewidth":
+        "(∀ ω, 3 / 8 * n / (((τ : ℝ) + 1) * Δ) ≤",
+    "proposition2_randomPlanar":
+        "(∀ ω, 5 / 18 * n / (Real.sqrt (8 * n) * Δ) ≤",
+    "proposition2_randomCorridor":
+        "(∀ ω, 2 * β ^ 2 * n * ((ℓ : ℝ) - 1) ≤",
+}
 
 
 class ValidationError(Exception):
@@ -257,6 +267,8 @@ def validate_sources(names: list[str]) -> None:
         statement = solution_statements[local_name]
         if "(hρ :" in statement or "(hmean :" in statement or exact_exponent not in statement:
             fail(f"PaperClaims.{local_name} does not expose the exact random interface")
+        if PATHWISE_RANDOM_FRAGMENTS[local_name] not in statement:
+            fail(f"PaperClaims.{local_name} does not expose its pathwise topology bound")
         theorem_block = re.search(
             rf"^theorem\s+{re.escape(local_name)}\b.*?(?=^/--|^theorem|\Z)",
             solution_source,
@@ -266,6 +278,34 @@ def validate_sources(names: list[str]) -> None:
             rf"\b{re.escape(interface)}\b", theorem_block.group()
         ):
             fail(f"PaperClaims.{local_name} does not use {interface}")
+
+    corridor_statement = solution_statements["proposition1_corridor"]
+    for fragment in (
+        "max G.totalWeight ((n : ℝ) * G.weights emax)",
+        "(hmax : ∀ e, G.weights e ≤ G.weights emax)",
+        "2 * β ^ 2 * n * ((ℓ : ℝ) - 1) ≤",
+    ):
+        if fragment not in corridor_statement:
+            fail("PaperClaims.proposition1_corridor does not expose the exact maximum form")
+    if not re.search(
+        r"2 \* β \^ 2 \* n \* \(\(ℓ : ℝ\) - 1\) ≤\s*"
+        r"2 \* β \^ 2 \* \(\(ℓ : ℝ\) - 1\) \^ 2 \*\s*"
+        r"max G\.totalWeight",
+        corridor_statement,
+    ):
+        fail("PaperClaims.proposition1_corridor omits the displayed inequality chain")
+
+    grounded_statement = solution_statements["groundedConditioningTransfer"]
+    for fragment in (
+        "∀ (A X Bv : Finset (Fin n))",
+        "β * (1 - β) * n / (s * Δ) ≤",
+        "∀ (left right : Finset (Fin n))",
+        "βc ^ 2 * n * ((ℓ : ℝ) - 1) ≤",
+        "∀ Δr bmax : ℝ",
+        "2 * G.totalWeight - Δr * bmax",
+    ):
+        if fragment not in grounded_statement:
+            fail("PaperClaims.groundedConditioningTransfer omits a manuscript transfer")
         if re.search(r"\brandom_[A-Za-z0-9_]*_exponential\b", theorem_block.group()):
             fail(f"PaperClaims.{local_name} uses a weakened exponential corollary")
 
@@ -285,7 +325,11 @@ def validate_sources(names: list[str]) -> None:
         "ClassicalSDDSolveBound",
         "DenseLoadingBound",
         "GraphHardPairCertificate",
+        "CorridorTopology",
     }
+    corridor_source = (ROOT / "PowerFlowLimits" / "Corridors.lean").read_text(
+        encoding="utf-8"
+    )
     for structure_name in public_structures:
         pattern = re.compile(
             rf"^structure\s+{re.escape(structure_name)}\b.*?"
@@ -293,7 +337,10 @@ def validate_sources(names: list[str]) -> None:
             re.MULTILINE | re.DOTALL,
         )
         challenge_match = pattern.search(definitions_source)
-        solution_match = pattern.search(solution_source)
+        structure_source = (
+            corridor_source if structure_name == "CorridorTopology" else solution_source
+        )
+        solution_match = pattern.search(structure_source)
         if challenge_match is None or solution_match is None:
             fail(f"could not extract public structure {structure_name}")
         if challenge_match.group().strip() != solution_match.group().strip():
