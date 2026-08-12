@@ -128,7 +128,7 @@ corpus_generation_policy_sha256 = "0e97b27700e05e0024ee79ad0b2cb1c6b0652cda7cd5b
 "query_conditions.py" = "0f83fb0a7e5950a762d119fac7071f171024bdedd10cdddebae3f2b77a69c1de"
 "treewidth_bound.jl" = "882040d47db2b6011779ca315b89d6123b05c2490f44fb830080409601be105a"
 "publication_policy.py" = "791d20ccccc3b9c3338dfda64cdb3acc8489d0162131cfdfe1cb74f1c0055020"
-"validate_survey.py" = "4c97ddfb66b5a5f9da344de67bc2e848d25ec84a1b0f3ae3db12d4321e92b833"
+"validate_survey.py" = "1cf8722b346978b8a43e9909fb17f2d07fb501303d4cf8ad2b10760058fc00b0"
 
 [outputs]
 core_json = "results.json"

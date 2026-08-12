@@ -29,13 +29,18 @@ are pinned in `uv.lock` and `publication.toml`.
   self or triple crossing, satisfying
   `1152 * (n + c_hat) <= n^2`. Failure to find such a drawing is unavailable
   evidence, not a proof that no qualifying drawing exists.
-- `Separator` is a PyMetis bisection converted into an `(s,beta)` vertex
-  separation and checked edge by edge. The table requires `beta >= 1/4` and
-  `s^2 <= 8n`.
+- `Direct METIS separator` is a PyMetis bisection converted into an `(s,beta)`
+  vertex separation and checked edge by edge. The table requires
+  `beta >= 1/4` and `s^2 <= 8n`.
 - `Treewidth` is an AMD Cholesky completion converted into a tree decomposition.
   The Python validator checks vertex and edge coverage and running intersection.
   Its width `U` is a certified upper bound, and the table requires
   `4 * (U + 1) <= n`.
+- `Balanced separator (combined)` holds when either the direct METIS
+  certificate holds or the validated treewidth certificate also satisfies
+  `(U + 1)^2 <= 8n`. The second route uses the theorem that treewidth at most
+  `U` implies a balanced vertex separator of size at most `U + 1`; it is not a
+  second separator run.
 
 Parallel branches and self loops do not alter these graph invariants and are
 collapsed. Original active branch counts remain in `results.json`. For a

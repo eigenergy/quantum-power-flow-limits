@@ -449,9 +449,17 @@ def validate(
         "pglib_variant_files": sum(len(case["equivalent_formats"]) for case in pglib),
         "planar": sum(case["planar"] for case in cases),
         "pglib_planar": sum(case["planar"] for case in pglib),
-        "separator_condition_holds": sum(case["separator"]["holds"] for case in cases),
-        "pglib_separator_condition_holds": sum(
-            case["separator"]["holds"] for case in pglib
+        "balanced_separator_condition_holds": sum(
+            _balanced_separator_holds(case) for case in cases
+        ),
+        "pglib_balanced_separator_condition_holds": sum(
+            _balanced_separator_holds(case) for case in pglib
+        ),
+        "direct_metis_separator_condition_holds": sum(
+            _direct_metis_separator_holds(case) for case in cases
+        ),
+        "pglib_direct_metis_separator_condition_holds": sum(
+            _direct_metis_separator_holds(case) for case in pglib
         ),
         "treewidth_tested": sum(case["treewidth"] is not None for case in cases),
         "treewidth_condition_holds": sum(
@@ -569,6 +577,27 @@ def np_median(values: list[float]) -> float | None:
     return math.fsum(ordered[middle - 1 : middle + 1]) / 2
 
 
+def _direct_metis_separator_holds(case: dict) -> bool:
+    """Return the retained, independently checked METIS separator verdict."""
+    return bool(case["separator"]["holds"])
+
+
+def _treewidth_implies_small_balanced_separator(case: dict) -> bool:
+    """Apply the treewidth separator theorem to a validated upper bound."""
+    treewidth = case.get("treewidth")
+    if treewidth is None or not treewidth["holds"]:
+        return False
+    n = case["graph"]["largest_component_buses"]
+    return (treewidth["upper_bound"] + 1) ** 2 <= 8 * n
+
+
+def _balanced_separator_holds(case: dict) -> bool:
+    """Combine the direct METIS and theorem-derived separator certificates."""
+    return _direct_metis_separator_holds(case) or (
+        _treewidth_implies_small_balanced_separator(case)
+    )
+
+
 def render_summary(summary: dict) -> bytes:
     return (json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n").encode()
 
@@ -579,10 +608,24 @@ def render_summary_table(summary: dict) -> bytes:
         ("PGLib variants", summary["pglib_variant_files"], summary["pglib_variant_files"]),
         ("Planar", summary["planar"], summary["cases"]),
         ("PGLib planar", summary["pglib_planar"], summary["pglib_canonical"]),
-        ("Separator certificate", summary["separator_condition_holds"], summary["cases"]),
         (
-            "PGLib separator certificate",
-            summary["pglib_separator_condition_holds"],
+            "Balanced separator (combined)",
+            summary["balanced_separator_condition_holds"],
+            summary["cases"],
+        ),
+        (
+            "PGLib balanced separator (combined)",
+            summary["pglib_balanced_separator_condition_holds"],
+            summary["pglib_canonical"],
+        ),
+        (
+            "Direct METIS separator",
+            summary["direct_metis_separator_condition_holds"],
+            summary["cases"],
+        ),
+        (
+            "PGLib direct METIS separator",
+            summary["pglib_direct_metis_separator_condition_holds"],
             summary["pglib_canonical"],
         ),
         (

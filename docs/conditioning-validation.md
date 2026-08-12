@@ -53,8 +53,11 @@ unmodified case data.
 - Nine graphs are planar.
 - The deterministic METIS certificate meets the stated separator threshold
   in 73 cases. The five failed certificates are RTE 1888, RTE 1951, RTE 2848,
-  RTE 2868, and `case3375wp`; a failed heuristic certificate does not prove
-  that no qualifying separator exists.
+  RTE 2868, and `case3375wp`. All five have a validated treewidth upper bound
+  `U` with `(U + 1)^2 <= 8n`. Since treewidth at most `U` implies a balanced
+  vertex separator of size at most `U + 1`, the combined balanced separator
+  certificate holds in all 78 cases. The direct METIS and theorem-derived
+  routes are reported separately.
 - The validated AMD tree decomposition meets the stated finite treewidth
   threshold in 76 cases. Only the 3-bus and 5-bus cases fail the numerical
   threshold, both with `U = 2`.
@@ -75,12 +78,15 @@ unmodified case data.
   of the estimate to the exact cut lower bound is `21.75`. These are cross
   sectional results, not a fitted growth law.
 
-Within the 66 canonical PGLib cases, 61 separator certificates and 64 treewidth certificates meet
-the stated thresholds. Nine are exactly planar, while 39 of the 45 cases requiring a drawing test
-meet the near planar threshold. The direct positive susceptance model is usable in 46 cases, and
-all 46 of those cases also pass the separator certificate. The recorded operating point diagnostic
-passes in 35 of the 36 PGLib cases for which it is computed. These results measure applicability;
-they do not replace the theorem premises or prove a growth law.
+Within the 66 canonical PGLib cases, 61 direct METIS certificates and 64
+treewidth certificates meet their stated thresholds. The combined balanced
+separator certificate holds in all 66 cases. Nine are exactly planar, while
+39 of the 45 cases requiring a drawing test meet the near planar threshold.
+The direct positive susceptance model is usable in 46 cases, and all 46 of
+those cases also pass the direct METIS certificate. The recorded operating
+point diagnostic passes in 35 of the 36 PGLib cases for which it is computed.
+These results measure applicability; they do not replace the theorem premises
+or prove a growth law.
 
 ## Cross format findings
 

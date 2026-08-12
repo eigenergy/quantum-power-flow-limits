@@ -11,6 +11,7 @@ import pytest
 
 from publication_policy import environment_errors, load_policy, provenance_errors
 from validate_survey import (
+    _balanced_separator_holds,
     canonical_artifact,
     deterministic_gzip,
     render_summary,
@@ -165,9 +166,28 @@ def test_complete_publication_fixture_passes(publication_document, policy) -> No
     assert summary["pglib_variant_files"] == 132
     assert summary["treewidth_tested"] == 78
     assert summary["pglib_treewidth_tested"] == 66
-    assert summary["pglib_separator_condition_holds"] == 66
+    assert summary["pglib_balanced_separator_condition_holds"] == 66
+    assert summary["pglib_direct_metis_separator_condition_holds"] == 66
     assert summary["pglib_weight_model_usable"] == 0
     assert summary["pglib_base_rhs_tested"] == 0
+
+
+def test_balanced_separator_combines_direct_and_treewidth_certificates() -> None:
+    case = {
+        "graph": {"largest_component_buses": 10_000},
+        "separator": {"holds": False},
+        "treewidth": {"holds": True, "upper_bound": 100},
+    }
+    assert _balanced_separator_holds(case)
+
+    case["treewidth"]["upper_bound"] = 500
+    assert not _balanced_separator_holds(case)
+
+    case["treewidth"] = {"holds": False, "upper_bound": 100}
+    assert not _balanced_separator_holds(case)
+
+    case["separator"]["holds"] = True
+    assert _balanced_separator_holds(case)
 
 
 @pytest.mark.parametrize("field", ["treewidth_enabled", "near_planarity_enabled"])
@@ -355,6 +375,10 @@ def test_retained_corpus_passes_current_semantic_validation(policy) -> None:
     )
     assert summary["cases"] == 78
     assert summary["treewidth_tested"] == 78
+    assert summary["balanced_separator_condition_holds"] == 78
+    assert summary["direct_metis_separator_condition_holds"] == 73
+    assert summary["pglib_balanced_separator_condition_holds"] == 66
+    assert summary["pglib_direct_metis_separator_condition_holds"] == 61
 
 
 def test_retained_result_matches_policy() -> None:
