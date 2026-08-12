@@ -35,11 +35,10 @@ The repository represents the second item as the theorem valued premise
 and near planar public claims are therefore proved relative to Lipton–Tarjan,
 with all graph construction and projection steps checked in Lean.
 
-For random susceptances, the finite Hoeffding lemmas retain their exact
-probability exponent without a mean ratio assumption. The public grid family
-wrappers assume a constant `rho > 0` and the mean bound
-`rho * m * b_max <= sum_e E[b_e]`. They return the uniform floor
-`1 - exp(-2 * epsilon^2 * rho^2 * m)` used in the letter.
+For random susceptances, the public Proposition 2 wrappers retain the exact
+Hoeffding probability
+`1 - exp(-2 * epsilon^2 * (sum_e E[b_e])^2 / (m * b_max^2))`.
+They impose no mean to maximum ratio assumption.
 
 Proposition 3 is stated on the zero sum subspace. Lean proves that this real
 Hilbert space has dimension `n - 1`, proves `n - 1 >= n / 2` for `n >= 2`, and

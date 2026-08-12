@@ -51,6 +51,12 @@ EXPECTED_NONFORMAL_CLAIMS = [
     ("unit_commitment", "discussion-not-formalized"),
     ("hybrid_algorithms", "discussion-not-formalized"),
 ]
+EXACT_RANDOM_INTERFACES = {
+    "proposition2_randomSeparator": "random_kappa_bound",
+    "proposition2_randomTreewidth": "random_treewidth_kappa_bound",
+    "proposition2_randomPlanar": "random_kappa_bound_of_sqrt_separator_partition",
+    "proposition2_randomCorridor": "random_corridor_kappa_bound",
+}
 
 
 class ValidationError(Exception):
@@ -242,6 +248,26 @@ def validate_sources(names: list[str]) -> None:
         if challenge_statement != solution_statement:
             fail(f"PaperClaims.{local_name} differs between Challenge and solution source")
         solution_statements[local_name] = solution_statement
+
+    exact_exponent = (
+        "1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 / "
+        "(m * bmax ^ 2)) ≤"
+    )
+    for local_name, interface in EXACT_RANDOM_INTERFACES.items():
+        statement = solution_statements[local_name]
+        if "(hρ :" in statement or "(hmean :" in statement or exact_exponent not in statement:
+            fail(f"PaperClaims.{local_name} does not expose the exact random interface")
+        theorem_block = re.search(
+            rf"^theorem\s+{re.escape(local_name)}\b.*?(?=^/--|^theorem|\Z)",
+            solution_source,
+            re.MULTILINE | re.DOTALL,
+        )
+        if theorem_block is None or not re.search(
+            rf"\b{re.escape(interface)}\b", theorem_block.group()
+        ):
+            fail(f"PaperClaims.{local_name} does not use {interface}")
+        if re.search(r"\brandom_[A-Za-z0-9_]*_exponential\b", theorem_block.group()):
+            fail(f"PaperClaims.{local_name} uses a weakened exponential corollary")
 
     sorry_count = len(SORRY_RE.findall(challenge_source))
     if sorry_count != len(names):

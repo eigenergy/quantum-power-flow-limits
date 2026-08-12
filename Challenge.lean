@@ -106,7 +106,7 @@ theorem proposition2_randomSeparator {sample : Type*} [MeasurableSpace sample]
     (hmeasurable : ∀ e, Measurable (weight e))
     (hindependent : ProbabilityTheory.iIndepFun weight measure)
     (bmax : ℝ) (hbounded : ∀ ω, ∀ e, weight e ω ∈ Set.Ioc 0 bmax)
-    (A X B : Finset (Fin n)) (s Δ β ε ρ : ℝ)
+    (A X B : Finset (Fin n)) (s Δ β ε : ℝ)
     (hcover : A ∪ X ∪ B = Finset.univ)
     (hdisjoint : Disjoint (A ∪ X) B)
     (hnoCrossing : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ B) ∧
@@ -115,10 +115,10 @@ theorem proposition2_randomSeparator {sample : Type*} [MeasurableSpace sample]
     (hdegree : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
     (hβ : 0 < β) (hβhalf : β ≤ 1 / 2)
     (hA : β * n ≤ ((A ∪ X).card : ℝ)) (hB : β * n ≤ (B.card : ℝ))
-    (hdenominator : 0 < s * Δ * bmax) (hε : 0 < ε) (hρ : 0 < ρ)
-    (hmean : ρ * (m : ℝ) * bmax ≤ ∑ e, ∫ ω, weight e ω ∂measure)
+    (hdenominator : 0 < s * Δ * bmax) (hε : 0 < ε)
     (hconn : G.CombinatoriallyConnected) :
-    1 - Real.exp (-2 * ε ^ 2 * ρ ^ 2 * m) ≤
+    1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
+        (m * bmax ^ 2)) ≤
       measure.real {ω | 2 * β * (1 - β) *
           ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) / (s * Δ * bmax) ≤
         effectiveConditionNumber
@@ -135,13 +135,13 @@ theorem proposition2_randomTreewidth {sample : Type*} [MeasurableSpace sample]
     (bmax : ℝ) (hbounded : ∀ ω, ∀ e, weight e ω ∈ Set.Ioc 0 bmax)
     (D : RootedTreeDecomposition G.toSimpleGraph k)
     (hn : 0 < n) (hwidth : D.HasWidthAtMost τ) (hτ : τ + 1 ≤ n / 4)
-    (Δ ε ρ : ℝ)
+    (Δ ε : ℝ)
     (hdegree : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
     (hdenominator : 0 < (((τ : ℝ) + 1) * Δ * bmax))
-    (hε : 0 < ε) (hρ : 0 < ρ)
-    (hmean : ρ * (m : ℝ) * bmax ≤ ∑ e, ∫ ω, weight e ω ∂measure)
+    (hε : 0 < ε)
     (hconn : G.CombinatoriallyConnected) :
-    1 - Real.exp (-2 * ε ^ 2 * ρ ^ 2 * m) ≤
+    1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
+        (m * bmax ^ 2)) ≤
       measure.real {ω | 3 / 8 * ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) /
           (((τ : ℝ) + 1) * Δ * bmax) ≤
         effectiveConditionNumber
@@ -156,13 +156,13 @@ theorem proposition2_randomPlanar {sample : Type*} [MeasurableSpace sample]
     (hmeasurable : ∀ e, Measurable (weight e))
     (hindependent : ProbabilityTheory.iIndepFun weight measure)
     (bmax : ℝ) (hbounded : ∀ ω, ∀ e, weight e ω ∈ Set.Ioc 0 bmax)
-    (hplanar : Planar _ G.toSimpleGraph) (hn : 288 ≤ n) (Δ ε ρ : ℝ)
+    (hplanar : Planar _ G.toSimpleGraph) (hn : 288 ≤ n) (Δ ε : ℝ)
     (hdegree : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
     (hdenominator : 0 < Real.sqrt (8 * n) * Δ * bmax)
-    (hε : 0 < ε) (hρ : 0 < ρ)
-    (hmean : ρ * (m : ℝ) * bmax ≤ ∑ e, ∫ ω, weight e ω ∂measure)
+    (hε : 0 < ε)
     (hconn : G.CombinatoriallyConnected) :
-    1 - Real.exp (-2 * ε ^ 2 * ρ ^ 2 * m) ≤
+    1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
+        (m * bmax ^ 2)) ≤
       measure.real {ω | 5 / 18 * ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) /
           (Real.sqrt (8 * n) * Δ * bmax) ≤
         effectiveConditionNumber
@@ -178,7 +178,7 @@ theorem proposition2_randomCorridor {sample : Type*} [MeasurableSpace sample]
     (bmax : ℝ) (hbounded : ∀ ω, ∀ e, weight e ω ∈ Set.Ioc 0 bmax)
     (left right : Finset (Fin n)) (ℓ : ℕ) (hℓ : 2 ≤ ℓ)
     (path : Fin ℓ → Fin n) (pathEdges : Finset (Fin m)) (hpathEdges : pathEdges.Nonempty)
-    (β ε ρ : ℝ) (hpathInjective : Function.Injective path)
+    (β ε : ℝ) (hpathInjective : Function.Injective path)
     (hleft : ∀ i, path i ∉ left) (hright : ∀ i, path i ∉ right)
     (hdisjoint : Disjoint left right)
     (hpath : ∀ e ∈ pathEdges, ∃ i : Fin ℓ, ∃ h : i.val + 1 < ℓ,
@@ -191,10 +191,10 @@ theorem proposition2_randomCorridor {sample : Type*} [MeasurableSpace sample]
        (G.negEndpoint e ∈ right ∨ G.negEndpoint e = path ⟨ℓ - 1, by omega⟩)))
     (hβ : 0 < β) (hleftSize : β * n ≤ (left.card : ℝ))
     (hrightSize : β * n ≤ (right.card : ℝ))
-    (hε : 0 < ε) (hρ : 0 < ρ)
-    (hmean : ρ * (m : ℝ) * bmax ≤ ∑ e, ∫ ω, weight e ω ∂measure)
+    (hε : 0 < ε)
     (hconn : G.CombinatoriallyConnected) :
-    1 - Real.exp (-2 * ε ^ 2 * ρ ^ 2 * m) ≤
+    1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
+        (m * bmax ^ 2)) ≤
       measure.real {ω | 2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 *
           ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) /
             (∑ e ∈ pathEdges, weight e ω) ≤

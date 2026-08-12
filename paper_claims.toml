@@ -43,19 +43,19 @@ external_dependencies = []
 [[claim]]
 name = "PaperClaims.proposition2_randomSeparator"
 status = "proved"
-summary = "Exponential probability bound for independent bounded weights"
+summary = "Exact Hoeffding probability bound for independent bounded weights"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.proposition2_randomTreewidth"
 status = "proved"
-summary = "Random weight transfer from a rooted tree decomposition"
+summary = "Exact random weight transfer from a rooted tree decomposition"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.proposition2_randomPlanar"
 status = "proved-relative-to-cited-result"
-summary = "Random weight transfer from a planarity certificate and the cited separator theorem"
+summary = "Exact random weight transfer from a planarity certificate and the cited separator theorem"
 external_dependencies = ["Lipton-Tarjan planar separator theorem"]
 citation = """
 Lipton and Tarjan, A Separator Theorem for Planar Graphs,
@@ -65,7 +65,7 @@ interface = "LiptonTarjanVertexCostTheorem"
 [[claim]]
 name = "PaperClaims.proposition2_randomCorridor"
 status = "proved"
-summary = "Random weight transfer for the corridor bound"
+summary = "Exact random weight transfer for the corridor bound"
 external_dependencies = []
 
 [[claim]]
