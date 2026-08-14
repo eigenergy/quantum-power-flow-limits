@@ -133,3 +133,24 @@ jobs:
         run: |
           uv run --project experiments --no-sync python experiments/publication_policy.py --check-files
           uv run --project experiments --no-sync python experiments/pglib_corpus.py --check-derived
+
+  powerio-compatibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13.14"
+
+      - name: Install the released PowerIO wheel
+        run: python -m pip install powerio==0.8.3 pytest==9.0.2 networkx==3.5
+
+      - name: Run the PowerIO surface tests
+        run: python -m pytest -q experiments/tests/test_powerio_compat.py

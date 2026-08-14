@@ -31,10 +31,10 @@ THEOREM_RE = re.compile(r"^theorem\s+([A-Za-z][A-Za-z0-9_]*)\b", re.MULTILINE)
 SORRY_RE = re.compile(r"\bsorry\b")
 EXPECTED_ACTIONS = Counter(
     {
-        "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1": 2,
+        "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1": 3,
         "leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9": 1,
         "actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e": 1,
-        "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97": 1,
+        "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97": 2,
     }
 )
 EXPECTED_TOOL_PINS = {

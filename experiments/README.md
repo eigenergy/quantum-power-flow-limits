@@ -19,6 +19,12 @@ Every run requires Python 3.13.14, uv 0.12.3, Julia 1.12.6, and Graphviz
 Graphviz version before parsing case data. Python packages and source inputs
 are pinned in `uv.lock` and `publication.toml`.
 
+`tests/test_powerio_compat.py` states the PowerIO surface these scripts
+read. The compatibility CI job runs it against the newest released PowerIO
+wheel, currently 0.8.3, so an upstream change surfaces there first. The
+retained artifacts keep the 0.7.3 provenance in `publication.toml` until a
+full rerun regenerates them.
+
 ## Certificate semantics
 
 - `Planar` is the exact planarity decision for the underlying simple graph.
