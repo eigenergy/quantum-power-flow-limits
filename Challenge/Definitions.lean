@@ -286,89 +286,18 @@ def zeroSumSubspace (n : ℕ) : Submodule ℝ (EuclideanSpace ℝ (Fin n)) where
     simp only [Set.mem_setOf_eq, PiLp.smul_apply, smul_eq_mul]
     rw [← Finset.mul_sum, hx, mul_zero]
 
-/-- The exact graph data asserted by Proposition 1's corridor prose. The path branches are
-indexed once, the bus sets form a disjoint cover, and every other branch stays inside one bulk
-together with its adjacent corridor endpoint. -/
-structure CorridorTopology (G : WeightedGraph n m)
-    (VS VT : Finset (Fin n)) (ℓ : ℕ) (p : Fin ℓ → Fin n)
-    (EP : Finset (Fin m)) where
-  length_two : 2 ≤ ℓ
-  path_injective : Function.Injective p
-  /-- The branch joining each consecutive pair of path vertices. -/
-  pathEdge : Fin (ℓ - 1) → Fin m
-  pathEdge_injective : Function.Injective pathEdge
-  pathEdge_range : EP = Finset.univ.image pathEdge
-  pathEdge_endpoints : ∀ i, ∃ j : Fin ℓ, ∃ h : j.val + 1 < ℓ,
-    j.val = i.val ∧
-      ((G.posEndpoint (pathEdge i) = p j ∧
-          G.negEndpoint (pathEdge i) = p ⟨j.val + 1, h⟩) ∨
-        (G.posEndpoint (pathEdge i) = p ⟨j.val + 1, h⟩ ∧
-          G.negEndpoint (pathEdge i) = p j))
-  path_disjoint_left : ∀ i, p i ∉ VS
-  path_disjoint_right : ∀ i, p i ∉ VT
-  bulks_disjoint : Disjoint VS VT
-  vertex_cover : VS ∪ Finset.univ.image p ∪ VT = Finset.univ
-  nonpath_internal : ∀ e ∉ EP,
-    ((G.posEndpoint e ∈ VS ∨ G.posEndpoint e = p ⟨0, by omega⟩) ∧
-      (G.negEndpoint e ∈ VS ∨ G.negEndpoint e = p ⟨0, by omega⟩)) ∨
-    ((G.posEndpoint e ∈ VT ∨ G.posEndpoint e = p ⟨ℓ - 1, by omega⟩) ∧
-      (G.negEndpoint e ∈ VT ∨ G.negEndpoint e = p ⟨ℓ - 1, by omega⟩))
-
-/-- Original buses together with the vertices inserted at crossings. -/
-abbrev PlanarizedVertex (n c : ℕ) := Fin n ⊕ Fin c
-
-/-- Combinatorial data of a drawing with finitely many ordinary pairwise crossings. -/
-structure CrossingSchedule (G : WeightedGraph n m) (c : ℕ) where
-  carriers : Fin c → Fin m × Fin m
-  carriers_ne : ∀ x, (carriers x).1 ≠ (carriers x).2
-  along : Fin m → List (Fin c)
-  along_nodup : ∀ e, (along e).Nodup
-  mem_along_iff : ∀ e x, x ∈ along e ↔ e = (carriers x).1 ∨ e = (carriers x).2
-
-namespace CrossingSchedule
-
-variable {c : ℕ} {G : WeightedGraph n m} (S : CrossingSchedule G c)
-
-def route (e : Fin m) : List (PlanarizedVertex n c) :=
-  Sum.inl (G.negEndpoint e) :: (S.along e).map Sum.inr ++ [Sum.inl (G.posEndpoint e)]
-
-def Consecutive {V : Type*} (vertices : List V) (u v : V) : Prop :=
-  ∃ before after, vertices = before ++ u :: v :: after
-
-def planarizedGraph : SimpleGraph (PlanarizedVertex n c) where
-  Adj u v := u ≠ v ∧ ∃ e, Consecutive (S.route e) u v ∨ Consecutive (S.route e) v u
-  symm := by
-    rintro u v ⟨hne, e, h⟩
-    exact ⟨hne.symm, e, h.symm⟩
-  loopless := ⟨by simp⟩
-
-end CrossingSchedule
-
-/-- An external notion of planarity. -/
-abbrev PlanarityPredicate := (V : Type) → SimpleGraph V → Prop
-
-/-- Quantitative output of the vertex cost planar separator theorem. -/
-structure VertexCostPartition {V : Type} [Fintype V] [DecidableEq V]
-    (H : SimpleGraph V) (cost : V → ℝ) where
-  left : Finset V
-  separator : Finset V
-  right : Finset V
-  cover : left ∪ separator ∪ right = Finset.univ
-  disjoint_left_separator : Disjoint left separator
-  disjoint_left_right : Disjoint left right
-  disjoint_separator_right : Disjoint separator right
-  no_left_right : ∀ u v, H.Adj u v → ¬(u ∈ left ∧ v ∈ right)
-  separator_card_le : (separator.card : ℝ) ≤ Real.sqrt (8 * Fintype.card V)
-  left_cost_le : ∑ v ∈ left, cost v ≤ 2 / 3
-  right_cost_le : ∑ v ∈ right, cost v ≤ 2 / 3
-
-/-- The precise external theorem boundary used by the public claims. -/
-def LiptonTarjanVertexCostTheorem (Planar : PlanarityPredicate) : Prop :=
-  ∀ (V : Type) [Fintype V] [DecidableEq V] (H : SimpleGraph V) (cost : V → ℝ),
-    (∀ v, 0 ≤ cost v) → (∑ v, cost v) ≤ 1 → Planar V H →
-      Nonempty (VertexCostPartition H cost)
-
 namespace PaperClaims
+
+structure LiptonTarjanPartition (G : WeightedGraph n m)
+    (A X B : Finset (Fin n)) : Prop where
+  order : 288 ≤ n
+  cover : A ∪ X ∪ B = Finset.univ
+  disjoint : Disjoint (A ∪ X) B
+  noCrossing : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ B) ∧
+    ¬(G.posEndpoint e ∈ B ∧ G.negEndpoint e ∈ A)
+  separatorSize : (X.card : ℝ) ≤ Real.sqrt (8 * n)
+  leftSize : (A.card : ℝ) ≤ 2 * n / 3
+  rightSize : (B.card : ℝ) ≤ 2 * n / 3
 
 structure ControlledPreparationHybridBound {d : ℕ}
     (pair : RHSQueryHardness.BalancedModePair d) (qSolve : ℕ)

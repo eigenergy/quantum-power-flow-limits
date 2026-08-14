@@ -489,42 +489,6 @@ theorem treewidth_kappa_bound_of_tree_decomposition (G : WeightedGraph n m)
   exact treewidth_kappa_bound_of_balanced_bag G X (τ : ℝ) Δ bmax hn
     hX_tau hX_quarter hcomponent hdeg hbmax hconn
 
-/-- Corollary 1(i), topology-only form, from the standard tree decomposition axioms. -/
-theorem treewidth_kappa_bound_of_tree_decomposition_topological (G : WeightedGraph n m)
-    (D : RootedTreeDecomposition G.toSimpleGraph k)
-    (hn : 0 < n) (hwidth : D.HasWidthAtMost τ) (hτ : τ + 1 ≤ n / 4)
-    (Δ : ℝ)
-    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
-    (hconn : G.CombinatoriallyConnected) :
-    3 / 8 * n / (((τ : ℝ) + 1) * Δ) ≤
-      effectiveConditionNumber G (fun _ ↦ 1) := by
-  obtain ⟨X, hX_width, hcomponent⟩ :=
-    G.exists_balanced_bag_of_tree_decomposition D hn hwidth
-  have hX_tau : (X.card : ℝ) ≤ (τ : ℝ) + 1 := by exact_mod_cast hX_width
-  have hX_quarter_nat : X.card ≤ n / 4 := hX_width.trans hτ
-  have hX_quarter : (X.card : ℝ) ≤ (n : ℝ) / 4 := by
-    have hcast : (X.card : ℝ) ≤ ((n / 4 : ℕ) : ℝ) := by exact_mod_cast hX_quarter_nat
-    exact hcast.trans Nat.cast_div_le
-  exact treewidth_kappa_bound_of_balanced_bag_topological G X (τ : ℝ) Δ hn
-    hX_tau hX_quarter hcomponent hdeg hconn
-
-/-- The weighted and topology-only tree decomposition bounds hold simultaneously. -/
-theorem treewidth_kappa_bound_of_tree_decomposition_combined (G : WeightedGraph n m)
-    (D : RootedTreeDecomposition G.toSimpleGraph k)
-    (hn : 0 < n) (hwidth : D.HasWidthAtMost τ) (hτ : τ + 1 ≤ n / 4)
-    (Δ bmax : ℝ)
-    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
-    (hbmax : ∀ e, G.weights e ≤ bmax)
-    (hconn : G.CombinatoriallyConnected) :
-    max (3 / 8 * G.totalWeight / (((τ : ℝ) + 1) * Δ * bmax))
-        (3 / 8 * n / (((τ : ℝ) + 1) * Δ)) ≤
-      effectiveConditionNumber G (fun _ ↦ 1) := by
-  apply max_le
-  · exact G.treewidth_kappa_bound_of_tree_decomposition D hn hwidth hτ Δ bmax
-      hdeg hbmax hconn
-  · exact G.treewidth_kappa_bound_of_tree_decomposition_topological D hn hwidth hτ Δ
-      hdeg hconn
-
 end WeightedGraph
 
 end

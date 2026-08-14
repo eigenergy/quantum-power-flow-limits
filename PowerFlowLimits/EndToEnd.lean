@@ -80,6 +80,148 @@ theorem e2e_observable_lower_bound (nn κ cost c₁ c₃ : ℝ)
     c₁ * (c₃ * nn) ≤ cost :=
   le_trans (mul_le_mul_of_nonneg_left hκ hc₁.le) hcost
 
+/-- Joint hard-family form of Proposition 3.  A code of dimension proportional to `nn` is
+embedded in slow balanced Laplacian modes.  The right hand side oracle exposes that code with
+phase `phase`; `horacle` is the fractional-phase direct-sum lower bound, and `hattenuation`
+records suppression by the fast/slow inverse gain ratio `gain`.  Unlike a multiplication of two
+independent worst-case statements, all premises concern the same coded family. -/
+theorem joint_hard_family_readout_lower_bound
+    (nn ε κ gain code phase queries cD cQ cE cG : ℝ)
+    (hn : 0 < nn) (hε : 0 < ε) (hgain : 0 < gain)
+    (hcD : 0 < cD) (hcQ : 0 < cQ) (hcE : 0 < cE) (hcG : 0 < cG)
+    (hqueries : 0 ≤ queries)
+    (hcode : cD * nn ≤ code)
+    (horacle : cQ * code ≤ queries * phase)
+    (hattenuation : phase ≤ cE * ε / gain)
+    (hcondition : κ ≤ cG * gain) :
+    cQ * cD * (nn * κ) / (cE * cG * ε) ≤ queries := by
+  have hcode' : cQ * (cD * nn) ≤ cQ * code :=
+    mul_le_mul_of_nonneg_left hcode hcQ.le
+  have hphase' : queries * phase ≤ queries * (cE * ε / gain) :=
+    mul_le_mul_of_nonneg_left hattenuation hqueries
+  have hbase : cQ * cD * nn ≤ queries * (cE * ε / gain) := by
+    calc
+      cQ * cD * nn = cQ * (cD * nn) := by ring
+      _ ≤ cQ * code := hcode'
+      _ ≤ queries * phase := horacle
+      _ ≤ queries * (cE * ε / gain) := hphase'
+  have hbase_gain : cQ * cD * nn * gain ≤ queries * (cE * ε) := by
+    have h := mul_le_mul_of_nonneg_right hbase hgain.le
+    calc
+      cQ * cD * nn * gain ≤ queries * (cE * ε / gain) * gain := h
+      _ = queries * (cE * ε) := by field_simp
+  have hcondition' : cQ * cD * nn * κ ≤ (cQ * cD * nn * gain) * cG := by
+    have hleft : 0 ≤ cQ * cD * nn := by positivity
+    have h := mul_le_mul_of_nonneg_left hcondition hleft
+    nlinarith
+  have hproduct : cQ * cD * (nn * κ) ≤ (cE * cG * ε) * queries := by
+    calc
+      cQ * cD * (nn * κ) = cQ * cD * nn * κ := by ring
+      _ ≤ (cQ * cD * nn * gain) * cG := hcondition'
+      _ ≤ (queries * (cE * ε)) * cG :=
+        mul_le_mul_of_nonneg_right hbase_gain hcG.le
+      _ = (cE * cG * ε) * queries := by ring
+  apply (div_le_iff₀ (by positivity : 0 < cE * cG * ε)).2
+  simpa [mul_comm, mul_left_comm, mul_assoc] using hproduct
+
+/-- If the same joint family has `κ = Ω(nn)`, its full readout query lower bound is
+`Ω(nn²/ε)`. -/
+theorem joint_hard_family_grid_lower_bound
+    (nn ε κ gain code phase queries cD cQ cE cG cK : ℝ)
+    (hn : 0 < nn) (hε : 0 < ε) (hgain : 0 < gain)
+    (hcD : 0 < cD) (hcQ : 0 < cQ) (hcE : 0 < cE) (hcG : 0 < cG)
+    (hqueries : 0 ≤ queries)
+    (hcode : cD * nn ≤ code)
+    (horacle : cQ * code ≤ queries * phase)
+    (hattenuation : phase ≤ cE * ε / gain)
+    (hcondition : κ ≤ cG * gain)
+    (hkappaLinear : cK * nn ≤ κ) :
+    cQ * cD * cK * nn ^ 2 / (cE * cG * ε) ≤ queries := by
+  have h := joint_hard_family_readout_lower_bound nn ε κ gain code phase queries
+    cD cQ cE cG hn hε hgain hcD hcQ hcE hcG hqueries hcode horacle
+    hattenuation hcondition
+  apply le_trans ?_ h
+  have hnum : cQ * cD * cK * nn ^ 2 ≤ cQ * cD * (nn * κ) := by
+    have hnonneg : 0 ≤ cQ * cD * nn := by positivity
+    have hmul := mul_le_mul_of_nonneg_left hkappaLinear hnonneg
+    nlinarith
+  exact div_le_div_of_nonneg_right hnum (by positivity)
+
+/-- If the same joint family has `κ = Ω(nn²)`, its full readout query lower bound is
+`Ω(nn³/ε)`. -/
+theorem joint_hard_family_corridor_lower_bound
+    (nn ε κ gain code phase queries cD cQ cE cG cK : ℝ)
+    (hn : 0 < nn) (hε : 0 < ε) (hgain : 0 < gain)
+    (hcD : 0 < cD) (hcQ : 0 < cQ) (hcE : 0 < cE) (hcG : 0 < cG)
+    (hqueries : 0 ≤ queries)
+    (hcode : cD * nn ≤ code)
+    (horacle : cQ * code ≤ queries * phase)
+    (hattenuation : phase ≤ cE * ε / gain)
+    (hcondition : κ ≤ cG * gain)
+    (hkappaQuadratic : cK * nn ^ 2 ≤ κ) :
+    cQ * cD * cK * nn ^ 3 / (cE * cG * ε) ≤ queries := by
+  have h := joint_hard_family_readout_lower_bound nn ε κ gain code phase queries
+    cD cQ cE cG hn hε hgain hcD hcQ hcE hcG hqueries hcode horacle
+    hattenuation hcondition
+  apply le_trans ?_ h
+  have hnum : cQ * cD * cK * nn ^ 3 ≤ cQ * cD * (nn * κ) := by
+    have hnonneg : 0 ≤ cQ * cD * nn := by positivity
+    have hmul := mul_le_mul_of_nonneg_left hkappaQuadratic hnonneg
+    nlinarith
+  exact div_le_div_of_nonneg_right hnum (by positivity)
+
+/-- A joint `Ω(nn·κ/ε)` query lower bound exceeds a nearly linear classical upper bound once
+the condition number is above the displayed constant and logarithmic threshold. -/
+theorem joint_product_exceeds_classical
+    (nn ε κ queries classicalTime lowerConstant C logFactor : ℝ)
+    (hn : 0 < nn) (hε : 0 < ε)
+    (hquantum : lowerConstant * (nn * κ) / ε ≤ queries)
+    (hclassical : classicalTime ≤ C * nn * logFactor)
+    (hthreshold : C * logFactor * ε < lowerConstant * κ) :
+    classicalTime < queries := by
+  have hlinear : C * nn * logFactor < lowerConstant * (nn * κ) / ε := by
+    apply (lt_div_iff₀ hε).2
+    have h := mul_lt_mul_of_pos_left hthreshold hn
+    nlinarith
+  exact lt_of_le_of_lt hclassical (lt_of_lt_of_le hlinear hquantum)
+
+/-- Separate full readout and two-state right hand side bounds. This diagnostic theorem does not
+use the coded joint family above. -/
+theorem qls_state_readout_lower_bound
+    (nn ε κ fullReadout rhsReadout total cT cR : ℝ)
+    (hfull : cT * (nn / ε) ≤ fullReadout)
+    (hrhs : cR * κ ≤ rhsReadout)
+    (hfullTotal : fullReadout ≤ total)
+    (hrhsTotal : rhsReadout ≤ total) :
+    max (cT * (nn / ε)) (cR * κ) ≤ total :=
+  max_le (le_trans hfull hfullTotal) (le_trans hrhs hrhsTotal)
+
+/-- Separate-bound diagnostic on sparse separator grid families. -/
+theorem qls_state_readout_grid_lower_bound
+    (nn ε κ fullReadout rhsReadout total cT cR cK : ℝ)
+    (hcR : 0 ≤ cR)
+    (hκ : cK * nn ≤ κ)
+    (hfull : cT * (nn / ε) ≤ fullReadout)
+    (hrhs : cR * κ ≤ rhsReadout)
+    (hfullTotal : fullReadout ≤ total)
+    (hrhsTotal : rhsReadout ≤ total) :
+    max (cT * (nn / ε)) (cR * (cK * nn)) ≤ total :=
+  max_le (le_trans hfull hfullTotal)
+    (le_trans (mul_le_mul_of_nonneg_left hκ hcR) (le_trans hrhs hrhsTotal))
+
+/-- Separate-bound diagnostic on macroscopic corridor families. -/
+theorem qls_state_readout_corridor_lower_bound
+    (nn ε κ fullReadout rhsReadout total cT cR cK : ℝ)
+    (hcR : 0 ≤ cR)
+    (hκ : cK * nn ^ 2 ≤ κ)
+    (hfull : cT * (nn / ε) ≤ fullReadout)
+    (hrhs : cR * κ ≤ rhsReadout)
+    (hfullTotal : fullReadout ≤ total)
+    (hrhsTotal : rhsReadout ≤ total) :
+    max (cT * (nn / ε)) (cR * (cK * nn ^ 2)) ≤ total :=
+  max_le (le_trans hfull hfullTotal)
+    (le_trans (mul_le_mul_of_nonneg_left hκ hcR) (le_trans hrhs hrhsTotal))
+
 /-- On a corridor family, a quadratic right hand side oracle lower bound exceeds a linear
 explicit-input classical upper bound once the displayed constant/polylog threshold holds. -/
 theorem corridor_rhs_oracle_exceeds_classical

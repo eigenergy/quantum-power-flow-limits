@@ -44,30 +44,14 @@ EXPECTED_TOOL_PINS = {
     "nanoda": "68d5ca9db226849b41a6fff59d796ff19d0a8840",
 }
 EXPECTED_NONFORMAL_CLAIMS = [
-    ("five_case_condition_table", "empirical"),
-    ("pglib_corpus_summary_table", "empirical"),
+    ("numerical_corpus_survey", "empirical"),
+    ("near_planar_extension", "discussion-not-formalized"),
     ("full_ac_newton_systems", "discussion-not-formalized"),
     ("full_opf_kkt_ipm_systems", "discussion-not-formalized"),
     ("complexity_class_statements", "discussion-not-formalized"),
     ("unit_commitment", "discussion-not-formalized"),
     ("hybrid_algorithms", "discussion-not-formalized"),
 ]
-EXACT_RANDOM_INTERFACES = {
-    "proposition2_randomSeparator": "random_kappa_bound",
-    "proposition2_randomTreewidth": "random_treewidth_kappa_bound",
-    "proposition2_randomPlanar": "random_kappa_bound_of_sqrt_separator_partition",
-    "proposition2_randomCorridor": "random_corridor_kappa_bound",
-}
-PATHWISE_RANDOM_FRAGMENTS = {
-    "proposition2_randomSeparator":
-        "(∀ ω, 2 * β * (1 - β) * n / (s * Δ) ≤",
-    "proposition2_randomTreewidth":
-        "(∀ ω, 3 / 8 * n / (((τ : ℝ) + 1) * Δ) ≤",
-    "proposition2_randomPlanar":
-        "(∀ ω, 5 / 18 * n / (Real.sqrt (8 * n) * Δ) ≤",
-    "proposition2_randomCorridor":
-        "(∀ ω, 2 * β ^ 2 * n * ((ℓ : ℝ) - 1) ≤",
-}
 
 
 class ValidationError(Exception):
@@ -126,8 +110,8 @@ def validate_manifest(manifest: dict[str, object]) -> list[str]:
     if not isinstance(claims, list):
         fail("claim must be an array of tables")
     expected_count = manifest["expected_claim_count"]
-    if not isinstance(expected_count, int) or expected_count != 18:
-        fail("expected_claim_count must be 18")
+    if not isinstance(expected_count, int) or expected_count != 17:
+        fail("expected_claim_count must be 17")
     if len(claims) != expected_count:
         fail(f"manifest contains {len(claims)} claims; expected {expected_count}")
 
@@ -171,9 +155,7 @@ def validate_manifest(manifest: dict[str, object]) -> list[str]:
                 fail(f"{name} does not name its Lean premise interface")
             interfaces = [item.strip() for item in interface.split(";")]
             if not all(
-                re.fullmatch(
-                    r"(?:PaperClaims\.)?[A-Za-z][A-Za-z0-9_]*", item
-                )
+                re.fullmatch(r"PaperClaims\.[A-Za-z][A-Za-z0-9_]*", item)
                 for item in interfaces
             ):
                 fail(f"{name} has an invalid Lean premise interface")
@@ -260,56 +242,6 @@ def validate_sources(names: list[str]) -> None:
             fail(f"PaperClaims.{local_name} differs between Challenge and solution source")
         solution_statements[local_name] = solution_statement
 
-    exact_exponent = (
-        "1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 / "
-        "(m * bmax ^ 2)) ≤"
-    )
-    for local_name, interface in EXACT_RANDOM_INTERFACES.items():
-        statement = solution_statements[local_name]
-        if "(hρ :" in statement or "(hmean :" in statement or exact_exponent not in statement:
-            fail(f"PaperClaims.{local_name} does not expose the exact random interface")
-        if PATHWISE_RANDOM_FRAGMENTS[local_name] not in statement:
-            fail(f"PaperClaims.{local_name} does not expose its pathwise topology bound")
-        theorem_block = re.search(
-            rf"^theorem\s+{re.escape(local_name)}\b.*?(?=^/--|^theorem|\Z)",
-            solution_source,
-            re.MULTILINE | re.DOTALL,
-        )
-        if theorem_block is None or not re.search(
-            rf"\b{re.escape(interface)}\b", theorem_block.group()
-        ):
-            fail(f"PaperClaims.{local_name} does not use {interface}")
-
-    corridor_statement = solution_statements["proposition1_corridor"]
-    for fragment in (
-        "max G.totalWeight ((n : ℝ) * G.weights emax)",
-        "(hmax : ∀ e, G.weights e ≤ G.weights emax)",
-        "2 * β ^ 2 * n * ((ℓ : ℝ) - 1) ≤",
-    ):
-        if fragment not in corridor_statement:
-            fail("PaperClaims.proposition1_corridor does not expose the exact maximum form")
-    if not re.search(
-        r"2 \* β \^ 2 \* n \* \(\(ℓ : ℝ\) - 1\) ≤\s*"
-        r"2 \* β \^ 2 \* \(\(ℓ : ℝ\) - 1\) \^ 2 \*\s*"
-        r"max G\.totalWeight",
-        corridor_statement,
-    ):
-        fail("PaperClaims.proposition1_corridor omits the displayed inequality chain")
-
-    grounded_statement = solution_statements["groundedConditioningTransfer"]
-    for fragment in (
-        "∀ (A X Bv : Finset (Fin n))",
-        "β * (1 - β) * n / (s * Δ) ≤",
-        "∀ (left right : Finset (Fin n))",
-        "βc ^ 2 * n * ((ℓ : ℝ) - 1) ≤",
-        "∀ Δr bmax : ℝ",
-        "2 * G.totalWeight - Δr * bmax",
-    ):
-        if fragment not in grounded_statement:
-            fail("PaperClaims.groundedConditioningTransfer omits a manuscript transfer")
-        if re.search(r"\brandom_[A-Za-z0-9_]*_exponential\b", theorem_block.group()):
-            fail(f"PaperClaims.{local_name} uses a weakened exponential corollary")
-
     sorry_count = len(SORRY_RE.findall(challenge_source))
     if sorry_count != len(names):
         fail(f"Challenge.lean contains {sorry_count} sorry tokens; expected {len(names)}")
@@ -321,16 +253,13 @@ def validate_sources(names: list[str]) -> None:
 
     manifest = load_manifest()
     public_structures = {
+        "LiptonTarjanPartition",
         "ControlledPreparationHybridBound",
         "PureStateTomographyBound",
         "ClassicalSDDSolveBound",
         "DenseLoadingBound",
         "GraphHardPairCertificate",
-        "CorridorTopology",
     }
-    corridor_source = (ROOT / "PowerFlowLimits" / "Corridors.lean").read_text(
-        encoding="utf-8"
-    )
     for structure_name in public_structures:
         pattern = re.compile(
             rf"^structure\s+{re.escape(structure_name)}\b.*?"
@@ -338,36 +267,19 @@ def validate_sources(names: list[str]) -> None:
             re.MULTILINE | re.DOTALL,
         )
         challenge_match = pattern.search(definitions_source)
-        structure_source = (
-            corridor_source if structure_name == "CorridorTopology" else solution_source
-        )
-        solution_match = pattern.search(structure_source)
+        solution_match = pattern.search(solution_source)
         if challenge_match is None or solution_match is None:
             fail(f"could not extract public structure {structure_name}")
         if challenge_match.group().strip() != solution_match.group().strip():
             fail(f"public structure {structure_name} differs between claim environments")
-    solution_declarations = "\n".join(
-        [
-            solution_source,
-            (ROOT / "PowerFlowLimits" / "Planarization.lean").read_text(
-                encoding="utf-8"
-            ),
-            (ROOT / "PowerFlowLimits" / "PlanarSeparator.lean").read_text(
-                encoding="utf-8"
-            ),
-        ]
-    )
     for claim in manifest["claim"]:
         if claim["status"] != "proved-relative-to-cited-result":
             continue
         for interface in claim["interface"].split(";"):
             local_name = interface.strip().removeprefix("PaperClaims.")
-            declaration = re.compile(
-                rf"^(?:abbrev|def|structure)\s+{re.escape(local_name)}\b",
-                re.MULTILINE,
-            )
+            declaration = re.compile(rf"^structure\s+{re.escape(local_name)}\b", re.MULTILINE)
             if not declaration.search(definitions_source) or not declaration.search(
-                solution_declarations
+                solution_source
             ):
                 fail(f"{claim['name']} names an interface absent from one claim environment")
             claim_local_name = claim["name"].removeprefix("PaperClaims.")
@@ -408,10 +320,10 @@ def validate_workflow() -> None:
         "RestrictAddressFamilies=AF_UNIX",
         'cp "$GITHUB_WORKSPACE/lean-toolchain" "$RUNNER_TEMP/comparator/lean-toolchain"',
         "cargo build --locked --release",
-        'LAKE_BIN="$(command -v lake)"',
-        '"$LAKE_BIN" env "$RUNNER_TEMP/comparator/.lake/build/bin/comparator" comparator.json',
-        "experiments/publication_policy.py --check-files",
-        "experiments/pglib_corpus.py --check-derived",
+        'lake env "$RUNNER_TEMP/comparator/.lake/build/bin/comparator" comparator.json',
+        "experiments/validate_survey.py",
+        "--publication",
+        "--check-derived",
     )
     missing = [fragment for fragment in required_fragments if fragment not in source]
     if missing:

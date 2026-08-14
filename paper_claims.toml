@@ -1,7 +1,7 @@
 schema_version = 1
 challenge_module = "Challenge"
 solution_module = "PowerFlowLimits.PaperClaims"
-expected_claim_count = 18
+expected_claim_count = 17
 expected_nonformal_claim_count = 7
 permitted_axioms = ["propext", "Quot.sound", "Classical.choice"]
 enable_nanoda = true
@@ -15,57 +15,57 @@ external_dependencies = []
 [[claim]]
 name = "PaperClaims.theorem1_separator"
 status = "proved"
-summary = "Weighted and topology only condition number lower bounds from a quantitative separator"
+summary = "Condition number lower bound from a quantitative separator"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.corollary1_treewidth"
 status = "proved"
-summary = "Weighted and topology only bounds from a standard rooted tree decomposition"
+summary = "Treewidth bound from a standard rooted tree decomposition"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.corollary1_planarFromLiptonTarjan"
 status = "proved-relative-to-cited-result"
-summary = "Weighted and topology only planar bounds from a certificate and the cited separator theorem"
+summary = "Planar specialization from a quantitative separator partition"
 external_dependencies = ["Lipton-Tarjan planar separator theorem"]
 citation = """
 Lipton and Tarjan, A Separator Theorem for Planar Graphs,
 SIAM Journal on Applied Mathematics 36(2), 1979, doi:10.1137/0136016"""
-interface = "LiptonTarjanVertexCostTheorem"
+interface = "PaperClaims.LiptonTarjanPartition"
 
 [[claim]]
 name = "PaperClaims.proposition1_corridor"
 status = "proved"
-summary = "Exact maximum-edge weighted bound and its topology only consequence for a macroscopic corridor"
+summary = "Condition number lower bound for a macroscopic corridor"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.proposition2_randomSeparator"
 status = "proved"
-summary = "Pathwise topology bound and exact Hoeffding probability for independent bounded weights"
+summary = "Exponential probability bound for independent bounded weights"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.proposition2_randomTreewidth"
 status = "proved"
-summary = "Pathwise topology bound and exact random transfer from a rooted tree decomposition"
+summary = "Random weight transfer from a rooted tree decomposition"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.proposition2_randomPlanar"
 status = "proved-relative-to-cited-result"
-summary = "Pathwise topology bound and exact random transfer from a certificate and the cited separator theorem"
+summary = "Random weight transfer from a quantitative planar partition"
 external_dependencies = ["Lipton-Tarjan planar separator theorem"]
 citation = """
 Lipton and Tarjan, A Separator Theorem for Planar Graphs,
 SIAM Journal on Applied Mathematics 36(2), 1979, doi:10.1137/0136016"""
-interface = "LiptonTarjanVertexCostTheorem"
+interface = "PaperClaims.LiptonTarjanPartition"
 
 [[claim]]
 name = "PaperClaims.proposition2_randomCorridor"
 status = "proved"
-summary = "Pathwise topology bound and exact random transfer for the corridor bound"
+summary = "Random weight transfer for the corridor bound"
 external_dependencies = []
 
 [[claim]]
@@ -151,7 +151,7 @@ interface = "PaperClaims.ControlledPreparationHybridBound"
 [[claim]]
 name = "PaperClaims.groundedConditioningTransfer"
 status = "proved"
-summary = "Direct separator and corridor half transfers with the corrected grounded trace bound"
+summary = "Corrected trace condition bound for a grounded matrix"
 external_dependencies = []
 
 [[claim]]
@@ -166,25 +166,15 @@ status = "proved"
 summary = "Positive DC optimal power flow barrier scales and Laplacian block identity"
 external_dependencies = []
 
-[[claim]]
-name = "PaperClaims.nearPlanarFromCrossingDrawing"
-status = "proved-relative-to-cited-result"
-summary = "Weighted and topology only near planar bounds from a crossing schedule and cited separator theorem"
-external_dependencies = ["Lipton-Tarjan planar separator theorem"]
-citation = """
-Lipton and Tarjan, A Separator Theorem for Planar Graphs,
-SIAM Journal on Applied Mathematics 36(2), 1979, doi:10.1137/0136016"""
-interface = "LiptonTarjanVertexCostTheorem"
+[[nonformal_claim]]
+name = "numerical_corpus_survey"
+status = "empirical"
+summary = "Retained numerical survey of separator, treewidth, planarity, and operating point diagnostics"
 
 [[nonformal_claim]]
-name = "five_case_condition_table"
-status = "empirical"
-summary = "Five-case empirical condition number table reproduced by the manuscript generator"
-
-[[nonformal_claim]]
-name = "pglib_corpus_summary_table"
-status = "empirical"
-summary = "Sixty-six-case PGLib structural and operating point summary reproduced by the manuscript generator"
+name = "near_planar_extension"
+status = "discussion-not-formalized"
+summary = "Near planar extension from the Lipton-Tarjan vertex cost planar separator theorem after planarization"
 
 [[nonformal_claim]]
 name = "full_ac_newton_systems"

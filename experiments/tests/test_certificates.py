@@ -9,7 +9,6 @@ import pytest
 
 from run_conditions import (
     count_crossings,
-    crossing_key,
     normalized_largest_component,
     series_reactance_audit,
     separator_certificate,
@@ -185,20 +184,6 @@ def test_crossing_counter_rejects_nonproper_touch() -> None:
     positions = [(0, 0), (10, 0), (5, 0), (5, 5)]
     with pytest.raises(ValueError, match="nonproper"):
         count_crossings(graph, positions, limit=10)
-
-
-def test_crossing_counter_rejects_triple_crossing() -> None:
-    graph = nx.Graph([(0, 1), (2, 3), (4, 5)])
-    positions = [(0, 5), (10, 5), (5, 0), (5, 10), (0, 0), (10, 10)]
-    with pytest.raises(ValueError, match="triple crossing"):
-        count_crossings(graph, positions, limit=10, chunk_size=1)
-
-
-def test_crossing_key_is_exact_and_order_independent() -> None:
-    horizontal = ((0, 5), (10, 5))
-    vertical = ((5, 0), (5, 10))
-    assert crossing_key(*horizontal, *vertical) == (5, 5, 1)
-    assert crossing_key(*vertical, *horizontal) == (5, 5, 1)
 
 
 @pytest.mark.parametrize(

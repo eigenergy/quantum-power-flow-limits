@@ -107,34 +107,6 @@ theorem random_totalWeight_lower_tail {Ωs : Type*} [MeasurableSpace Ωs]
       have huniv : μ.real Set.univ = 1 := by simp [MeasureTheory.measureReal_def]
       linarith
 
-/-- A uniform lower bound on the mean-to-maximum ratio turns the exact Hoeffding floor into an
-explicit exponential floor in the number of branches. -/
-theorem hoeffding_probability_floor_of_mean_ratio
-    (hm : 0 < m) {bmax ε ρ M : ℝ}
-    (hbmax : 0 < bmax) (hρ : 0 < ρ)
-    (hmean : ρ * (m : ℝ) * bmax ≤ M) :
-    1 - Real.exp (-2 * ε ^ 2 * ρ ^ 2 * m) ≤
-      1 - Real.exp (-2 * ε ^ 2 * M ^ 2 / (m * bmax ^ 2)) := by
-  have hm_pos : (0 : ℝ) < m := by exact_mod_cast hm
-  have hmean_nonneg : 0 ≤ ρ * (m : ℝ) * bmax := by positivity
-  have hsq : (ρ * (m : ℝ) * bmax) ^ 2 ≤ M ^ 2 := by
-    nlinarith [sq_nonneg M]
-  have hratio : ρ ^ 2 * (m : ℝ) ≤ M ^ 2 / ((m : ℝ) * bmax ^ 2) := by
-    rw [le_div_iff₀ (mul_pos hm_pos (sq_pos_of_pos hbmax))]
-    nlinarith [hsq]
-  have hcoef : 0 ≤ (2 : ℝ) * ε ^ 2 := mul_nonneg (by norm_num) (sq_nonneg ε)
-  have hscaled := mul_le_mul_of_nonneg_left hratio hcoef
-  have hexponent :
-      -2 * ε ^ 2 * M ^ 2 / ((m : ℝ) * bmax ^ 2) ≤
-        -2 * ε ^ 2 * ρ ^ 2 * (m : ℝ) := by
-    calc
-      -2 * ε ^ 2 * M ^ 2 / ((m : ℝ) * bmax ^ 2) =
-          -(2 * ε ^ 2 * (M ^ 2 / ((m : ℝ) * bmax ^ 2))) := by ring
-      _ ≤ -(2 * ε ^ 2 * (ρ ^ 2 * (m : ℝ))) := neg_le_neg hscaled
-      _ = -2 * ε ^ 2 * ρ ^ 2 * (m : ℝ) := by ring
-  have hexp := Real.exp_le_exp.mpr hexponent
-  linarith
-
 /-- Proposition 2 (prop:random): pathwise ill-conditioning with random
     susceptances. Fix the topology of `G` (its own weights are irrelevant) with
     an (s,β)-separation, and let the branch susceptances `w e` be independent
@@ -309,6 +281,9 @@ theorem random_kappa_bound_exponential {Ωs : Type*} [MeasurableSpace Ωs]
         effectiveConditionNumber
           (G.withWeights (fun e ↦ w e ω) (fun e ↦ (hw_mem ω e).1))
           (fun _ ↦ 1)} := by
+  have hbase := random_kappa_bound μ G hm w hw_meas hw_indep bmax hw_mem
+    A X Bv s Δ β ε hcover hdisj hnoAB hX hdeg hβ hβ' hA_size hB_size
+    hden hε hconn
   have hΩ : Nonempty Ωs := by
     by_contra h
     rw [not_nonempty_iff] at h
@@ -318,11 +293,29 @@ theorem random_kappa_bound_exponential {Ωs : Type*} [MeasurableSpace Ωs]
   obtain ⟨ω₀⟩ := hΩ
   have hbmax_pos : 0 < bmax :=
     lt_of_lt_of_le (hw_mem ω₀ ⟨0, hm⟩).1 (hw_mem ω₀ ⟨0, hm⟩).2
-  exact le_trans
-    (hoeffding_probability_floor_of_mean_ratio hm hbmax_pos hρ hmean)
-    (random_kappa_bound μ G hm w hw_meas hw_indep bmax hw_mem
-      A X Bv s Δ β ε hcover hdisj hnoAB hX hdeg hβ hβ' hA_size hB_size
-      hden hε hconn)
+  have hm_pos : (0 : ℝ) < m := by exact_mod_cast hm
+  let M : ℝ := ∑ e, ∫ ω, w e ω ∂μ
+  have ha_nonneg : 0 ≤ ρ * (m : ℝ) * bmax := by positivity
+  have hsq : (ρ * (m : ℝ) * bmax) ^ 2 ≤ M ^ 2 := by
+    dsimp [M]
+    nlinarith [sq_nonneg (∑ e, ∫ ω, w e ω ∂μ)]
+  have hratio : ρ ^ 2 * (m : ℝ) ≤ M ^ 2 / ((m : ℝ) * bmax ^ 2) := by
+    rw [le_div_iff₀ (mul_pos hm_pos (sq_pos_of_pos hbmax_pos))]
+    nlinarith [hsq]
+  have hexponent :
+      -2 * ε ^ 2 * M ^ 2 / ((m : ℝ) * bmax ^ 2) ≤
+        -2 * ε ^ 2 * ρ ^ 2 * (m : ℝ) := by
+    have hcoef : 0 ≤ (2 : ℝ) * ε ^ 2 :=
+      mul_nonneg (by norm_num) (sq_nonneg ε)
+    have hscaled := mul_le_mul_of_nonneg_left hratio hcoef
+    calc
+      -2 * ε ^ 2 * M ^ 2 / ((m : ℝ) * bmax ^ 2) =
+          -(2 * ε ^ 2 * (M ^ 2 / ((m : ℝ) * bmax ^ 2))) := by ring
+      _ ≤ -(2 * ε ^ 2 * (ρ ^ 2 * (m : ℝ))) := neg_le_neg hscaled
+      _ = -2 * ε ^ 2 * ρ ^ 2 * (m : ℝ) := by ring
+  have hexp := Real.exp_le_exp.mpr hexponent
+  dsimp [M] at hexp
+  exact le_trans (by linarith) hbase
 
 /-- Proposition 2 transferred to Corollary 1(i), conditional on its treewidth separator. -/
 theorem random_treewidth_kappa_bound {Ωs : Type*} [MeasurableSpace Ωs]
@@ -356,41 +349,6 @@ theorem random_treewidth_kappa_bound {Ωs : Type*} [MeasurableSpace Ωs]
   convert h using 1
   all_goals ring_nf
 
-/-- The treewidth specialization with an explicit exponential failure bound under a uniform
-mean-to-maximum ratio. -/
-theorem random_treewidth_kappa_bound_exponential
-    {Ωs : Type*} [MeasurableSpace Ωs]
-    (μ : MeasureTheory.Measure Ωs) [MeasureTheory.IsProbabilityMeasure μ]
-    (G : WeightedGraph n m) (hm : 0 < m)
-    (w : Fin m → Ωs → ℝ)
-    (hw_meas : ∀ e, Measurable (w e))
-    (hw_indep : ProbabilityTheory.iIndepFun w μ)
-    (bmax : ℝ) (hw_mem : ∀ ω, ∀ e, w e ω ∈ Set.Ioc 0 bmax)
-    (A X Bv : Finset (Fin n)) (τ Δ ε ρ : ℝ)
-    (hcover : A ∪ X ∪ Bv = Finset.univ)
-    (hdisj : Disjoint (A ∪ X) Bv)
-    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
-      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
-    (hX : (X.card : ℝ) ≤ τ + 1)
-    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
-    (hA_size : (n : ℝ) / 4 ≤ ((A ∪ X).card : ℝ))
-    (hB_size : (n : ℝ) / 4 ≤ (Bv.card : ℝ))
-    (hden : 0 < (τ + 1) * Δ * bmax)
-    (hε : 0 < ε) (hρ : 0 < ρ)
-    (hmean : ρ * (m : ℝ) * bmax ≤ ∑ e, ∫ ω, w e ω ∂μ)
-    (hconn : G.CombinatoriallyConnected) :
-    1 - Real.exp (-2 * ε ^ 2 * ρ ^ 2 * m) ≤
-      μ.real {ω | 3 / 8 * ((1 - ε) * (∑ e, ∫ ω', w e ω' ∂μ)) /
-        ((τ + 1) * Δ * bmax) ≤
-        effectiveConditionNumber
-          (G.withWeights (fun e ↦ w e ω) (fun e ↦ (hw_mem ω e).1))
-          (fun _ ↦ 1)} := by
-  have h := random_kappa_bound_exponential μ G hm w hw_meas hw_indep bmax hw_mem
-    A X Bv (τ + 1) Δ (1 / 4) ε ρ hcover hdisj hnoAB hX hdeg
-    (by norm_num) (by norm_num) (by linarith) (by linarith) hden hε hρ hmean hconn
-  convert h using 1
-  all_goals ring_nf
-
 /-- Proposition 2 transferred to Corollary 1(ii), conditional on its planar separator. -/
 theorem random_kappa_bound_of_sqrt_separator_partition
     {Ωs : Type*} [MeasurableSpace Ωs]
@@ -421,41 +379,6 @@ theorem random_kappa_bound_of_sqrt_separator_partition
   have h := random_kappa_bound μ G hm w hw_meas hw_indep bmax hw_mem A X Bv
     (Real.sqrt (8 * n)) Δ (1 / 6) ε hcover hdisj hnoAB hX hdeg
     (by norm_num) (by norm_num) (by linarith) (by linarith) hden hε hconn
-  convert h using 1
-  all_goals ring_nf
-
-/-- The planar-separator specialization with an explicit exponential failure bound under a
-uniform mean-to-maximum ratio. -/
-theorem random_kappa_bound_of_sqrt_separator_partition_exponential
-    {Ωs : Type*} [MeasurableSpace Ωs]
-    (μ : MeasureTheory.Measure Ωs) [MeasureTheory.IsProbabilityMeasure μ]
-    (G : WeightedGraph n m) (hm : 0 < m)
-    (w : Fin m → Ωs → ℝ)
-    (hw_meas : ∀ e, Measurable (w e))
-    (hw_indep : ProbabilityTheory.iIndepFun w μ)
-    (bmax : ℝ) (hw_mem : ∀ ω, ∀ e, w e ω ∈ Set.Ioc 0 bmax)
-    (A X Bv : Finset (Fin n)) (Δ ε ρ : ℝ)
-    (hcover : A ∪ X ∪ Bv = Finset.univ)
-    (hdisj : Disjoint (A ∪ X) Bv)
-    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
-      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
-    (hX : (X.card : ℝ) ≤ Real.sqrt (8 * n))
-    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
-    (hA_size : (n : ℝ) / 6 ≤ ((A ∪ X).card : ℝ))
-    (hB_size : (n : ℝ) / 6 ≤ (Bv.card : ℝ))
-    (hden : 0 < Real.sqrt (8 * n) * Δ * bmax)
-    (hε : 0 < ε) (hρ : 0 < ρ)
-    (hmean : ρ * (m : ℝ) * bmax ≤ ∑ e, ∫ ω, w e ω ∂μ)
-    (hconn : G.CombinatoriallyConnected) :
-    1 - Real.exp (-2 * ε ^ 2 * ρ ^ 2 * m) ≤
-      μ.real {ω | 5 / 18 * ((1 - ε) * (∑ e, ∫ ω', w e ω' ∂μ)) /
-        (Real.sqrt (8 * n) * Δ * bmax) ≤
-        effectiveConditionNumber
-          (G.withWeights (fun e ↦ w e ω) (fun e ↦ (hw_mem ω e).1))
-          (fun _ ↦ 1)} := by
-  have h := random_kappa_bound_exponential μ G hm w hw_meas hw_indep bmax hw_mem
-    A X Bv (Real.sqrt (8 * n)) Δ (1 / 6) ε ρ hcover hdisj hnoAB hX hdeg
-    (by norm_num) (by norm_num) (by linarith) (by linarith) hden hε hρ hmean hconn
   convert h using 1
   all_goals ring_nf
 
@@ -515,55 +438,5 @@ theorem random_corridor_kappa_bound {Ωs : Type*} [MeasurableSpace Ωs]
         2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 * (∑ e, w e ω) :=
     mul_le_mul_of_nonneg_left hω hcoef
   exact mul_le_mul_of_nonneg_right hnum hden.le
-
-/-- The corridor specialization with an explicit exponential failure bound under a uniform
-mean-to-maximum ratio. -/
-theorem random_corridor_kappa_bound_exponential
-    {Ωs : Type*} [MeasurableSpace Ωs]
-    (μ : MeasureTheory.Measure Ωs) [MeasureTheory.IsProbabilityMeasure μ]
-    (G : WeightedGraph n m) (hm : 0 < m)
-    (w : Fin m → Ωs → ℝ)
-    (hw_meas : ∀ e, Measurable (w e))
-    (hw_indep : ProbabilityTheory.iIndepFun w μ)
-    (bmax : ℝ) (hw_mem : ∀ ω, ∀ e, w e ω ∈ Set.Ioc 0 bmax)
-    (VS VT : Finset (Fin n)) (ℓ : ℕ) (hl : 2 ≤ ℓ)
-    (p : Fin ℓ → Fin n) (EP : Finset (Fin m)) (hEP : EP.Nonempty) (β ε ρ : ℝ)
-    (hp_inj : Function.Injective p)
-    (hdisjS : ∀ i, p i ∉ VS) (hdisjT : ∀ i, p i ∉ VT)
-    (hST : Disjoint VS VT)
-    (hpath : ∀ e ∈ EP, ∃ i : Fin ℓ, ∃ h : i.val + 1 < ℓ,
-      (G.posEndpoint e = p i ∧ G.negEndpoint e = p ⟨i.val + 1, h⟩) ∨
-      (G.posEndpoint e = p ⟨i.val + 1, h⟩ ∧ G.negEndpoint e = p i))
-    (hnonpath : ∀ e ∉ EP,
-      ((G.posEndpoint e ∈ VS ∨ G.posEndpoint e = p ⟨0, by omega⟩) ∧
-       (G.negEndpoint e ∈ VS ∨ G.negEndpoint e = p ⟨0, by omega⟩)) ∨
-      ((G.posEndpoint e ∈ VT ∨ G.posEndpoint e = p ⟨ℓ - 1, by omega⟩) ∧
-       (G.negEndpoint e ∈ VT ∨ G.negEndpoint e = p ⟨ℓ - 1, by omega⟩)))
-    (hβ : 0 < β)
-    (hVS_size : β * n ≤ (VS.card : ℝ)) (hVT_size : β * n ≤ (VT.card : ℝ))
-    (hε : 0 < ε) (hρ : 0 < ρ)
-    (hmean : ρ * (m : ℝ) * bmax ≤ ∑ e, ∫ ω, w e ω ∂μ)
-    (hconn : G.CombinatoriallyConnected) :
-    1 - Real.exp (-2 * ε ^ 2 * ρ ^ 2 * m) ≤
-      μ.real {ω |
-        2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 *
-            ((1 - ε) * (∑ e, ∫ ω', w e ω' ∂μ)) / (∑ e ∈ EP, w e ω) ≤
-          effectiveConditionNumber
-            (G.withWeights (fun e ↦ w e ω) (fun e ↦ (hw_mem ω e).1))
-            (fun _ ↦ 1)} := by
-  have hΩ : Nonempty Ωs := by
-    by_contra h
-    rw [not_nonempty_iff] at h
-    have h1 : μ Set.univ = 1 := MeasureTheory.measure_univ
-    rw [Set.univ_eq_empty_iff.mpr h] at h1
-    simp at h1
-  obtain ⟨ω₀⟩ := hΩ
-  have hbmax_pos : 0 < bmax :=
-    lt_of_lt_of_le (hw_mem ω₀ ⟨0, hm⟩).1 (hw_mem ω₀ ⟨0, hm⟩).2
-  exact le_trans
-    (hoeffding_probability_floor_of_mean_ratio hm hbmax_pos hρ hmean)
-    (random_corridor_kappa_bound μ G hm w hw_meas hw_indep bmax hw_mem
-      VS VT ℓ hl p EP hEP β ε hp_inj hdisjS hdisjT hST hpath hnonpath
-      hβ hVS_size hVT_size hε hconn)
 
 end

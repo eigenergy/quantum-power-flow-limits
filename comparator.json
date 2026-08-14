@@ -18,8 +18,7 @@
     "PaperClaims.proposition3_localObservable",
     "PaperClaims.groundedConditioningTransfer",
     "PaperClaims.flatStartACBlock",
-    "PaperClaims.dcOpfBarrierBlock",
-    "PaperClaims.nearPlanarFromCrossingDrawing"
+    "PaperClaims.dcOpfBarrierBlock"
   ],
   "permitted_axioms": [
     "propext",

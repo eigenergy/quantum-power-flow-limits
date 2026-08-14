@@ -1,7 +1,7 @@
 name = "PowerFlowLimits"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["PowerFlowLimits"]
+defaultTargets = ["PowerFlowLimits", "qpf-check"]
 lintDriver = "batteries/runLinter"
 
 [leanOptions]
@@ -20,3 +20,7 @@ name = "PowerFlowLimits"
 
 [[lean_lib]]
 name = "Challenge"
+
+[[lean_exe]]
+name = "qpf-check"
+root = "PowerFlowLimits.Certificate.Main"

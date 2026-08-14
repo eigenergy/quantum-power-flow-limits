@@ -1,0 +1,77 @@
+[[case]]
+key = "activsg200"
+label = "ACTIVSg200"
+primary = "ACTIVSg200/ACTIVSg200.aux"
+equivalent = ["ACTIVSg200/ACTIVSg200.RAW", "ACTIVSg200/case_ACTIVSg200.m"]
+display = ["ACTIVSg200/ACTIVSg200.pwd"]
+
+[[case]]
+key = "activsg500"
+label = "ACTIVSg500"
+primary = "ACTIVSg500/ACTIVSg500.aux"
+equivalent = ["ACTIVSg500/ACTIVSg500.RAW", "ACTIVSg500/case_ACTIVSg500.m"]
+display = ["ACTIVSg500/ACTIVSg500.pwd"]
+
+[[case]]
+key = "activsg2000"
+label = "ACTIVSg2000"
+primary = "ACTIVSg2000/ACTIVSg2000.aux"
+equivalent = ["ACTIVSg2000/ACTIVSg2000.RAW", "ACTIVSg2000/ACTIVSg2000.m"]
+display = ["ACTIVSg2000/ACTIVSg2000.pwd"]
+
+[[case]]
+key = "hawaii40"
+label = "Hawaii40"
+primary = "Hawaii40_220906/Hawaii40_220906.AUX"
+equivalent = ["Hawaii40_220906/Hawaii40_220906.RAW", "Hawaii40_220906/Hawaii40_220906.m"]
+display = ["Hawaii40_220906/Hawaii40.pwd"]
+
+[[case]]
+key = "midwest24k_geo"
+label = "Midwest24k"
+primary = "Midwest24k/Midwest24k_20220923.AUX"
+equivalent = ["Midwest24k/Midwest24k_20220923.RAW", "Midwest24k/Midwest24k_20220923.m"]
+
+[[case]]
+key = "texas7k_2021"
+label = "Texas7k-2021"
+primary = "Texas7k_20210804_Plus2023/Texas7k_20210804.AUX"
+equivalent = ["Texas7k_20210804_Plus2023/Texas7k_20210804.RAW", "Texas7k_20210804_Plus2023/Texas7k_20210804.m"]
+display = ["Texas7k_20210804_Plus2023/Texas7k_20210804.pwd"]
+
+[[case]]
+key = "texas7k_2022"
+label = "Texas7k-2022"
+primary = "Texas7k_20210804_Plus2023/Modified_Versions/Texas7k_20220923.AUX"
+equivalent = ["Texas7k_20210804_Plus2023/Modified_Versions/Texas7k_20220923.RAW", "Texas7k_20210804_Plus2023/Modified_Versions/Texas7k_20220923.m"]
+
+[[case]]
+key = "texas7k_2030"
+label = "Texas7k-2030"
+primary = "Texas7k_20210804_Plus2023/Modified_Versions/2030_Version/Texas7k_2030_20220923.AUX"
+equivalent = ["Texas7k_20210804_Plus2023/Modified_Versions/2030_Version/Texas7k_2030_20220923.RAW", "Texas7k_20210804_Plus2023/Modified_Versions/2030_Version/Texas7k_2030_20220923.m"]
+
+[[case]]
+key = "rts_gmlc"
+label = "RTS-GMLC"
+primary = "RTS-GMLC/RTS_Data/FormattedData/MATPOWER/RTS_GMLC.m"
+equivalent = ["RTS-GMLC/RTS_Data/FormattedData/PSSE/RTS-GMLC.RAW"]
+
+[[case]]
+key = "cats"
+label = "CATS"
+primary = "CATS-CaliforniaTestSystem/MATPOWER/CaliforniaTestSystem.m"
+equivalent = ["CATS-CaliforniaTestSystem/Archive/CaliforniaTestSystem.m"]
+
+[[case]]
+key = "uiuc150"
+label = "UIUC150"
+primary = "icseg-corpus-enhanced/uiuc_150_bus/UIUC 150-Bus System/uiuc-150bus.RAW"
+equivalent = ["icseg-corpus-enhanced/uiuc_150_bus/UIUC 150-Bus System/uiuc_150bus[1].m"]
+display = ["icseg-corpus-enhanced/uiuc_150_bus/UIUC 150-Bus System/uiuc-150bus.pwd"]
+
+[[case]]
+key = "australian14gen"
+label = "Australian-14-generator"
+primary = "icseg-corpus-enhanced/australian_14_generator/LF_Case01_R4_S/AU14GenModel.RAW"
+display = ["icseg-corpus-enhanced/australian_14_generator/LF_Case01_R4_S/AU14GenModel.pwd"]

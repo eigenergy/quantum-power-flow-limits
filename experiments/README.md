@@ -1,20 +1,22 @@
 # Structural condition experiments
 
-The core runner parses the five power system cases used in the manuscript
-with PowerIO, reduces each in service branch topology to its largest connected
-simple graph, and emits independently checked structural certificates.
+The runner parses each power system case with PowerIO, reduces the in service
+branch topology to its largest connected simple graph, and emits independently
+validated structural certificates.
 
-Pass the PowerIO 0.7.3 checkout at the commit pinned in `publication.toml`:
+The `core` mode reproduces the five structural rows. Pass the PowerIO 0.7.3
+checkout at the commit pinned in `publication.toml`:
 
 ```sh
 experiments/run.sh /path/to/powerio-v0.7.3 /path/to/datasets core
 ```
 
-The script builds a PowerIO wheel from the supplied source tree, installs it in
-the locked experiment environment, and writes `results.json` and
-`conditions_table.tex`. It does not copy or modify case data.
+The script builds a [PowerIO](https://github.com/eigenergy/powerio) 0.7.3 wheel
+from the supplied source tree, installs it in the locked experiment
+environment, and writes `results.json` and `conditions_table.tex`. It does not
+copy or modify any case data.
 
-Every run requires Python 3.13.14, uv 0.12.3, Julia 1.12.6, and Graphviz
+Every mode requires Python 3.13.14, uv 0.12.3, Julia 1.12.6, and Graphviz
 15.1.0. Put the matching `sfdp` first on `PATH`; `run.sh` rejects a different
 Graphviz version before parsing case data. Python packages and source inputs
 are pinned in `uv.lock` and `publication.toml`.
@@ -29,8 +31,7 @@ full rerun regenerates them.
 
 - `Planar` is the exact planarity decision for the underlying simple graph.
 - `Near planar` is checked only when a deterministic straight line drawing has
-  a fully verified count `c_hat` of proper pairwise crossing events, with no
-  self or triple crossing, satisfying
+  a fully verified crossing count `c_hat` satisfying
   `1152 * (n + c_hat) <= n^2`. Failure to find such a drawing is unavailable
   evidence, not a proof that no qualifying drawing exists.
 - `Separator` is a PyMetis bisection converted into an `(s,beta)` vertex
@@ -53,49 +54,82 @@ PEGASE13k, GOC30k, and EPIGRIDS78k are the v23.07
 `cases.toml`. The manifest fixes the exact local filenames, and the output
 records their SHA-256 hashes.
 
-## Publication regeneration
+## Corpus survey
 
-The publication mode checks the pinned environment and input hashes before it
-runs. It writes into a temporary directory and replaces the retained outputs
-only after both files have been produced:
+The `survey` mode writes `results/corpus-survey.json`:
+
+```sh
+experiments/run.sh /path/to/powerio-v0.7.3 /path/to/datasets survey
+```
+
+It analyzes all 66 canonical PGLib v23.07 cases and parses both `api` and
+`sad` variants for topology comparison. `survey_cases.toml` adds ACTIVSg,
+PERFORM, RTS-GMLC, CATS, UIUC, Hawaii, and Australian cases. When available,
+the runner uses bus coordinates read from `.aux`, parses `.pwd` display files,
+and compares `.raw` and MATPOWER topology. A failed comparison is recorded;
+it is not silently treated as an equivalent case.
+
+For positive series reactances, the survey builds the weighted Laplacian with
+aggregated simple edge weights `b_e = 1/x_e`. It records the exact cut lower
+bound and the separator counting lower bound. Sparse eigenvalue checks shift
+the known constant nullspace before solving for `lambda2`, use a deterministic
+start, and report residuals. Cases containing nonpositive or nonfinite
+reactances remain in the structural survey but are marked unusable for this
+weight model.
+
+Near planarity results use four explicit statuses: `certificate-found`,
+`threshold-exceeded`, `inapplicable-size`, and `unavailable`. Completed tests
+retain their integer drawing coordinates and coordinate hash. An unavailable
+test records its failure reason and is rejected by the publication gate for a
+case with at least 1,152 retained buses.
+
+## Publication run
+
+The `publication` mode runs the five core cases and the full 78 case survey
+with treewidth, near planarity, all 132 PGLib variants, and the fixed spectral
+cutoff enabled:
 
 ```sh
 experiments/run.sh /path/to/powerio-v0.7.3 /path/to/datasets publication
 ```
 
-Validate the retained policy and provenance without rerunning the cases:
+It writes a readable survey JSON, a deterministic gzip encoding, the gzip
+SHA-256, a readable count summary, and a generated TeX count table. It then
+regenerates those derived files in check mode and compares their bytes. The
+outputs are moved into `experiments/results` only after the complete package
+passes validation, so an interrupted run does not replace retained results.
+The readable 50 MB JSON is a local regeneration product and is ignored by Git.
+The repository retains the deterministic gzip, its checksum, and the two
+summaries. The publication validator rejects disabled analyses, missing or
+duplicate cases, null required results, absolute paths, timing and timestamp
+fields, dirty PowerIO source, dependency version drift, Graphviz drift,
+provenance hash drift, and unexpected denominators.
+
+To validate the retained compressed artifact without rerunning the corpus:
 
 ```sh
-experiments/.venv/bin/python experiments/publication_policy.py --check-files
+artifact_json=$(mktemp)
+trap 'rm -f "$artifact_json"' EXIT
+(cd experiments/results && sha256sum --check corpus-survey.json.gz.sha256)
+gzip --decompress --stdout experiments/results/corpus-survey.json.gz \
+  > "$artifact_json"
+experiments/.venv/bin/python experiments/validate_survey.py \
+  "$artifact_json" \
+  --publication \
+  --core-input experiments/results.json \
+  --summary-output experiments/results/corpus-summary.json \
+  --table-output experiments/results/corpus-summary.tex \
+  --compressed-output experiments/results/corpus-survey.json.gz \
+  --sha256-output experiments/results/corpus-survey.json.gz.sha256 \
+  --check-derived
 ```
+
+The retained compressed survey is not promoted by changing metadata. A run
+with disabled analyses or nondeterministic fields remains a smoke artifact and
+must be replaced by a complete run.
 
 Run the unit suite independently with:
 
 ```sh
 experiments/.venv/bin/python -m pytest -q experiments/tests
 ```
-
-## PGLib corpus table
-
-`results/pglib-structural.json` retains the paper-facing evidence for all 66
-canonical PGLib v23.07 cases. It excludes the broader corpus, format
-comparisons, and query diagnostics. `pglib_corpus.py` validates every retained
-count and renders `results/pglib-corpus-summary.tex`, which is byte identical
-to the optional fourth-page table in the manuscript.
-
-The balanced separator row accepts either the direct METIS certificate or the
-separator implied by a validated tree decomposition when
-`(U + 1)^2 <= 8n`. This gives 66/66 combined certificates while retaining the
-direct METIS count of 61/66.
-
-Validate the retained PGLib evidence and generated table with:
-
-```sh
-experiments/.venv/bin/python experiments/pglib_corpus.py --check-derived
-```
-
-The compact artifact was projected from the reviewed retained corpus snapshot
-whose SHA-256 is recorded in both the artifact and validator. The environment,
-algorithm parameters, case sources, and certificate hashes remain in the
-compact artifact. Full raw case regeneration requires the pinned PowerIO,
-data, Julia, and Graphviz inputs recorded there.

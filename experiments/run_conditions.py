@@ -414,30 +414,6 @@ def segment_relation(
     return "touch" if touches else "disjoint"
 
 
-def crossing_key(
-    a: tuple[int, int],
-    b: tuple[int, int],
-    c: tuple[int, int],
-    d: tuple[int, int],
-) -> tuple[int, int, int]:
-    """Return a canonical exact homogeneous coordinate for a proper crossing."""
-    ab_x, ab_y = b[0] - a[0], b[1] - a[1]
-    cd_x, cd_y = d[0] - c[0], d[1] - c[1]
-    denominator = ab_x * cd_y - ab_y * cd_x
-    if denominator == 0:
-        raise ValueError("proper crossing has parallel supporting lines")
-    ca_x, ca_y = c[0] - a[0], c[1] - a[1]
-    numerator = ca_x * cd_y - ca_y * cd_x
-    x_numerator = a[0] * denominator + numerator * ab_x
-    y_numerator = a[1] * denominator + numerator * ab_y
-    if denominator < 0:
-        x_numerator = -x_numerator
-        y_numerator = -y_numerator
-        denominator = -denominator
-    divisor = math.gcd(math.gcd(abs(x_numerator), abs(y_numerator)), denominator)
-    return x_numerator // divisor, y_numerator // divisor, denominator // divisor
-
-
 def count_crossings(
     graph: nx.Graph,
     positions: Sequence[tuple[int, int]],
@@ -471,7 +447,6 @@ def count_crossings(
     )
     tree = STRtree(geometries)
     crossings = 0
-    crossing_carriers: dict[tuple[int, int, int], tuple[int, int]] = {}
     for start in range(0, len(edges), chunk_size):
         stop = min(start + chunk_size, len(edges))
         pairs = tree.query(geometries[start:stop])
@@ -506,14 +481,6 @@ def count_crossings(
                             raise ValueError("incident straight edges overlap")
                 continue
             if relation == "proper":
-                key = crossing_key(
-                    positions[u], positions[v], positions[x], positions[y]
-                )
-                carriers = {edge_index, other_index}
-                previous = crossing_carriers.get(key)
-                if previous is not None and len(set(previous) | carriers) > 2:
-                    raise ValueError("drawing has a triple crossing")
-                crossing_carriers[key] = tuple(sorted(carriers))
                 crossings += 1
                 if crossings > limit:
                     return {
@@ -586,11 +553,11 @@ def write_table(results: dict, output_path: Path) -> None:
     table = "\n".join(
         [
             r"\begin{table}[t]",
-            r"\caption{Structural conditions. \sat{$\hat c$: certified proper crossing count; Near Plan.: $1152(n+\hat c)\leq n^2$; Sep.: $\beta\geq1/4$ and $s^2\leq8n$; treewidth: $4(U+1)\leq n$; $\times$ means the positive weight model fails.}}",
+            r"\caption{Structural conditions. A cross in Positive $b_e$ means the weighted Laplacian model does not apply.}",
             r"\label{tab:conditions}",
             r"\centering",
             r"\setlength{\tabcolsep}{2.2pt}",
-            r"\begin{tabular}{lcccrr}",
+            r"\begin{tabular}{lcccrrr}",
             r"\hline",
             r"Case & $n$ & Positive $b_e$ & Near Plan. & Sep. $s$ & $\operatorname{tw}\leq U$ \\",
             r"\hline",

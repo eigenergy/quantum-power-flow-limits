@@ -13,16 +13,16 @@ import PowerFlowLimits.Separators
 import PowerFlowLimits.TreeDecomposition
 import PowerFlowLimits.Corridors
 import PowerFlowLimits.Random
-import PowerFlowLimits.Planarization
-import PowerFlowLimits.PlanarSeparator
 import PowerFlowLimits.BeyondDC
 import PowerFlowLimits.ACPowerFlow
 import PowerFlowLimits.OptimalPowerFlow
 import PowerFlowLimits.EndToEnd
+import PowerFlowLimits.Counterexamples
 import PowerFlowLimits.QueryHardness
 import PowerFlowLimits.SpectralHardPair
-import PowerFlowLimits.TopologyOnlyExamples
 import PowerFlowLimits.PaperClaims
+import PowerFlowLimits.Certificate.Core
+import PowerFlowLimits.Certificate.Soundness
 
 /-!
 # The Limits of Quantum Computers for Power Flow: Lean 4 formalization
