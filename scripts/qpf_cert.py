@@ -20,9 +20,17 @@ def parse_model(path: Path) -> tuple[int, list[tuple[int, int, Fraction]]]:
     rows = tokens[7:-1]
     if len(rows) != 4 * m:
         raise ValueError("branch count does not match model document")
+    if n < 2:
+        raise ValueError("a cut certificate needs at least two buses")
     branches = []
     for index in range(m):
         source, target, significand, exponent = map(int, rows[4 * index : 4 * index + 4])
+        if not (0 <= source < n and 0 <= target < n) or source == target:
+            raise ValueError(
+                f"branch {index} endpoints {source} {target} are invalid for {n} buses"
+            )
+        if significand <= 0:
+            raise ValueError(f"branch {index} states a nonpositive susceptance")
         weight = Fraction(significand * 2**exponent) if exponent >= 0 else Fraction(
             significand, 2 ** (-exponent)
         )

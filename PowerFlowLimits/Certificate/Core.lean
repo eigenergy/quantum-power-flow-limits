@@ -45,20 +45,34 @@ deriving Repr, BEq
 def Branch.valid (n : Nat) (e : Branch) : Bool :=
   e.source < n && e.target < n && e.source != e.target && 0 < e.weight
 
-private def expandReachable (model : Model) (reached : List Nat) : List Nat :=
+private def adjacency (model : Model) : Array (List Nat) :=
   model.branches.foldl
-    (fun found branch ↦
-      if found.contains branch.source then branch.target :: found
-      else if found.contains branch.target then branch.source :: found
-      else found)
-    reached
+    (fun adj branch ↦
+      let adj := adj.modify branch.source (branch.target :: ·)
+      adj.modify branch.target (branch.source :: ·))
+    (Array.replicate model.buses [])
 
-private def reachableAfter (model : Model) : Nat → List Nat → List Nat
-  | 0, reached => reached
-  | steps + 1, reached => reachableAfter model steps (expandReachable model reached)
+/-- Breadth first traversal. A bus is marked when it is enqueued, so every bus is dequeued at
+most once and `model.buses` steps of fuel visit the whole component. -/
+private def bfsVisit (adj : Array (List Nat)) :
+    Nat → List Nat → Array Bool → Array Bool
+  | 0, _, visited => visited
+  | _ + 1, [], visited => visited
+  | fuel + 1, bus :: queue, visited =>
+      let (visited, fresh) := (adj.getD bus []).foldl
+        (fun (state : Array Bool × List Nat) next ↦
+          if state.1.getD next false then state
+          else (state.1.setIfInBounds next true, next :: state.2))
+        (visited, [])
+      bfsVisit adj fuel (fresh ++ queue) visited
 
 def Model.connected (model : Model) : Bool :=
-  (List.range model.buses).all (reachableAfter model model.buses [0]).contains
+  match model.buses with
+  | 0 => true
+  | _ + 1 =>
+      let start := (Array.replicate model.buses false).setIfInBounds 0 true
+      let visited := bfsVisit (adjacency model) model.buses [0] start
+      (List.range model.buses).all (fun bus ↦ visited.getD bus false)
 
 def Model.valid (model : Model) : Bool :=
   2 ≤ model.buses && model.branches.all (Branch.valid model.buses) && model.connected
@@ -71,13 +85,11 @@ def Policy.valid (policy : Policy) : Bool :=
 def totalWeight (model : Model) : Rat :=
   model.branches.foldl (fun total branch ↦ total + branch.weight) 0
 
-private def member (side : List Bool) (bus : Nat) : Bool :=
-  side.getD bus false
-
 def cutWeight (model : Model) (witness : CutWitness) : Rat :=
+  let side := witness.side.toArray
   model.branches.foldl
     (fun total branch ↦
-      if member witness.side branch.source != member witness.side branch.target then
+      if side.getD branch.source false != side.getD branch.target false then
         total + branch.weight
       else total)
     0
@@ -111,8 +123,7 @@ def checkNoAdvantage (model : Model) (policy : Policy) (witness : CutWitness) : 
     | none => false
     | some conditionLower =>
         classicalCost model policy < quantumCostLower model policy conditionLower
-  else match cutLowerBound model witness with
-    | _ => false
+  else false
 
 theorem checkNoAdvantage_sound {model : Model} {policy : Policy} {witness : CutWitness}
     (accepted : checkNoAdvantage model policy witness = true) :

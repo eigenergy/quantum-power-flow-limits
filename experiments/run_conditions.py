@@ -557,7 +557,7 @@ def write_table(results: dict, output_path: Path) -> None:
             r"\label{tab:conditions}",
             r"\centering",
             r"\setlength{\tabcolsep}{2.2pt}",
-            r"\begin{tabular}{lcccrrr}",
+            r"\begin{tabular}{lcccrr}",
             r"\hline",
             r"Case & $n$ & Positive $b_e$ & Near Plan. & Sep. $s$ & $\operatorname{tw}\leq U$ \\",
             r"\hline",

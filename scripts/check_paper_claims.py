@@ -313,6 +313,10 @@ def validate_workflow() -> None:
             fail(f"verification workflow {tool} pin is missing or duplicated")
     required_fragments = (
         "lake build PowerFlowLimits --wfail",
+        "lake build qpf-check",
+        "lake build PowerFlowLimits.Certificate.Test --wfail",
+        "test-data/certificate/path4.model.qpf",
+        "test-data/certificate/high-classical.policy.qpf",
         "lake lint",
         "lake env leanchecker",
         "scripts/audit_lean_trust.py",

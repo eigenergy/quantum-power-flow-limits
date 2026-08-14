@@ -26,10 +26,14 @@ private def parseRat (num den : List Char) : Option Rat := do
   let denominator ← parseNat den
   if denominator = 0 then none else pure ((numerator : Rat) / (denominator : Rat))
 
+/-- Binary64 dyadic exponents lie in `[-1074, 971]`; the bound rejects a document whose
+exponent would force an enormous exact numeral without describing any binary64 weight. -/
+private def maxDyadicExponent : Nat := 1100
+
 private def parseDyadic (significand exponent : List Char) : Option Rat := do
   let sig ← parseNat significand
   let exp ← parseInt exponent
-  if sig = 0 then none
+  if sig = 0 || maxDyadicExponent < exp.natAbs then none
   else if 0 ≤ exp then
     pure ((sig * 2 ^ exp.natAbs : Nat) : Rat)
   else

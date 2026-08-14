@@ -42,6 +42,45 @@ jobs:
           lake build PowerFlowLimits.PaperClaims Challenge.Definitions --wfail
           lake build Challenge
 
+      - name: Build the certificate checker and its compile time vectors
+        run: |
+          set -euo pipefail
+          lake build qpf-check
+          lake build PowerFlowLimits.Certificate.Test --wfail
+
+      - name: Run the certificate checker on the retained vectors
+        run: |
+          set -euo pipefail
+          ./.lake/build/bin/qpf-check \
+            test-data/certificate/path4.model.qpf \
+            test-data/certificate/full-readout.policy.qpf \
+            test-data/certificate/path4.cut.qpf
+          set +e
+          ./.lake/build/bin/qpf-check \
+            test-data/certificate/path4.model.qpf \
+            test-data/certificate/high-classical.policy.qpf \
+            test-data/certificate/path4.cut.qpf
+          status=$?
+          set -e
+          [[ "$status" -eq 1 ]]
+          printf 'QPFMODEL 1 N 4 M 3 MALFORMED\n' > "$RUNNER_TEMP/malformed.qpf"
+          set +e
+          ./.lake/build/bin/qpf-check \
+            "$RUNNER_TEMP/malformed.qpf" \
+            test-data/certificate/full-readout.policy.qpf \
+            test-data/certificate/path4.cut.qpf
+          status=$?
+          set -e
+          [[ "$status" -eq 2 ]]
+          set +e
+          ./.lake/build/bin/qpf-check \
+            "$RUNNER_TEMP/does-not-exist.qpf" \
+            test-data/certificate/full-readout.policy.qpf \
+            test-data/certificate/path4.cut.qpf
+          status=$?
+          set -e
+          [[ "$status" -eq 2 ]]
+
       - name: Run the Lean linters
         run: lake lint
 
