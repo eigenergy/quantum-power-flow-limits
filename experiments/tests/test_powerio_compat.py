@@ -7,14 +7,24 @@ The structural scripts touch a small PowerIO surface: ``parse_file``,
 PowerIO wheel, so an upstream change surfaces here before it reaches a
 survey run. The locked experiment environment does not carry PowerIO;
 the tests skip there and run in the dedicated compatibility CI job.
+``scripts/qpf_model.py`` consumes exactly this surface, so its export
+tests live here and run against the same installed wheel.
 """
 
 import math
 import re
+import sys
+from fractions import Fraction
+from pathlib import Path
 
 import pytest
 
 powerio = pytest.importorskip("powerio")
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+
+import qpf_cert
+import qpf_model
 
 CASE3 = """function mpc = case3
 mpc.version = '2';
@@ -75,3 +85,40 @@ def test_to_networkx_matches_the_branch_rows(network):
     for branch in network.branches:
         assert int(branch["from_id"]) in nodes
         assert int(branch["to_id"]) in nodes
+
+
+def test_qpf_model_dyadic_is_exact_and_odd():
+    assert qpf_model.dyadic(0.5) == (1, -1)
+    assert qpf_model.dyadic(3.0) == (3, 0)
+    weight = 1 / 0.06
+    significand, exponent = qpf_model.dyadic(weight)
+    assert significand % 2 == 1
+    assert Fraction(significand) * Fraction(2) ** exponent == Fraction(
+        *weight.as_integer_ratio()
+    )
+
+
+def test_qpf_model_exports_exact_dyadic_weights(tmp_path):
+    path = tmp_path / "case3.m"
+    path.write_text(CASE3, encoding="ascii")
+    document = qpf_model.export_model(path)
+    tokens = document.split()
+    assert tokens[:7] == ["QPFMODEL", "1", "N", "3", "M", "3", "BRANCHES"]
+    assert tokens[-1] == "END"
+    model_path = tmp_path / "case3.model.qpf"
+    model_path.write_text(document, encoding="ascii")
+    bus_count, branches = qpf_cert.parse_model(model_path)
+    assert bus_count == 3
+    weights = {(source, target): weight for source, target, weight in branches}
+    assert weights == {
+        (0, 1): Fraction(*(1 / 0.06).as_integer_ratio()),
+        (0, 2): Fraction(*(1 / 0.09).as_integer_ratio()),
+        (1, 2): Fraction(*(1 / 0.08).as_integer_ratio()),
+    }
+
+
+def test_qpf_model_refuses_nonpositive_reactance(tmp_path):
+    path = tmp_path / "case3-zero-x.m"
+    path.write_text(CASE3.replace("0.06", "0.00", 1), encoding="ascii")
+    with pytest.raises(qpf_model.ExportError):
+        qpf_model.export_model(path)
