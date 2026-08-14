@@ -9,7 +9,7 @@ import PowerFlowLimits.QueryHardness
 # Proposition 3 (prop:e2e): end-to-end query lower bounds, chaining the cited facts (F1), (F2)
 
 Part of the Lean 4 formalization of
-"The Limits of Quantum Computers for Power Flow" (Khanpour and Talkington).
+"Proving the Limits of Quantum Power Flow" (Khanpour and Talkington).
 -/
 
 open Finset BigOperators

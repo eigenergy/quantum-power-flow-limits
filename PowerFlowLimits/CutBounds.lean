@@ -9,7 +9,7 @@ import PowerFlowLimits.Eigenvalues
 # Lemma 1 (lem:cut): weighted cuts control conditioning, with the kappa_+ consequences
 
 Part of the Lean 4 formalization of
-"The Limits of Quantum Computers for Power Flow" (Khanpour and Talkington).
+"Proving the Limits of Quantum Power Flow" (Khanpour and Talkington).
 -/
 
 open Finset BigOperators

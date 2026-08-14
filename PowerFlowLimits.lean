@@ -25,5 +25,5 @@ import PowerFlowLimits.Certificate.Core
 import PowerFlowLimits.Certificate.Soundness
 
 /-!
-# The Limits of Quantum Computers for Power Flow: Lean 4 formalization
+# Proving the Limits of Quantum Power Flow: Lean 4 formalization
 -/

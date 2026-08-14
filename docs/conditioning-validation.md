@@ -210,7 +210,8 @@ not used in the base or admissible subspace pass criteria.
 the case exceeded a declared numerical size limit. `--` means the positive
 weight model does not apply or no spectral analysis was available. The local
 gap is divided by the observable operator norm.
-\n+| Case | n | Positive weights | Base RHS | G ratio | G+L ratio | Best local gap |
+
+| Case | n | Positive weights | Base RHS | G ratio | G+L ratio | Best local gap |
 |---|---:|:---:|:---:|---:|---:|---:|
 | `pglib_opf_case10000_goc` | 10,000 | yes | -- | -- | -- | -- |
 | `pglib_opf_case10192_epigrids` | 10,189 | yes | -- | -- | -- | -- |

@@ -14,7 +14,7 @@ This file defines lambda_2, lambda_max, and the effective condition number. It a
 trace bound through the spectral theorem.
 
 Part of the Lean 4 formalization of
-"The Limits of Quantum Computers for Power Flow" (Khanpour and Talkington).
+"Proving the Limits of Quantum Power Flow" (Khanpour and Talkington).
 -/
 
 open Finset BigOperators

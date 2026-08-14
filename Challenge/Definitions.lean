@@ -1,6 +1,7 @@
 /-
-Copyright (c) 2026 Power Flow Limits contributors. All rights reserved.
-Released under the MIT license. See LICENSE for details.
+Copyright (c) 2026 Cameron Khanpour and Samuel Talkington. All rights reserved.
+Released under MIT license as described in the file LICENSE.
+Authors: Cameron Khanpour, Samuel Talkington
 -/
 
 import Mathlib.Analysis.Matrix.Spectrum

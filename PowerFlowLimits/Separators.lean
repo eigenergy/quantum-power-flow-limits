@@ -10,7 +10,7 @@ import Mathlib.Combinatorics.SimpleGraph.Connectivity.WalkCounting
 # Theorem 1 (thm:separator) and Corollary 1 (cor:tw): separations force polynomial conditioning
 
 Part of the Lean 4 formalization of
-"The Limits of Quantum Computers for Power Flow" (Khanpour and Talkington).
+"Proving the Limits of Quantum Power Flow" (Khanpour and Talkington).
 -/
 
 open Finset BigOperators

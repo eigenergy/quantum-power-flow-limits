@@ -9,7 +9,7 @@ import PowerFlowLimits.Graph
 # The susceptance Laplacian: quadratic form, voltage drops, trace, and diagonal
 
 Part of the Lean 4 formalization of
-"The Limits of Quantum Computers for Power Flow" (Khanpour and Talkington).
+"Proving the Limits of Quantum Power Flow" (Khanpour and Talkington).
 -/
 
 open Finset BigOperators

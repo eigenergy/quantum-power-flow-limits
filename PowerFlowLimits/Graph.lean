@@ -9,7 +9,7 @@ import Mathlib.Tactic
 # Weighted graphs: oriented incidence structure, endpoints, cuts, and degrees
 
 Part of the Lean 4 formalization of
-"The Limits of Quantum Computers for Power Flow" (Khanpour and Talkington).
+"Proving the Limits of Quantum Power Flow" (Khanpour and Talkington).
 -/
 
 open Finset BigOperators

@@ -9,7 +9,7 @@ project:
   license: "MIT"
 
 sources:
-  - title: "The Limits of Quantum Computers for Power Flow"
+  - title: "Proving the Limits of Quantum Power Flow"
     authors:
       - "Cameron Khanpour"
       - "Samuel Talkington"
@@ -216,7 +216,7 @@ status:
       comparator_config: "comparator.json"
       literature_dependencies:
         - statement: "Existence of a balanced planar separator, supplied as hypotheses."
-          source: "The Limits of Quantum Computers for Power Flow"
+          source: "Proving the Limits of Quantum Power Flow"
     - declaration: "kappa_bound_of_near_planar_partition"
       file: "PowerFlowLimits/Separators.lean"
       sorry_count: 0
@@ -272,7 +272,7 @@ status:
       comparator_config: "comparator.json"
       literature_dependencies:
         - statement: "The quantum query and state-preparation lower bounds are explicit hypotheses."
-          source: "The Limits of Quantum Computers for Power Flow"
+          source: "Proving the Limits of Quantum Power Flow"
     - declaration: "e2e_query_lower_bound_grid"
       file: "PowerFlowLimits/EndToEnd.lean"
       sorry_count: 0
@@ -290,7 +290,7 @@ status:
       comparator_config: "comparator.json"
       literature_dependencies:
         - statement: "The quantum linear-system solve lower bound is an explicit hypothesis."
-          source: "The Limits of Quantum Computers for Power Flow"
+          source: "Proving the Limits of Quantum Power Flow"
     - declaration: "joint_hard_family_readout_lower_bound"
       file: "PowerFlowLimits/EndToEnd.lean"
       sorry_count: 0
@@ -326,7 +326,7 @@ status:
       comparator_config: "comparator.json"
       literature_dependencies:
         - statement: "Tomography and right hand side oracle lower bounds are explicit hypotheses."
-          source: "The Limits of Quantum Computers for Power Flow"
+          source: "Proving the Limits of Quantum Power Flow"
     - declaration: "qls_state_readout_grid_lower_bound"
       file: "PowerFlowLimits/EndToEnd.lean"
       sorry_count: 0

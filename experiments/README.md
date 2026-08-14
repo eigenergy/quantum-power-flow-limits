@@ -113,7 +113,7 @@ trap 'rm -f "$artifact_json"' EXIT
 (cd experiments/results && sha256sum --check corpus-survey.json.gz.sha256)
 gzip --decompress --stdout experiments/results/corpus-survey.json.gz \
   > "$artifact_json"
-experiments/.venv/bin/python experiments/validate_survey.py \
+uv run --project experiments --no-sync python experiments/validate_survey.py \
   "$artifact_json" \
   --publication \
   --core-input experiments/results.json \
@@ -131,5 +131,5 @@ must be replaced by a complete run.
 Run the unit suite independently with:
 
 ```sh
-experiments/.venv/bin/python -m pytest -q experiments/tests
+uv run --project experiments --no-sync python -m pytest -q experiments/tests
 ```

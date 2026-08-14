@@ -1,5 +1,12 @@
 import PowerFlowLimits.Certificate.Wire
 
+/-!
+# Compile time vectors for the certificate kernel
+
+Each `#guard` runs during elaboration, so building this module fails if a parser, the exact cut
+bound, the acceptance verdict, or the disconnected model rejection changes.
+-/
+
 open PowerFlowLimits.Certificate
 
 private def pathModelText : String :=
