@@ -16,32 +16,46 @@ namespace PowerFlowLimits.Certificate
 
 /-- One positive weighted branch in a dense zero based bus index space. -/
 structure Branch where
+  /-- Zero based index of one endpoint bus. -/
   source : Nat
+  /-- Zero based index of the other endpoint bus. -/
   target : Nat
+  /-- Series susceptance weight of the branch. Valid branches have positive weight. -/
   weight : Rat
-deriving Repr, BEq
+deriving BEq
 
 /-- The canonical positive weighted DC model supplied by PowerIO. -/
 structure Model where
+  /-- Number of buses. Bus indices run from `0` to `buses - 1`. -/
   buses : Nat
+  /-- All branches of the model. -/
   branches : List Branch
-deriving Repr, BEq
+deriving BEq
 
 /-- A cut is represented by one Boolean membership value per bus. -/
 structure CutWitness where
+  /-- `side[i] = true` when bus `i` belongs to the cut side `S`. -/
   side : List Bool
-deriving Repr, BEq
+deriving BEq
 
 /-- Explicit finite cost model for full angle vector readout. -/
 structure Policy where
+  /-- Readout accuracy target. Divides the quantum cost lower bound. Must be positive. -/
   error : Rat
+  /-- Constant factor of the tomography term in the quantum cost lower bound. Must be positive. -/
   tomographyConstant : Rat
+  /-- Constant factor for the solver queries per tomography repetition. Must be positive. -/
   solverGap : Rat
+  /-- Divisor that discounts the quantum cost lower bound for hybrid schemes. Must be positive. -/
   hybridConstant : Rat
+  /-- Constant factor of the classical cost upper bound. Must be nonnegative. -/
   classicalConstant : Rat
+  /-- Logarithmic factor of the classical cost upper bound. Must be nonnegative. -/
   classicalLogFactor : Rat
-deriving Repr, BEq
+deriving BEq
 
+/-- A branch is valid for an `n` bus model when both endpoints are distinct indices below `n`
+and the weight is positive. -/
 def Branch.valid (n : Nat) (e : Branch) : Bool :=
   e.source < n && e.target < n && e.source != e.target && 0 < e.weight
 
@@ -57,23 +71,29 @@ private def reachableAfter (model : Model) : Nat → List Nat → List Nat
   | 0, reached => reached
   | steps + 1, reached => reachableAfter model steps (expandReachable model reached)
 
+/-- Decide whether every bus is reachable from bus `0` along branches. -/
 def Model.connected (model : Model) : Bool :=
   (List.range model.buses).all (reachableAfter model model.buses [0]).contains
 
+/-- A model is valid when it has at least two buses, every branch is valid, and the branch
+graph is connected. -/
 def Model.valid (model : Model) : Bool :=
   2 ≤ model.buses && model.branches.all (Branch.valid model.buses) && model.connected
 
+/-- Sign checks for the policy constants. -/
 def Policy.valid (policy : Policy) : Bool :=
   0 < policy.error && 0 < policy.tomographyConstant && 0 < policy.solverGap &&
     0 < policy.hybridConstant && 0 ≤ policy.classicalConstant &&
     0 ≤ policy.classicalLogFactor
 
+/-- Total branch weight `b(E)`. -/
 def totalWeight (model : Model) : Rat :=
   model.branches.foldl (fun total branch ↦ total + branch.weight) 0
 
 private def member (side : List Bool) (bus : Nat) : Bool :=
   side.getD bus false
 
+/-- Total weight of the branches whose endpoints lie on opposite sides of the cut, `b(∂S)`. -/
 def cutWeight (model : Model) (witness : CutWitness) : Rat :=
   model.branches.foldl
     (fun total branch ↦
@@ -82,6 +102,7 @@ def cutWeight (model : Model) (witness : CutWitness) : Rat :=
       else total)
     0
 
+/-- Number of buses on the cut side `S`. -/
 def sideCard (witness : CutWitness) : Nat :=
   witness.side.foldl (fun count inside ↦ if inside then count + 1 else count) 0
 
@@ -97,9 +118,11 @@ def cutLowerBound (model : Model) (witness : CutWitness) : Option Rat :=
       some (2 * (a : Rat) * (model.buses - a : Nat) * totalWeight model /
         ((model.buses : Rat) ^ 2 * cut))
 
+/-- Classical cost upper bound `classicalConstant * m * classicalLogFactor`. -/
 def classicalCost (model : Model) (policy : Policy) : Rat :=
   policy.classicalConstant * model.branches.length * policy.classicalLogFactor
 
+/-- Quantum cost lower bound obtained from the certified condition number lower bound. -/
 def quantumCostLower (model : Model) (policy : Policy) (conditionLower : Rat) : Rat :=
   policy.tomographyConstant / 2 * policy.solverGap * model.buses * conditionLower /
     (policy.hybridConstant * policy.error)
