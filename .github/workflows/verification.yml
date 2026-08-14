@@ -89,6 +89,7 @@ jobs:
       - name: Check the public theorem surface with both kernels
         run: |
           set -euo pipefail
+          LAKE_BIN="$(command -v lake)"
           sudo systemd-run \
             --quiet \
             --wait \
@@ -102,7 +103,7 @@ jobs:
             --setenv="LEAN_ABORT_ON_PANIC=1" \
             --property="NoNewPrivileges=yes" \
             --property="RestrictAddressFamilies=AF_UNIX" \
-            lake env "$RUNNER_TEMP/comparator/.lake/build/bin/comparator" comparator.json
+            "$LAKE_BIN" env "$RUNNER_TEMP/comparator/.lake/build/bin/comparator" comparator.json
 
   numerical-verification:
     runs-on: ubuntu-24.04
