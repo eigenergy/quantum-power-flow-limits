@@ -47,6 +47,7 @@ private def tokenizeAux : List Char → List Char → List (List Char) → List 
         tokenizeAux rest [] (if current.isEmpty then output else current.reverse :: output)
       else tokenizeAux rest (char :: current) output
 
+/-- Split text into whitespace separated tokens. -/
 def tokens (text : String) : List (List Char) := tokenizeAux text.toList [] []
 
 private def parseBranches : Nat → List (List Char) → Option (List Branch × List (List Char))

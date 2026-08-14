@@ -48,6 +48,8 @@ private def unreadable (error : IO.Error) : IO UInt32 := do
   IO.eprintln s!"qpf-check: {error}"
   return 2
 
+/-- Entry point of `qpf-check`. Exit code `0` reports an accepted no advantage certificate,
+`1` reports an inconclusive check, and `2` reports unreadable or malformed input. -/
 def main (args : List String) : IO UInt32 := do
   match args with
   | [modelPath, policyPath, certificatePath] =>
