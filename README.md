@@ -186,16 +186,16 @@ lake exe qpf-check test-data/certificate/path4.model.qpf \
   test-data/certificate/path4.cut.qpf
 ```
 
-The `qpf-model` exporter is a PowerIO development binary and is not in a
-tagged PowerIO release yet. Set `POWERIO_ROOT` to a PowerIO checkout that
-provides it, then generate and check a certificate:
+The `qpf-model` exporter is `scripts/qpf_model.py`. It reads a case with
+an installed PowerIO wheel (`pip install powerio`) and needs no PowerIO
+checkout. Generate and check a certificate:
 
 ```sh
 scripts/qpf-cert case.m --out case.cut.qpf
 scripts/qpf-check case.m policy.qpf case.cut.qpf
 ```
 
-The wrapper reruns the PowerIO exporter for every check. The exporter
+The wrapper reruns the exporter for every check. The exporter
 states each series susceptance b_e = 1/x_e as its binary64 bits, and the
 checker decodes those bits as exact dyadic rationals. The checker never
 recomputes `1/x` and never uses floating point arithmetic. The policy
