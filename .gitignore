@@ -1,1 +1,20 @@
 .lake/
+**/.venv/
+**/.pytest_cache/
+**/__pycache__/
+**/.mypy_cache/
+**/.ruff_cache/
+*.py[cod]
+*.egg-info/
+.coverage
+htmlcov/
+.DS_Store
+.idea/
+.vscode/
+experiments/.artifacts/
+experiments/build/
+experiments/dist/
+
+# The canonical publication survey is retained as a deterministic gzip with
+# its checksum and generated summaries. The 50 MB readable expansion is local.
+experiments/results/corpus-survey.json

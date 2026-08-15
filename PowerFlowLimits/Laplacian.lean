@@ -1,10 +1,15 @@
+/-
+Copyright (c) 2026 Cameron Khanpour and Samuel Talkington. All rights reserved.
+Released under MIT license as described in the file LICENSE.
+Authors: Cameron Khanpour, Samuel Talkington
+-/
 import PowerFlowLimits.Graph
 
 /-!
 # The susceptance Laplacian: quadratic form, voltage drops, trace, and diagonal
 
 Part of the Lean 4 formalization of
-"The Limits of Quantum Computers for Power Flow" (Khanpour and Talkington).
+"Proving the Limits of Quantum Power Flow" (Khanpour and Talkington).
 -/
 
 open Finset BigOperators
@@ -12,6 +17,12 @@ open Finset BigOperators
 noncomputable section
 
 variable {n m : ℕ}
+
+/-- Symmetric diagonal dominance for a real square matrix. -/
+def Matrix.IsSymmetricDiagonallyDominant {ι : Type*} [Fintype ι] [DecidableEq ι]
+    (M : Matrix ι ι ℝ) : Prop :=
+  (∀ i j, M i j = M j i) ∧
+    ∀ i, ∑ j ∈ (Finset.univ.erase i), |M i j| ≤ M i i
 
 /-- Weighted Laplacian matrix entry: L_s(i,j) = Σ_e A_{ie} (w_e s_e) A_{je}. -/
 def WeightedGraph.laplacian (G : WeightedGraph n m) (s : Fin m → ℝ)
@@ -30,6 +41,35 @@ theorem WeightedGraph.laplacian_symmetric (G : WeightedGraph n m) (s : Fin m →
   apply Finset.sum_congr rfl
   intro e _; ring
 
+/-- Off-diagonal entries of a positive weighted Laplacian are nonpositive. -/
+theorem WeightedGraph.laplacian_offDiag_nonpos (G : WeightedGraph n m)
+    (i j : Fin n) (hij : i ≠ j) :
+    G.laplacian (fun _ ↦ 1) i j ≤ 0 := by
+  unfold WeightedGraph.laplacian
+  refine Finset.sum_nonpos fun e _ ↦ ?_
+  rcases G.incidence_values i e with hi | hi | hi <;>
+    rcases G.incidence_values j e with hj | hj | hj
+  · have hie := G.negEndpoint_unique e i hi
+    have hje := G.negEndpoint_unique e j hj
+    exact (hij (hie.trans hje.symm)).elim
+  · rw [hi, hj]
+    norm_num
+  · rw [hi, hj]
+    simpa using neg_nonpos.mpr (G.weights_pos e).le
+  · rw [hi, hj]
+    norm_num
+  · rw [hi, hj]
+    norm_num
+  · rw [hi, hj]
+    norm_num
+  · rw [hi, hj]
+    simpa using neg_nonpos.mpr (G.weights_pos e).le
+  · rw [hi, hj]
+    norm_num
+  · have hie := G.posEndpoint_unique e i hi
+    have hje := G.posEndpoint_unique e j hj
+    exact (hij (hie.trans hje.symm)).elim
+
 /-- The Laplacian kills the all-ones vector: Σ_j L_s(i,j) = 0. -/
 theorem WeightedGraph.laplacian_kernel (G : WeightedGraph n m) (s : Fin m → ℝ)
     (i : Fin n) :
@@ -42,6 +82,26 @@ theorem WeightedGraph.laplacian_kernel (G : WeightedGraph n m) (s : Fin m → �
   trans (G.incidence i e * (G.weights e * s e) * ∑ j : Fin n, G.incidence j e)
   · rw [Finset.mul_sum]
   · rw [h_col, mul_zero]
+
+/-- The unit-switching susceptance Laplacian is symmetric diagonally dominant. -/
+theorem WeightedGraph.unitLaplacian_isSDD (G : WeightedGraph n m) :
+    Matrix.IsSymmetricDiagonallyDominant (G.laplacian (fun _ ↦ 1)) := by
+  constructor
+  · exact G.laplacian_symmetric (fun _ ↦ 1)
+  · intro i
+    have habs : ∑ j ∈ (Finset.univ.erase i), |G.laplacian (fun _ ↦ 1) i j| =
+        -∑ j ∈ (Finset.univ.erase i), G.laplacian (fun _ ↦ 1) i j := by
+      rw [← Finset.sum_neg_distrib]
+      apply Finset.sum_congr rfl
+      intro j hj
+      rw [abs_of_nonpos
+        (G.laplacian_offDiag_nonpos i j (Finset.mem_erase.mp hj).1.symm)]
+    have hrow := G.laplacian_kernel (fun _ ↦ 1) i
+    have hsplit := Finset.sum_erase_add Finset.univ
+      (fun j ↦ G.laplacian (fun _ ↦ 1) i j) (Finset.mem_univ i)
+    rw [habs]
+    rw [hrow] at hsplit
+    linarith
 
 /-- The Laplacian quadratic form equals the edge sum of squared voltage drops:
     xᵀ L_s x = Σ_e s_e w_e (Δx_e)². -/

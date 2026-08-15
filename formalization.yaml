@@ -9,7 +9,7 @@ project:
   license: "MIT"
 
 sources:
-  - title: "The Limits of Quantum Computers for Power Flow"
+  - title: "Proving the Limits of Quantum Power Flow"
     authors:
       - "Cameron Khanpour"
       - "Samuel Talkington"
@@ -19,19 +19,131 @@ sources:
 
 status:
   scope: >-
-    Lean 4 verification of the numbered claims in the manuscript: Lemma 1,
-    Theorem 1, Corollary 1, and Propositions 1--3, together with the stated
-    grid, corridor, planar, and near-planar specializations.
+    Lean 4 verification of the structural arithmetic in Lemma 1, Theorem 1,
+    Corollary 1, and Propositions 1--2, plus the Proposition 3 worst case balanced
+    hard pair, canonical preparation oracles, balanced target reachability, fixed
+    coherent schedule readout product, corridor comparison, joint product
+    strengthening, QLS implementation accounting theorem, and local observable result. Ordinary graph connectivity is connected to spectral
+    positivity. The grounded trace correction, variational Poincare separation,
+    positive definiteness, and corrected condition-number transfer are proved;
+    tree decomposition separator existence is proved locally; planar separator
+    existence and a grounded Laplacian matrix only oracle reduction remain outside
+    the proved scope.
   sorry_count: 0
   sorry_in_definitions: 0
   notes: >-
     Challenge.lean contains intentional statement placeholders for Comparator;
-    they are not part of the proof implementation counted above.
+    they are not part of the proof implementation counted above. QueryHardness.lean proves the balanced hard pair,
+    its canonical preparation oracle distance, the coded attenuation, exact star
+    spectrum, and local observable algebra on the standard lossless domain
+    span(1)^perp. EndToEnd.lean proves the worst case corridor comparison and the
+    recovered clean QLS readout product on one worst case balanced injection, plus
+    the independent joint n*kappa/epsilon product.
   axioms:
     - "propext"
     - "Quot.sound"
     - "Classical.choice"
   main_results:
+    - declaration: "WeightedGraph.unitLaplacian_isSDD"
+      file: "PowerFlowLimits/Laplacian.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "WeightedGraph.card_sub_one_le_edges"
+      file: "PowerFlowLimits/Connectivity.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "combinatoriallyConnected_implies_spectralConnected"
+      file: "PowerFlowLimits/Eigenvalues.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "groundedLaplacian_trace_eq"
+      file: "PowerFlowLimits/Grounded.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "groundedLaplacian_trace_correction"
+      file: "PowerFlowLimits/Grounded.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "groundedEigenvalueMin_le_lambda2"
+      file: "PowerFlowLimits/Grounded.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "corrected_trace_over_lambda2_le_groundedConditionNumber"
+      file: "PowerFlowLimits/Grounded.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "positiveRescaling_separator_kappa_bound"
+      file: "PowerFlowLimits/BeyondDC.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "WeightedGraph.acAngleJacobian_flat_eq_laplacian"
+      file: "PowerFlowLimits/ACPowerFlow.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "WeightedGraph.dcOpfNetworkBlock_separator_kappa_bound"
+      file: "PowerFlowLimits/OptimalPowerFlow.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "random_kappa_bound_exponential"
+      file: "PowerFlowLimits/Random.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "WeightedGraph.treewidth_kappa_bound_of_tree_decomposition"
+      file: "PowerFlowLimits/TreeDecomposition.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "DiagonalQLSAlgorithm.zero_query_solver_at_arbitrary_condition"
+      file: "PowerFlowLimits/Counterexamples.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "RHSQueryHardness.canonical_input_gap_sq"
+      file: "PowerFlowLimits/QueryHardness.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "RHSQueryHardness.preparationOracle_gap_sq"
+      file: "PowerFlowLimits/QueryHardness.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "RHSQueryHardness.bus_observable_gap"
+      file: "PowerFlowLimits/QueryHardness.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "RHSQueryHardness.branch_observable_gap"
+      file: "PowerFlowLimits/QueryHardness.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "RHSQueryHardness.hybrid_distance_le"
+      file: "PowerFlowLimits/QueryHardness.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "RHSQueryHardness.rhs_query_lower_bound"
+      file: "PowerFlowLimits/QueryHardness.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "RHSQueryHardness.estimates_separated_of_quarter_gap"
+      file: "PowerFlowLimits/QueryHardness.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
     - declaration: "two_totalWeight_div_le_lambdaMax"
       file: "PowerFlowLimits/Eigenvalues.lean"
       sorry_count: 0
@@ -67,36 +179,88 @@ status:
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
+    - declaration: "separator_family_isBigOmega_linear"
+      file: "PowerFlowLimits/Separators.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
     - declaration: "treewidth_kappa_bound"
       file: "PowerFlowLimits/Separators.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
       literature_dependencies:
-        - statement: "Existence of a balanced separator from bounded treewidth, supplied as hypotheses."
-          source: "The Limits of Quantum Computers for Power Flow"
-    - declaration: "planar_kappa_bound"
+        - statement: >-
+            This helper takes a separation explicitly; the final
+            treewidth_kappa_bound_of_tree_decomposition theorem constructs it.
+          source: "PowerFlowLimits/TreeDecomposition.lean"
+    - declaration: "treewidth_kappa_bound_of_balanced_bag"
+      file: "PowerFlowLimits/Separators.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: >-
+            This helper takes a balanced bag explicitly; the final
+            treewidth_kappa_bound_of_tree_decomposition theorem constructs it.
+          source: "PowerFlowLimits/TreeDecomposition.lean"
+    - declaration: "kappa_bound_of_sqrt_separator_partition"
+      file: "PowerFlowLimits/Separators.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "planar_kappa_bound_of_lipton_partition"
       file: "PowerFlowLimits/Separators.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
       literature_dependencies:
         - statement: "Existence of a balanced planar separator, supplied as hypotheses."
-          source: "The Limits of Quantum Computers for Power Flow"
-    - declaration: "near_planar_kappa_bound"
+          source: "Proving the Limits of Quantum Power Flow"
+    - declaration: "kappa_bound_of_near_planar_partition"
       file: "PowerFlowLimits/Separators.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
       literature_dependencies:
         - statement: "Existence of the stated near-planar separator, supplied as hypotheses."
-          source: "The Limits of Quantum Computers for Power Flow"
+          source: "Lipton and Tarjan, A Separator Theorem for Planar Graphs, Theorem 4, 1979"
     - declaration: "corridor_kappa_bound"
       file: "PowerFlowLimits/Corridors.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
       comparator_config: "comparator.json"
+    - declaration: "corridor_kappa_bound_of_topology"
+      file: "PowerFlowLimits/Corridors.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "two_bus_corridor_kappa_bound"
+      file: "PowerFlowLimits/Corridors.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "corridor_family_isBigOmega_quadratic"
+      file: "PowerFlowLimits/Corridors.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
     - declaration: "random_kappa_bound"
+      file: "PowerFlowLimits/Random.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "random_corridor_kappa_bound"
+      file: "PowerFlowLimits/Random.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "random_treewidth_kappa_bound"
+      file: "PowerFlowLimits/Random.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "random_kappa_bound_of_sqrt_separator_partition"
       file: "PowerFlowLimits/Random.lean"
       sorry_count: 0
       axioms: ["propext", "Quot.sound", "Classical.choice"]
@@ -108,7 +272,7 @@ status:
       comparator_config: "comparator.json"
       literature_dependencies:
         - statement: "The quantum query and state-preparation lower bounds are explicit hypotheses."
-          source: "The Limits of Quantum Computers for Power Flow"
+          source: "Proving the Limits of Quantum Power Flow"
     - declaration: "e2e_query_lower_bound_grid"
       file: "PowerFlowLimits/EndToEnd.lean"
       sorry_count: 0
@@ -126,7 +290,93 @@ status:
       comparator_config: "comparator.json"
       literature_dependencies:
         - statement: "The quantum linear-system solve lower bound is an explicit hypothesis."
-          source: "The Limits of Quantum Computers for Power Flow"
+          source: "Proving the Limits of Quantum Power Flow"
+    - declaration: "joint_hard_family_readout_lower_bound"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: "Fractional phase direct sum hardness is an explicit cited hypothesis."
+          source: "Quantum tomography using state-preparation unitaries"
+    - declaration: "joint_hard_family_grid_lower_bound"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "joint_hard_family_corridor_lower_bound"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "joint_product_exceeds_classical"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "RHSQueryHardness.starLaplacian_rayleigh_upper"
+      file: "PowerFlowLimits/QueryHardness.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "qls_state_readout_lower_bound"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: "Tomography and right hand side oracle lower bounds are explicit hypotheses."
+          source: "Proving the Limits of Quantum Power Flow"
+    - declaration: "qls_state_readout_grid_lower_bound"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "qls_state_readout_corridor_lower_bound"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "corridor_rhs_oracle_exceeds_classical"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "worst_case_corridor_qls_exceeds_classical"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "normalized_rhs_reaches_every_target"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "clean_qls_worst_case_product"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: "The pure state tomography lower bound is an explicit cited hypothesis."
+          source: "Quantum tomography using state-preparation unitaries"
+        - statement: "One-query hybrid progress is an explicit standard query-model hypothesis."
+          source: "Strengths and Weaknesses of Quantum Computing"
+    - declaration: "clean_qls_worst_case_grid_product"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "clean_qls_worst_case_corridor_product"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
+    - declaration: "clean_qls_grid_product_exceeds_nearly_linear"
+      file: "PowerFlowLimits/EndToEnd.lean"
+      sorry_count: 0
+      axioms: ["propext", "Quot.sound", "Classical.choice"]
+      comparator_config: "comparator.json"
 
 automation:
   methods:
@@ -136,12 +386,31 @@ automation:
 
 fidelity:
   divergences: >-
-    The separator-existence inputs behind Corollary 1 and the quantum query
-    facts behind Proposition 3 are represented as explicit hypotheses, as in
-    the manuscript's proofs. Proposition 2 makes pointwise boundedness,
-    per-outcome connectivity, and positivity regularity assumptions explicit.
-    The repository also proves a sharper interface-stiffness separator bound
-    and a weighted-degree hub bound beyond the manuscript's numbered claims.
+    Proposition 3 recovers the full readout product
+    for the clean opaque controlled QLS unitary and inverse family assumed by the
+    cited tomography theorem. Explicit inverse preparation rotations are O(1/kappa) apart
+    while their normalized solution states have constant separation, forcing the
+    fixed coherent schedule to use Omega(kappa) queries. Tomography then selects one
+    balanced hard input that invokes the same schedule tilde Omega(n/epsilon)
+    times. Target reachability on the invertible balanced space and the resulting
+    product are proved in Lean; the tomography and standard hybrid lower bounds are
+    explicit literature premises. The joint hard family theorem gives an independent
+    n*kappa/epsilon route. Its unit star witness has an
+    exact balanced slow eigenspace and radial fast mode checked in Lean. The
+    fractional phase direct sum lower bound is represented as a cited hypothesis.
+    Local observables are restricted to the paper's nonzero-gap bus and branch rank-one class,
+    and their query lower bound is composed with the fixed solve schedule. The pass-through
+    instance remains a counterexample to stronger instancewise readings. Planar separator existence,
+    planarization, and weighted balance behind the near planar extension remain
+    literature dependencies. Corollary 1(i)'s tree decomposition
+    separator is constructed in Lean. Ordinary path
+    connectivity now implies spectral positivity for positive weights. The
+    grounded trace correction, Poincare separation, and corrected grounded
+    condition-number transfer are proved. Proposition 2's Corollary 1 transfer is proved
+    conditional on the same explicit separator partitions.
+    Proposition 2 makes pointwise boundedness and positivity assumptions
+    explicit; connectivity is fixed by the topology. The repository also proves a sharper
+    interface stiffness separator bound and a weighted degree hub bound.
 
 review:
   status: "self-assessed"
@@ -150,11 +419,21 @@ review:
     - "Samuel Talkington"
   notes: >-
     The proof modules build without sorry and report only Lean's standard
-    axioms. Comparator independently checks the manuscript-facing declarations.
+    axioms. The manifest, statement surface, and permitted axiom checks run in
+    clean CI. The Ubuntu job runs Comparator with both kernels under landrun and
+    systemd isolation; the macOS wrapper is only a development smoke test.
 
 alignment:
   namespace: "root"
   statements:
+    - source: "Computational fact F3: the susceptance Laplacian is SDD"
+      lean: "WeightedGraph.unitLaplacian_isSDD"
+      module: "PowerFlowLimits.Laplacian"
+      status: "proved"
+    - source: "Corollary 1 proof: connectedness gives m >= n - 1"
+      lean: "WeightedGraph.card_sub_one_le_edges"
+      module: "PowerFlowLimits.Connectivity"
+      status: "proved"
     - source: "Lemma 1(i), trace form"
       lean: "two_totalWeight_div_le_lambdaMax"
       module: "PowerFlowLimits.Eigenvalues"
@@ -179,51 +458,172 @@ alignment:
       lean: "kappaPlus_ge_edge"
       module: "PowerFlowLimits.CutBounds"
       status: "proved"
+    - source: "Grounded-matrix transfer required by the formalization goal"
+      lean: "corrected_trace_over_lambda2_le_groundedConditionNumber"
+      module: "PowerFlowLimits.Grounded"
+      status: "proved"
+      note: "The exact transfer assumes the corrected trace is nonnegative."
     - source: "Theorem 1"
       lean: "separator_kappa_bound"
       module: "PowerFlowLimits.Separators"
       status: "proved"
+    - source: "Positive rescaling transfer used for DC-OPF network blocks"
+      lean: "WeightedGraph.dcOpfNetworkBlock_separator_kappa_bound"
+      module: "PowerFlowLimits.OptimalPowerFlow"
+      status: "proved-for-modeled-block"
+      note: >-
+        The exact first and second directional derivatives of the two-sided
+        branch-flow log barrier are proved, as are positive branch scales and
+        separator transfer at every strictly feasible iterate. A complete
+        DC-OPF KKT system with all remaining terms is outside this declaration.
     - source: "Corollary 1(i)"
-      lean: "treewidth_kappa_bound"
-      module: "PowerFlowLimits.Separators"
-      status: "literature-dependency"
-      note: "The separator partition is supplied as hypotheses."
+      lean: "WeightedGraph.treewidth_kappa_bound_of_tree_decomposition"
+      module: "PowerFlowLimits.TreeDecomposition"
+      status: "proved"
+      note: >-
+        The balanced bag and separator partition are constructed from the
+        standard tree decomposition axioms.
     - source: "Corollary 1(ii)"
-      lean: "planar_kappa_bound"
+      lean: "kappa_bound_of_sqrt_separator_partition"
       module: "PowerFlowLimits.Separators"
       status: "literature-dependency"
       note: "The separator partition is supplied as hypotheses."
+    - source: "Corollary 1(ii), n >= 288 balance arithmetic"
+      lean: "planar_kappa_bound_of_lipton_partition"
+      module: "PowerFlowLimits.Separators"
+      status: "proved"
+      note: "The quantitative Lipton--Tarjan partition is supplied as a hypothesis."
     - source: "Near-planar remark"
-      lean: "near_planar_kappa_bound"
+      lean: "kappa_bound_of_near_planar_partition"
       module: "PowerFlowLimits.Separators"
       status: "literature-dependency"
-      note: "The separator partition is supplied as hypotheses."
+      note: >-
+        Planarization and the vertex cost form of Lipton--Tarjan, with equal positive cost on
+        original buses and zero cost on crossing vertices, are supplied as hypotheses.
     - source: "Proposition 1"
       lean: "corridor_kappa_bound"
+      module: "PowerFlowLimits.Corridors"
+      status: "proved"
+    - source: "Proposition 1 path weight consequence"
+      lean: "corridorWeight_le_length_mul_bmax"
       module: "PowerFlowLimits.Corridors"
       status: "proved"
     - source: "Proposition 2"
       lean: "random_kappa_bound"
       module: "PowerFlowLimits.Random"
       status: "proved"
-    - source: "Proposition 3(i), abstract form"
+      note: "This declaration proves the separator event."
+    - source: "Proposition 2 transfer to the corridor bound"
+      lean: "random_corridor_kappa_bound"
+      module: "PowerFlowLimits.Random"
+      status: "proved"
+    - source: "Proposition 3(i), worst case balanced hard pair"
+      lean: "RHSQueryHardness.preparationOracle_gap_sq"
+      module: "PowerFlowLimits.QueryHardness"
+      status: "proved-algebra-with-standard-query-hybrid-premise"
+      note: >-
+        The canonical preparation oracles are exact inverses, prepare balanced
+        inputs O(1/kappa) apart, and their normalized solutions have constant separation.
+    - source: "Proposition 3(i), worst case corridor comparison"
+      lean: "worst_case_corridor_qls_exceeds_classical"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved"
+      note: >-
+        The theorem combines hybrid progress, kappa = Omega(n^2), and the nearly
+        linear classical upper bound at one dimension.
+    - source: "Proposition 3(i), balanced target reachability"
+      lean: "normalized_rhs_reaches_every_target"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved"
+      note: >-
+        Every nonzero target direction of an invertible balanced-space operator is
+        reached by a normalized right hand side, up to positive normalization.
+    - source: "Proposition 3(i), recovered clean QLS worst case product"
+      lean: "clean_qls_worst_case_product"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved-arithmetic-with-tomography-and-hybrid-premises"
+      note: >-
+        The hard pair lower bounds the fixed coherent solution preparation schedule.
+        The tomography hard input then invokes that same schedule, yielding one input
+        with total cost Omega(n*kappa/epsilon).
+    - source: "Proposition 3(i), recovered grid specialization"
+      lean: "clean_qls_worst_case_grid_product"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved"
+    - source: "Proposition 3(i), recovered corridor specialization"
+      lean: "clean_qls_worst_case_corridor_product"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved"
+    - source: "Proposition 3(i), recovered comparison with sparse classical solve"
+      lean: "clean_qls_grid_product_exceeds_nearly_linear"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved"
+    - source: "Proposition 3(i), QLS implementation product"
       lean: "e2e_query_lower_bound"
       module: "PowerFlowLimits.EndToEnd"
-      status: "literature-dependency"
-      note: "The quantum query inputs are supplied as hypotheses."
+      status: "proved-for-qls-implementation-schedule"
+      note: >-
+        The theorem accounts for tomography calls and the actual per preparation
+        query schedule. The joint hard family theorem below supplies an independent
+        worst case product proof.
+    - source: "Proposition 3(i), joint hard prepared input family"
+      lean: "joint_hard_family_readout_lower_bound"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved-arithmetic-with-fractional-phase-premise"
+      note: >-
+        The same phase code supplies the readout dimension and condition number
+        attenuation. The conclusion counts controlled right hand side oracle calls.
     - source: "Proposition 3(i), grid specialization"
-      lean: "e2e_query_lower_bound_grid"
+      lean: "joint_hard_family_grid_lower_bound"
       module: "PowerFlowLimits.EndToEnd"
       status: "proved"
     - source: "Proposition 3(i), corridor specialization"
-      lean: "e2e_query_lower_bound_corridor"
+      lean: "joint_hard_family_corridor_lower_bound"
       module: "PowerFlowLimits.EndToEnd"
       status: "proved"
-    - source: "Proposition 3(ii)"
-      lean: "e2e_observable_lower_bound"
+    - source: "Proposition 3(ii), intended local observables"
+      lean: "PaperClaims.proposition3_localObservable"
+      module: "PowerFlowLimits.PaperClaims"
+      status: "proved"
+      note: >-
+        The theorem composes the fixed solve schedule's right hand side query lower bound with
+        quarter-gap distinguishability for the paper's nonzero-gap bus and branch observables.
+    - source: "Proposition 3, canonical preparation oracle gap"
+      lean: "RHSQueryHardness.preparationOracle_gap_sq"
+      module: "PowerFlowLimits.QueryHardness"
+      status: "proved"
+    - source: "Proposition 3, corridor comparison"
+      lean: "worst_case_corridor_qls_exceeds_classical"
       module: "PowerFlowLimits.EndToEnd"
-      status: "literature-dependency"
-      note: "The quantum solve-cost input is supplied as a hypothesis."
+      status: "proved"
+    - source: "Additional coded attenuation strengthening"
+      lean: "RHSQueryHardness.codedPrepared_signal_le"
+      module: "PowerFlowLimits.QueryHardness"
+      status: "proved"
+    - source: "Additional unit star witness"
+      lean: "RHSQueryHardness.starLaplacian_rayleigh_upper"
+      module: "PowerFlowLimits.QueryHardness"
+      status: "proved"
+    - source: "Additional joint product strengthening"
+      lean: "joint_hard_family_readout_lower_bound"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved-arithmetic-with-fractional-phase-premise"
+    - source: "Additional joint grid specialization"
+      lean: "joint_hard_family_grid_lower_bound"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved"
+    - source: "Additional joint corridor specialization"
+      lean: "joint_hard_family_corridor_lower_bound"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved"
+    - source: "Additional joint classical comparison"
+      lean: "joint_product_exceeds_classical"
+      module: "PowerFlowLimits.EndToEnd"
+      status: "proved"
+    - source: "Proposition 3, quarter-gap readout"
+      lean: "RHSQueryHardness.estimates_separated_of_quarter_gap"
+      module: "PowerFlowLimits.QueryHardness"
+      status: "proved"
 
 acknowledgements: >-
   Built with Lean 4 and Mathlib; independent statement and axiom checking is

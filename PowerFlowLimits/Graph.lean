@@ -1,10 +1,15 @@
+/-
+Copyright (c) 2026 Cameron Khanpour and Samuel Talkington. All rights reserved.
+Released under MIT license as described in the file LICENSE.
+Authors: Cameron Khanpour, Samuel Talkington
+-/
 import Mathlib.Tactic
 
 /-!
 # Weighted graphs: oriented incidence structure, endpoints, cuts, and degrees
 
 Part of the Lean 4 formalization of
-"The Limits of Quantum Computers for Power Flow" (Khanpour and Talkington).
+"Proving the Limits of Quantum Power Flow" (Khanpour and Talkington).
 -/
 
 open Finset BigOperators
@@ -117,6 +122,11 @@ theorem proj_sum_zero (v : Fin n → ℝ) (hn : 0 < n) :
 /-- Total branch susceptance b(E) = Σ_e b_e. -/
 def WeightedGraph.totalWeight (G : WeightedGraph n m) : ℝ :=
   ∑ e, G.weights e
+
+/-- Same branch topology and incidence matrix with new positive susceptances. -/
+def WeightedGraph.withWeights (G : WeightedGraph n m) (w : Fin m → ℝ)
+    (hw : ∀ e, 0 < w e) : WeightedGraph n m :=
+  { G with weights := w, weights_pos := hw }
 
 /-- Weighted cut b(∂S): each edge contributes its weight iff exactly one
     endpoint lies in `S` (the squared indicator difference is 1 on boundary

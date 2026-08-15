@@ -1,0 +1,210 @@
+name: Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lean-verification:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Lean
+        uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9
+        with:
+          auto-config: false
+          use-mathlib-cache: true
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version: "1.25.12"
+          cache: false
+
+      - name: Build the checked modules
+        run: |
+          set -euo pipefail
+          lake build PowerFlowLimits --wfail
+          lake build PowerFlowLimits.PaperClaims Challenge.Definitions --wfail
+          lake build Challenge
+
+      - name: Build the certificate checker and its compile time vectors
+        run: |
+          set -euo pipefail
+          lake build qpf-check
+          lake build PowerFlowLimits.Certificate.Test --wfail
+
+      - name: Run the certificate checker on the retained vectors
+        run: |
+          set -euo pipefail
+          ./.lake/build/bin/qpf-check \
+            test-data/certificate/path4.model.qpf \
+            test-data/certificate/full-readout.policy.qpf \
+            test-data/certificate/path4.cut.qpf
+          set +e
+          ./.lake/build/bin/qpf-check \
+            test-data/certificate/path4.model.qpf \
+            test-data/certificate/high-classical.policy.qpf \
+            test-data/certificate/path4.cut.qpf
+          status=$?
+          set -e
+          [[ "$status" -eq 1 ]]
+          printf 'QPFMODEL 1 N 4 M 3 MALFORMED\n' > "$RUNNER_TEMP/malformed.qpf"
+          set +e
+          ./.lake/build/bin/qpf-check \
+            "$RUNNER_TEMP/malformed.qpf" \
+            test-data/certificate/full-readout.policy.qpf \
+            test-data/certificate/path4.cut.qpf
+          status=$?
+          set -e
+          [[ "$status" -eq 2 ]]
+          set +e
+          ./.lake/build/bin/qpf-check \
+            "$RUNNER_TEMP/does-not-exist.qpf" \
+            test-data/certificate/full-readout.policy.qpf \
+            test-data/certificate/path4.cut.qpf
+          status=$?
+          set -e
+          [[ "$status" -eq 2 ]]
+
+      - name: Run the Lean linters
+        run: lake lint
+
+      - name: Replay declarations with leanchecker
+        run: lake env leanchecker PowerFlowLimits PowerFlowLimits.PaperClaims Challenge.Definitions
+
+      - name: Check the public claim manifest
+        run: python3 scripts/check_paper_claims.py
+
+      - name: Audit the Lean trust boundary
+        run: python3 scripts/audit_lean_trust.py
+
+      - name: Install landrun
+        run: |
+          set -euo pipefail
+          go install github.com/zouuup/landrun/cmd/landrun@5ed4a3db3a4ad930d577215c6b9abaa19df7f99f
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Build lean4export
+        run: |
+          set -euo pipefail
+          git clone https://github.com/leanprover/lean4export.git "$RUNNER_TEMP/lean4export"
+          git -C "$RUNNER_TEMP/lean4export" checkout d065b0009aed0520e9e99752847a33b337661690
+          cp "$GITHUB_WORKSPACE/lean-toolchain" "$RUNNER_TEMP/lean4export/lean-toolchain"
+          lake --dir "$RUNNER_TEMP/lean4export" build lean4export
+          echo "$RUNNER_TEMP/lean4export/.lake/build/bin" >> "$GITHUB_PATH"
+
+      - name: Build Comparator
+        run: |
+          set -euo pipefail
+          git clone https://github.com/leanprover/comparator.git "$RUNNER_TEMP/comparator"
+          git -C "$RUNNER_TEMP/comparator" checkout 71b52ec29e06d4b7d882726553b1ceb99a2499e0
+          cp "$GITHUB_WORKSPACE/lean-toolchain" "$RUNNER_TEMP/comparator/lean-toolchain"
+          lake --dir "$RUNNER_TEMP/comparator" build comparator
+          echo "$RUNNER_TEMP/comparator/.lake/build/bin" >> "$GITHUB_PATH"
+
+      - name: Build nanoda
+        run: |
+          set -euo pipefail
+          git clone https://github.com/robsimmons/nanoda_lib.git "$RUNNER_TEMP/nanoda"
+          git -C "$RUNNER_TEMP/nanoda" checkout 68d5ca9db226849b41a6fff59d796ff19d0a8840
+          cargo build --locked --release --manifest-path "$RUNNER_TEMP/nanoda/Cargo.toml"
+          echo "$RUNNER_TEMP/nanoda/target/release" >> "$GITHUB_PATH"
+
+      - name: Check the public theorem surface with both kernels
+        run: |
+          set -euo pipefail
+          LAKE_BIN="$(command -v lake)"
+          sudo systemd-run \
+            --quiet \
+            --wait \
+            --pipe \
+            --collect \
+            --uid="$(id -u)" \
+            --gid="$(id -g)" \
+            --working-directory="$GITHUB_WORKSPACE" \
+            --setenv="HOME=$HOME" \
+            --setenv="PATH=$PATH" \
+            --setenv="LEAN_ABORT_ON_PANIC=1" \
+            --property="NoNewPrivileges=yes" \
+            --property="RestrictAddressFamilies=AF_UNIX" \
+            "$LAKE_BIN" env "$RUNNER_TEMP/comparator/.lake/build/bin/comparator" comparator.json
+
+  numerical-verification:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13.14"
+
+      - name: Install the locked Python environment
+        run: |
+          set -euo pipefail
+          python -m pip install uv==0.12.3
+          uv sync --project experiments --python 3.13.14 --locked
+
+      - name: Run the numerical unit tests
+        run: uv run --project experiments --no-sync python -m pytest -q experiments/tests
+
+      - name: Validate the retained publication artifact
+        run: |
+          set -euo pipefail
+          (
+            cd experiments/results
+            sha256sum --check corpus-survey.json.gz.sha256
+          )
+          gzip --decompress --stdout experiments/results/corpus-survey.json.gz \
+            > "$RUNNER_TEMP/corpus-survey.json"
+          uv run --project experiments --no-sync python experiments/validate_survey.py \
+            "$RUNNER_TEMP/corpus-survey.json" \
+            --publication \
+            --core-input experiments/results.json \
+            --summary-output experiments/results/corpus-summary.json \
+            --table-output experiments/results/corpus-summary.tex \
+            --compressed-output experiments/results/corpus-survey.json.gz \
+            --sha256-output experiments/results/corpus-survey.json.gz.sha256 \
+            --check-derived
+
+  powerio-compatibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13.14"
+
+      - name: Install the released PowerIO wheel
+        run: python -m pip install powerio==0.8.3 pytest==9.0.2 networkx==3.5
+
+      - name: Run the PowerIO surface tests
+        run: python -m pytest -q experiments/tests/test_powerio_compat.py

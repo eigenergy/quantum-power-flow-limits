@@ -1,12 +1,14 @@
 name = "PowerFlowLimits"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["PowerFlowLimits"]
+defaultTargets = ["PowerFlowLimits", "qpf-check"]
+lintDriver = "batteries/runLinter"
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
-relaxedAutoImplicit = false
+autoImplicit = false
 maxSynthPendingDepth = 3
+weak.linter.mathlibStandardSet = true
 
 [[require]]
 name = "mathlib"
@@ -18,3 +20,7 @@ name = "PowerFlowLimits"
 
 [[lean_lib]]
 name = "Challenge"
+
+[[lean_exe]]
+name = "qpf-check"
+root = "PowerFlowLimits.Certificate.Main"

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 3 ]]; then
+  echo "usage: qpf-check <case> <policy> <certificate>" >&2
+  exit 2
+fi
+
+repo_dir=$(cd "$(dirname "$0")/.." && pwd)
+if [[ -z "${POWERIO_ROOT:-}" ]]; then
+  echo "qpf-check: set POWERIO_ROOT to a PowerIO checkout that provides the qpf-model exporter" >&2
+  exit 2
+fi
+powerio_dir=$POWERIO_ROOT
+model_file=$(mktemp "${TMPDIR:-/tmp}/qpf-model.XXXXXX")
+trap 'rm -f "$model_file"' EXIT
+
+cargo run -q --manifest-path "$powerio_dir/Cargo.toml" -p powerio-capi \
+  --features matrix --bin qpf-model -- "$1" >"$model_file"
+set +e
+"$repo_dir/.lake/build/bin/qpf-check" "$model_file" "$2" "$3"
+status=$?
+set -e
+exit "$status"

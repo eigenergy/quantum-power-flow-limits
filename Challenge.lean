@@ -1,281 +1,380 @@
-import Mathlib.Tactic
-import Mathlib.Analysis.Matrix.Spectrum
-import Mathlib.LinearAlgebra.Matrix.ToLinearEquiv
-import Mathlib.Probability.Moments.SubGaussian
+/-
+Copyright (c) 2026 Power Flow Limits contributors. All rights reserved.
+Released under the MIT license. See LICENSE for details.
+-/
+
+import Challenge.Definitions
 
 /-!
-# Trusted statements for Comparator
+# Trusted public theorem statements
 
-This file intentionally imports only Mathlib. It repeats the project-specific
-definitions needed to state the manuscript's claims, then gives those claims
-with `sorry`. A reader can audit this file and use `comparator.json` to check
-that `PowerFlowLimits` proves these exact statements with only the permitted
-axioms.
-
-Keep the definitions and theorem statements here synchronized with the
-corresponding declarations in `PowerFlowLimits`.
+This file contains exactly the theorem statements checked by Comparator. It imports only the
+independent definitions and Mathlib dependencies in `Challenge.Definitions`.
 -/
 
 open Finset BigOperators
+open Matrix
 open scoped Matrix
 
 noncomputable section
 
+set_option autoImplicit false
+
 variable {n m : ℕ}
 
-/-- A weighted graph with `n` nodes and `m` edges. -/
-structure WeightedGraph (n m : ℕ) where
-  weights : Fin m → ℝ
-  weights_pos : ∀ e, 0 < weights e
-  incidence : Fin n → Fin m → ℝ
-  incidence_pos_unique : ∀ e, ∃! i, incidence i e = 1
-  incidence_neg_unique : ∀ e, ∃! i, incidence i e = -1
-  incidence_col_sum : ∀ e, ∑ i, incidence i e = 0
-  incidence_values : ∀ i e, incidence i e = -1 ∨ incidence i e = 0 ∨ incidence i e = 1
+namespace PaperClaims
 
-namespace WeightedGraph
-
-def posEndpoint (G : WeightedGraph n m) (e : Fin m) : Fin n :=
-  Classical.choose <| ExistsUnique.exists (G.incidence_pos_unique e)
-
-def negEndpoint (G : WeightedGraph n m) (e : Fin m) : Fin n :=
-  Classical.choose <| ExistsUnique.exists (G.incidence_neg_unique e)
-
-end WeightedGraph
-
-def WeightedGraph.totalWeight (G : WeightedGraph n m) : ℝ :=
-  ∑ e, G.weights e
-
-def WeightedGraph.cutWeight (G : WeightedGraph n m) (S : Finset (Fin n)) : ℝ :=
-  ∑ e, G.weights e *
-    ((if G.posEndpoint e ∈ S then (1 : ℝ) else 0) -
-     (if G.negEndpoint e ∈ S then (1 : ℝ) else 0)) ^ 2
-
-def WeightedGraph.incidentEdges (G : WeightedGraph n m) (i : Fin n) : Finset (Fin m) :=
-  Finset.univ.filter fun e => i = G.posEndpoint e ∨ i = G.negEndpoint e
-
-def WeightedGraph.laplacian (G : WeightedGraph n m) (s : Fin m → ℝ)
-    (i j : Fin n) : ℝ :=
-  ∑ e, G.incidence i e * (G.weights e * s e) * G.incidence j e
-
-@[irreducible] def laplacian_eigenvalue₂ (G : WeightedGraph n m) (s : Fin m → ℝ) : ℝ :=
-  sSup {r : ℝ | ∀ (x : Fin n → ℝ), ∑ i, x i = 0 →
-    r * (∑ i, x i ^ 2) ≤ ∑ i, (∑ j, G.laplacian s i j * x j) * x i}
-
-def WeightedGraph.Connected (G : WeightedGraph n m) (s : Fin m → ℝ) : Prop :=
-  0 < laplacian_eigenvalue₂ G s
-
-def laplacianEigenvalueMax (G : WeightedGraph n m) (s : Fin m → ℝ) : ℝ :=
-  sInf {r : ℝ | ∀ x : Fin n → ℝ,
-    ∑ i, (∑ j, G.laplacian s i j * x j) * x i ≤ r * ∑ i, x i ^ 2}
-
-def effectiveConditionNumber (G : WeightedGraph n m) (s : Fin m → ℝ) : ℝ :=
-  laplacianEigenvalueMax G s / laplacian_eigenvalue₂ G s
-
-def WeightedGraph.withWeights (G : WeightedGraph n m) (w : Fin m → ℝ)
-    (hw : ∀ e, 0 < w e) : WeightedGraph n m :=
-  { G with weights := w, weights_pos := hw }
-
-/-- Lemma 1(i), trace form. -/
-theorem two_totalWeight_div_le_lambdaMax (G : WeightedGraph n m) (hn : 1 < n) :
-    2 * G.totalWeight / ((n : ℝ) - 1) ≤ laplacianEigenvalueMax G (fun _ => 1) := by
+theorem lemma1_weightedCuts (G : WeightedGraph n m) (S : Finset (Fin n))
+    (e : Fin m) (hn : 1 < n) (hne : S.Nonempty) (hproper : S ≠ Finset.univ)
+    (hconn : G.CombinatoriallyConnected) :
+    2 * G.totalWeight / ((n : ℝ) - 1) ≤
+        laplacianEigenvalueMax G (fun _ ↦ 1) ∧
+      2 * G.weights e ≤ laplacianEigenvalueMax G (fun _ ↦ 1) ∧
+      laplacian_eigenvalue₂ G (fun _ ↦ 1) *
+          ((S.card : ℝ) * ((n : ℝ) - S.card)) ≤
+        (n : ℝ) * G.cutWeight S ∧
+      2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) * G.totalWeight /
+          G.cutWeight S ≤ effectiveConditionNumber G (fun _ ↦ 1) ∧
+      2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) *
+          ((n : ℝ) * G.weights e) / G.cutWeight S ≤
+        effectiveConditionNumber G (fun _ ↦ 1) := by
   sorry
 
-/-- Lemma 1(i), edge form. -/
-theorem two_mul_weight_le_lambdaMax (G : WeightedGraph n m) (e : Fin m) :
-    2 * G.weights e ≤ laplacianEigenvalueMax G (fun _ => 1) := by
-  sorry
-
-/-- Lemma 1(ii), quotient form. -/
-theorem lambda2_le_cut_div (G : WeightedGraph n m) (S : Finset (Fin n))
-    (hne : S.Nonempty) (hproper : S ≠ Finset.univ) :
-    laplacian_eigenvalue₂ G (fun _ => 1) ≤
-      G.cutWeight S /
-        (((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) * n) := by
-  sorry
-
-/-- Lemma 1(ii), denominator-free form. -/
-theorem lambda2_mul_le_cut (G : WeightedGraph n m) (S : Finset (Fin n))
-    (hne : S.Nonempty) (hproper : S ≠ Finset.univ) :
-    laplacian_eigenvalue₂ G (fun _ => 1) * ((S.card : ℝ) * ((n : ℝ) - S.card)) ≤
-      (n : ℝ) * G.cutWeight S := by
-  sorry
-
-/-- Lemma 1, equation (2), total-weight form. -/
-theorem kappaPlus_ge_totalWeight (G : WeightedGraph n m) (S : Finset (Fin n))
-    (hne : S.Nonempty) (hproper : S ≠ Finset.univ)
-    (hconn : G.Connected (fun _ => 1)) :
-    2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) * G.totalWeight /
-        G.cutWeight S ≤
-      effectiveConditionNumber G (fun _ => 1) := by
-  sorry
-
-/-- Lemma 1, equation (2), per-edge form. -/
-theorem kappaPlus_ge_edge (G : WeightedGraph n m) (S : Finset (Fin n))
-    (hne : S.Nonempty) (hproper : S ≠ Finset.univ)
-    (hconn : G.Connected (fun _ => 1)) (e : Fin m) :
-    2 * ((S.card : ℝ) / n) * (1 - (S.card : ℝ) / n) * ((n : ℝ) * G.weights e) /
-        G.cutWeight S ≤
-      effectiveConditionNumber G (fun _ => 1) := by
-  sorry
-
-/-- Theorem 1. -/
-theorem separator_kappa_bound (G : WeightedGraph n m)
-    (A X Bv : Finset (Fin n)) (s Δ bmax β : ℝ)
-    (hcover : A ∪ X ∪ Bv = Finset.univ)
-    (hdisj : Disjoint (A ∪ X) Bv)
-    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
-      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
+theorem theorem1_separator (G : WeightedGraph n m)
+    (A X B : Finset (Fin n)) (s Δ bmax β : ℝ)
+    (hcover : A ∪ X ∪ B = Finset.univ)
+    (hdisjoint : Disjoint (A ∪ X) B)
+    (hnoCrossing : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ B) ∧
+      ¬(G.posEndpoint e ∈ B ∧ G.negEndpoint e ∈ A))
     (hX : (X.card : ℝ) ≤ s)
-    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
-    (hbmax : ∀ e, G.weights e ≤ bmax)
-    (hβ : 0 < β) (hβ' : β ≤ 1 / 2)
-    (hA_size : β * n ≤ ((A ∪ X).card : ℝ)) (hB_size : β * n ≤ (Bv.card : ℝ))
-    (hconn : G.Connected (fun _ => 1)) :
+    (hdegree : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hweight : ∀ e, G.weights e ≤ bmax)
+    (hβ : 0 < β) (hβhalf : β ≤ 1 / 2)
+    (hA : β * n ≤ ((A ∪ X).card : ℝ)) (hB : β * n ≤ (B.card : ℝ))
+    (hconn : G.CombinatoriallyConnected) :
     2 * β * (1 - β) * G.totalWeight / (s * Δ * bmax) ≤
-      effectiveConditionNumber G (fun _ => 1) := by
+      effectiveConditionNumber G (fun _ ↦ 1) := by
   sorry
 
-/-- Corollary 1(i). -/
-theorem treewidth_kappa_bound (G : WeightedGraph n m)
-    (A X Bv : Finset (Fin n)) (τ Δ bmax : ℝ)
-    (hcover : A ∪ X ∪ Bv = Finset.univ)
-    (hdisj : Disjoint (A ∪ X) Bv)
-    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
-      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
-    (hX : (X.card : ℝ) ≤ τ + 1)
-    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
-    (hbmax : ∀ e, G.weights e ≤ bmax)
-    (hA_size : (n : ℝ) / 4 ≤ ((A ∪ X).card : ℝ))
-    (hB_size : (n : ℝ) / 4 ≤ (Bv.card : ℝ))
-    (hconn : G.Connected (fun _ => 1)) :
-    3 / 8 * G.totalWeight / ((τ + 1) * Δ * bmax) ≤
-      effectiveConditionNumber G (fun _ => 1) := by
+theorem corollary1_treewidth {k τ : ℕ} (G : WeightedGraph n m)
+    (D : RootedTreeDecomposition G.toSimpleGraph k)
+    (hn : 0 < n) (hwidth : D.HasWidthAtMost τ) (hτ : τ + 1 ≤ n / 4)
+    (Δ bmax : ℝ)
+    (hdegree : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hweight : ∀ e, G.weights e ≤ bmax)
+    (hconn : G.CombinatoriallyConnected) :
+    3 / 8 * G.totalWeight / (((τ : ℝ) + 1) * Δ * bmax) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
   sorry
 
-/-- Corollary 1(ii). -/
-theorem planar_kappa_bound (G : WeightedGraph n m)
-    (A X Bv : Finset (Fin n)) (Δ bmax : ℝ)
-    (hcover : A ∪ X ∪ Bv = Finset.univ)
-    (hdisj : Disjoint (A ∪ X) Bv)
-    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
-      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
-    (hX : (X.card : ℝ) ≤ Real.sqrt (8 * n))
-    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
-    (hbmax : ∀ e, G.weights e ≤ bmax)
-    (hA_size : (n : ℝ) / 6 ≤ ((A ∪ X).card : ℝ))
-    (hB_size : (n : ℝ) / 6 ≤ (Bv.card : ℝ))
-    (hconn : G.Connected (fun _ => 1)) :
+theorem corollary1_planarFromLiptonTarjan (G : WeightedGraph n m)
+    (A X B : Finset (Fin n)) (partition : LiptonTarjanPartition G A X B)
+    (Δ bmax : ℝ)
+    (hdegree : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hweight : ∀ e, G.weights e ≤ bmax)
+    (hconn : G.CombinatoriallyConnected) :
     5 / 18 * G.totalWeight / (Real.sqrt (8 * n) * Δ * bmax) ≤
-      effectiveConditionNumber G (fun _ => 1) := by
+      effectiveConditionNumber G (fun _ ↦ 1) := by
   sorry
 
-/-- Near-planar extension of Corollary 1(ii). -/
-theorem near_planar_kappa_bound (G : WeightedGraph n m)
-    (A X Bv : Finset (Fin n)) (Δ bmax c : ℝ) (_hc : 0 ≤ c)
-    (hcover : A ∪ X ∪ Bv = Finset.univ)
-    (hdisj : Disjoint (A ∪ X) Bv)
-    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
-      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
-    (hX : (X.card : ℝ) ≤ 2 * Real.sqrt (8 * ((n : ℝ) + c)))
-    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
-    (hbmax : ∀ e, G.weights e ≤ bmax)
-    (hA_size : (n : ℝ) / 6 ≤ ((A ∪ X).card : ℝ))
-    (hB_size : (n : ℝ) / 6 ≤ (Bv.card : ℝ))
-    (hconn : G.Connected (fun _ => 1)) :
-    5 / 36 * G.totalWeight / (Real.sqrt (8 * ((n : ℝ) + c)) * Δ * bmax) ≤
-      effectiveConditionNumber G (fun _ => 1) := by
-  sorry
-
-/-- Proposition 1. -/
-theorem corridor_kappa_bound (G : WeightedGraph n m)
-    (VS VT : Finset (Fin n)) (ℓ : ℕ) (hl : 2 ≤ ℓ)
-    (p : Fin ℓ → Fin n) (EP : Finset (Fin m)) (β : ℝ)
-    (hp_inj : Function.Injective p)
-    (hdisjS : ∀ i, p i ∉ VS) (hdisjT : ∀ i, p i ∉ VT)
-    (hST : Disjoint VS VT)
-    (hpath : ∀ e ∈ EP, ∃ i : Fin ℓ, ∃ h : i.val + 1 < ℓ,
-      (G.posEndpoint e = p i ∧ G.negEndpoint e = p ⟨i.val + 1, h⟩) ∨
-      (G.posEndpoint e = p ⟨i.val + 1, h⟩ ∧ G.negEndpoint e = p i))
-    (hnonpath : ∀ e ∉ EP,
-      ((G.posEndpoint e ∈ VS ∨ G.posEndpoint e = p ⟨0, by omega⟩) ∧
-       (G.negEndpoint e ∈ VS ∨ G.negEndpoint e = p ⟨0, by omega⟩)) ∨
-      ((G.posEndpoint e ∈ VT ∨ G.posEndpoint e = p ⟨ℓ - 1, by omega⟩) ∧
-       (G.negEndpoint e ∈ VT ∨ G.negEndpoint e = p ⟨ℓ - 1, by omega⟩)))
+theorem proposition1_corridor (G : WeightedGraph n m)
+    (left right : Finset (Fin n)) (ℓ : ℕ) (hℓ : 2 ≤ ℓ)
+    (path : Fin ℓ → Fin n) (pathEdges : Finset (Fin m)) (β : ℝ)
+    (hpathInjective : Function.Injective path)
+    (hleft : ∀ i, path i ∉ left) (hright : ∀ i, path i ∉ right)
+    (hdisjoint : Disjoint left right)
+    (hpath : ∀ e ∈ pathEdges, ∃ i : Fin ℓ, ∃ h : i.val + 1 < ℓ,
+      (G.posEndpoint e = path i ∧ G.negEndpoint e = path ⟨i.val + 1, h⟩) ∨
+      (G.posEndpoint e = path ⟨i.val + 1, h⟩ ∧ G.negEndpoint e = path i))
+    (hnonpath : ∀ e ∉ pathEdges,
+      ((G.posEndpoint e ∈ left ∨ G.posEndpoint e = path ⟨0, by omega⟩) ∧
+       (G.negEndpoint e ∈ left ∨ G.negEndpoint e = path ⟨0, by omega⟩)) ∨
+      ((G.posEndpoint e ∈ right ∨ G.posEndpoint e = path ⟨ℓ - 1, by omega⟩) ∧
+       (G.negEndpoint e ∈ right ∨ G.negEndpoint e = path ⟨ℓ - 1, by omega⟩)))
     (hβ : 0 < β)
-    (hVS_size : β * n ≤ (VS.card : ℝ)) (hVT_size : β * n ≤ (VT.card : ℝ))
-    (hconn : G.Connected (fun _ => 1)) :
-    2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 * G.totalWeight / (∑ e ∈ EP, G.weights e) ≤
-      effectiveConditionNumber G (fun _ => 1) := by
+    (hleftSize : β * n ≤ (left.card : ℝ))
+    (hrightSize : β * n ≤ (right.card : ℝ))
+    (hconn : G.CombinatoriallyConnected) :
+    2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 * G.totalWeight /
+        (∑ e ∈ pathEdges, G.weights e) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
   sorry
 
-/-- Proposition 2. -/
-theorem random_kappa_bound {Ωs : Type*} [MeasurableSpace Ωs]
-    (μ : MeasureTheory.Measure Ωs) [MeasureTheory.IsProbabilityMeasure μ]
-    (G : WeightedGraph n m) (hm : 0 < m)
-    (w : Fin m → Ωs → ℝ)
-    (hw_meas : ∀ e, Measurable (w e))
-    (hw_indep : ProbabilityTheory.iIndepFun w μ)
-    (bmax : ℝ) (hw_mem : ∀ ω, ∀ e, w e ω ∈ Set.Ioc 0 bmax)
-    (A X Bv : Finset (Fin n)) (s Δ β ε : ℝ)
-    (hcover : A ∪ X ∪ Bv = Finset.univ)
-    (hdisj : Disjoint (A ∪ X) Bv)
-    (hnoAB : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ Bv) ∧
-      ¬(G.posEndpoint e ∈ Bv ∧ G.negEndpoint e ∈ A))
+theorem proposition2_randomSeparator {sample : Type*} [MeasurableSpace sample]
+    (measure : MeasureTheory.Measure sample) [MeasureTheory.IsProbabilityMeasure measure]
+    (G : WeightedGraph n m) (hm : 0 < m) (weight : Fin m → sample → ℝ)
+    (hmeasurable : ∀ e, Measurable (weight e))
+    (hindependent : ProbabilityTheory.iIndepFun weight measure)
+    (bmax : ℝ) (hbounded : ∀ ω, ∀ e, weight e ω ∈ Set.Ioc 0 bmax)
+    (A X B : Finset (Fin n)) (s Δ β ε ρ : ℝ)
+    (hcover : A ∪ X ∪ B = Finset.univ)
+    (hdisjoint : Disjoint (A ∪ X) B)
+    (hnoCrossing : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ B) ∧
+      ¬(G.posEndpoint e ∈ B ∧ G.negEndpoint e ∈ A))
     (hX : (X.card : ℝ) ≤ s)
-    (hdeg : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
-    (hβ : 0 < β) (hβ' : β ≤ 1 / 2)
-    (hA_size : β * n ≤ ((A ∪ X).card : ℝ)) (hB_size : β * n ≤ (Bv.card : ℝ))
-    (hden : 0 < s * Δ * bmax)
-    (hε : 0 < ε) (_hε' : ε < 1)
-    (hconn : ∀ ω, (G.withWeights (fun e => w e ω)
-      (fun e => (hw_mem ω e).1)).Connected (fun _ => 1)) :
-    1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, w e ω ∂μ) ^ 2 / (m * bmax ^ 2)) ≤
-      μ.real {ω | 2 * β * (1 - β) * ((1 - ε) * (∑ e, ∫ ω', w e ω' ∂μ)) /
-        (s * Δ * bmax) ≤
+    (hdegree : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hβ : 0 < β) (hβhalf : β ≤ 1 / 2)
+    (hA : β * n ≤ ((A ∪ X).card : ℝ)) (hB : β * n ≤ (B.card : ℝ))
+    (hdenominator : 0 < s * Δ * bmax) (hε : 0 < ε) (hρ : 0 < ρ)
+    (hmean : ρ * (m : ℝ) * bmax ≤ ∑ e, ∫ ω, weight e ω ∂measure)
+    (hconn : G.CombinatoriallyConnected) :
+    1 - Real.exp (-2 * ε ^ 2 * ρ ^ 2 * m) ≤
+      measure.real {ω | 2 * β * (1 - β) *
+          ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) / (s * Δ * bmax) ≤
         effectiveConditionNumber
-          (G.withWeights (fun e => w e ω) (fun e => (hw_mem ω e).1))
-          (fun _ => 1)} := by
+          (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
+          (fun _ ↦ 1)} := by
   sorry
 
-/-- Proposition 3(i), abstract form. -/
-theorem e2e_query_lower_bound (nn q ε κ preps costPerPrep total c₁ c₂ c₃ : ℝ)
-    (hn : 0 < nn) (hq : 0 < q) (hε : 0 < ε)
-    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
-    (hκ : c₃ * q ≤ κ)
-    (hpreps : c₂ * (nn / ε) ≤ preps)
-    (hcost : c₁ * κ ≤ costPerPrep)
-    (htotal : preps * costPerPrep ≤ total) :
-    c₁ * c₂ * c₃ * (nn * q) / ε ≤ total := by
+theorem proposition2_randomTreewidth {sample : Type*} [MeasurableSpace sample]
+    {k τ : ℕ}
+    (measure : MeasureTheory.Measure sample) [MeasureTheory.IsProbabilityMeasure measure]
+    (G : WeightedGraph n m) (hm : 0 < m) (weight : Fin m → sample → ℝ)
+    (hmeasurable : ∀ e, Measurable (weight e))
+    (hindependent : ProbabilityTheory.iIndepFun weight measure)
+    (bmax : ℝ) (hbounded : ∀ ω, ∀ e, weight e ω ∈ Set.Ioc 0 bmax)
+    (D : RootedTreeDecomposition G.toSimpleGraph k)
+    (hn : 0 < n) (hwidth : D.HasWidthAtMost τ) (hτ : τ + 1 ≤ n / 4)
+    (Δ ε : ℝ)
+    (hdegree : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hdenominator : 0 < (((τ : ℝ) + 1) * Δ * bmax)) (hε : 0 < ε)
+    (hconn : G.CombinatoriallyConnected) :
+    1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
+        (m * bmax ^ 2)) ≤
+      measure.real {ω | 3 / 8 * ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) /
+          (((τ : ℝ) + 1) * Δ * bmax) ≤
+        effectiveConditionNumber
+          (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
+          (fun _ ↦ 1)} := by
   sorry
 
-/-- Proposition 3(i), grid specialization. -/
-theorem e2e_query_lower_bound_grid (nn ε κ preps costPerPrep total c₁ c₂ c₃ : ℝ)
-    (hn : 0 < nn) (hε : 0 < ε)
-    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
-    (hκ : c₃ * nn ≤ κ)
-    (hpreps : c₂ * (nn / ε) ≤ preps)
-    (hcost : c₁ * κ ≤ costPerPrep)
-    (htotal : preps * costPerPrep ≤ total) :
-    c₁ * c₂ * c₃ * nn ^ 2 / ε ≤ total := by
+theorem proposition2_randomPlanar {sample : Type*} [MeasurableSpace sample]
+    (measure : MeasureTheory.Measure sample) [MeasureTheory.IsProbabilityMeasure measure]
+    (G : WeightedGraph n m) (hm : 0 < m) (weight : Fin m → sample → ℝ)
+    (hmeasurable : ∀ e, Measurable (weight e))
+    (hindependent : ProbabilityTheory.iIndepFun weight measure)
+    (bmax : ℝ) (hbounded : ∀ ω, ∀ e, weight e ω ∈ Set.Ioc 0 bmax)
+    (A X B : Finset (Fin n)) (partition : LiptonTarjanPartition G A X B)
+    (Δ ε : ℝ) (hdegree : ∀ i, ((G.incidentEdges i).card : ℝ) ≤ Δ)
+    (hdenominator : 0 < Real.sqrt (8 * n) * Δ * bmax) (hε : 0 < ε)
+    (hconn : G.CombinatoriallyConnected) :
+    1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
+        (m * bmax ^ 2)) ≤
+      measure.real {ω | 5 / 18 * ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) /
+          (Real.sqrt (8 * n) * Δ * bmax) ≤
+        effectiveConditionNumber
+          (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
+          (fun _ ↦ 1)} := by
   sorry
 
-/-- Proposition 3(i), corridor specialization. -/
-theorem e2e_query_lower_bound_corridor
-    (nn ε κ preps costPerPrep total c₁ c₂ c₃ : ℝ)
-    (hn : 0 < nn) (hε : 0 < ε)
-    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
-    (hκ : c₃ * nn ^ 2 ≤ κ)
-    (hpreps : c₂ * (nn / ε) ≤ preps)
-    (hcost : c₁ * κ ≤ costPerPrep)
-    (htotal : preps * costPerPrep ≤ total) :
-    c₁ * c₂ * c₃ * nn ^ 3 / ε ≤ total := by
+theorem proposition2_randomCorridor {sample : Type*} [MeasurableSpace sample]
+    (measure : MeasureTheory.Measure sample) [MeasureTheory.IsProbabilityMeasure measure]
+    (G : WeightedGraph n m) (hm : 0 < m) (weight : Fin m → sample → ℝ)
+    (hmeasurable : ∀ e, Measurable (weight e))
+    (hindependent : ProbabilityTheory.iIndepFun weight measure)
+    (bmax : ℝ) (hbounded : ∀ ω, ∀ e, weight e ω ∈ Set.Ioc 0 bmax)
+    (left right : Finset (Fin n)) (ℓ : ℕ) (hℓ : 2 ≤ ℓ)
+    (path : Fin ℓ → Fin n) (pathEdges : Finset (Fin m)) (hpathEdges : pathEdges.Nonempty)
+    (β ε : ℝ) (hpathInjective : Function.Injective path)
+    (hleft : ∀ i, path i ∉ left) (hright : ∀ i, path i ∉ right)
+    (hdisjoint : Disjoint left right)
+    (hpath : ∀ e ∈ pathEdges, ∃ i : Fin ℓ, ∃ h : i.val + 1 < ℓ,
+      (G.posEndpoint e = path i ∧ G.negEndpoint e = path ⟨i.val + 1, h⟩) ∨
+      (G.posEndpoint e = path ⟨i.val + 1, h⟩ ∧ G.negEndpoint e = path i))
+    (hnonpath : ∀ e ∉ pathEdges,
+      ((G.posEndpoint e ∈ left ∨ G.posEndpoint e = path ⟨0, by omega⟩) ∧
+       (G.negEndpoint e ∈ left ∨ G.negEndpoint e = path ⟨0, by omega⟩)) ∨
+      ((G.posEndpoint e ∈ right ∨ G.posEndpoint e = path ⟨ℓ - 1, by omega⟩) ∧
+       (G.negEndpoint e ∈ right ∨ G.negEndpoint e = path ⟨ℓ - 1, by omega⟩)))
+    (hβ : 0 < β) (hleftSize : β * n ≤ (left.card : ℝ))
+    (hrightSize : β * n ≤ (right.card : ℝ)) (hε : 0 < ε)
+    (hconn : G.CombinatoriallyConnected) :
+    1 - Real.exp (-2 * ε ^ 2 * (∑ e, ∫ ω, weight e ω ∂measure) ^ 2 /
+        (m * bmax ^ 2)) ≤
+      measure.real {ω | 2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 *
+          ((1 - ε) * (∑ e, ∫ ω', weight e ω' ∂measure)) /
+            (∑ e ∈ pathEdges, weight e ω) ≤
+        effectiveConditionNumber
+          (G.withWeights (fun e ↦ weight e ω) (fun e ↦ (hbounded ω e).1))
+          (fun _ ↦ 1)} := by
   sorry
 
-/-- Proposition 3(ii). -/
-theorem e2e_observable_lower_bound (nn κ cost c₁ c₃ : ℝ)
-    (hc₁ : 0 < c₁) (hκ : c₃ * nn ≤ κ) (hcost : c₁ * κ ≤ cost) :
-    c₁ * (c₃ * nn) ≤ cost := by
+theorem proposition3_balancedHardPair (G : WeightedGraph n m)
+    (hconn : G.CombinatoriallyConnected) (hn : 1 < n)
+    (hextreme : laplacian_eigenvalue₂ G (fun _ ↦ 1) <
+      laplacianEigenvalueMax G (fun _ ↦ 1)) :
+    Nonempty (GraphHardPairCertificate G) := by
   sorry
+
+theorem proposition3_fixedScheduleReadout {index : Type*}
+    (G : WeightedGraph n m) (hconn : G.CombinatoriallyConnected) (hn : 1 < n)
+    (hardPair : GraphHardPairCertificate G)
+    (qSolve : ℕ) (calls total classicalTime loadTime : index → ℝ)
+    (target : index → zeroSumSubspace n) (isDense : index → Prop)
+    (preparePlus prepareMinus preparePlusInv prepareMinusInv :
+      (Fin 2 → ℝ) → Fin 2 → ℝ)
+    (tomographyBasis : zeroSumSubspace n)
+    (tomographyPrepare tomographyPrepareInv :
+      index → zeroSumSubspace n → zeroSumSubspace n)
+    (distance gap hybridConstant error successProbability tomographyConstant
+      classicalConstant sparseConstant classicalLogFactor loadingConstant : ℝ)
+    (hybrid : ControlledPreparationHybridBound hardPair.pair qSolve
+      (effectiveConditionNumber G (fun _ ↦ 1)) distance gap hybridConstant preparePlus
+      prepareMinus preparePlusInv prepareMinusInv)
+    (tomography : PureStateTomographyBound target calls tomographyBasis
+      tomographyPrepare tomographyPrepareInv error successProbability tomographyConstant)
+    (classicalSolve : ClassicalSDDSolveBound G classicalTime classicalConstant
+      classicalLogFactor)
+    (denseLoading : DenseLoadingBound n isDense loadTime loadingConstant)
+    (htotal : ∀ p, calls p * qSolve ≤ total p)
+    (hsparse : (m : ℝ) ≤ sparseConstant * n)
+    (hthreshold : classicalConstant * sparseConstant * classicalLogFactor <
+      (tomographyConstant / 2) * gap * effectiveConditionNumber G (fun _ ↦ 1) /
+        (hybridConstant * error)) :
+    ∃ (p : index) (rhs : Fin n → ℝ) (scale : ℝ),
+      (tomographyConstant / 2) * gap *
+          ((n : ℝ) * effectiveConditionNumber G (fun _ ↦ 1)) /
+          (hybridConstant * error) ≤ total p ∧
+        RHSQueryHardness.IsBalanced rhs ∧
+        RHSQueryHardness.sqNorm rhs = 1 ∧
+        0 < scale ∧
+        G.laplacian (fun _ ↦ 1) *ᵥ (scale • fun i ↦ (target p).1 i) = rhs ∧
+        classicalTime p < total p ∧
+        (isDense p → loadingConstant * n ≤ loadTime p) := by
+  sorry
+
+theorem proposition3_gridReadout {index : Type*}
+    (G : WeightedGraph n m) (hconn : G.CombinatoriallyConnected) (hn : 1 < n)
+    (hardPair : GraphHardPairCertificate G)
+    (qSolve : ℕ) (calls total classicalTime loadTime : index → ℝ)
+    (target : index → zeroSumSubspace n) (isDense : index → Prop)
+    (preparePlus prepareMinus preparePlusInv prepareMinusInv :
+      (Fin 2 → ℝ) → Fin 2 → ℝ)
+    (tomographyBasis : zeroSumSubspace n)
+    (tomographyPrepare tomographyPrepareInv :
+      index → zeroSumSubspace n → zeroSumSubspace n)
+    (distance gap hybridConstant error successProbability tomographyConstant cK
+      classicalConstant sparseConstant classicalLogFactor loadingConstant : ℝ)
+    (hybrid : ControlledPreparationHybridBound hardPair.pair qSolve
+      (effectiveConditionNumber G (fun _ ↦ 1)) distance gap hybridConstant preparePlus
+      prepareMinus preparePlusInv prepareMinusInv)
+    (tomography : PureStateTomographyBound target calls tomographyBasis
+      tomographyPrepare tomographyPrepareInv error successProbability tomographyConstant)
+    (classicalSolve : ClassicalSDDSolveBound G classicalTime classicalConstant
+      classicalLogFactor)
+    (denseLoading : DenseLoadingBound n isDense loadTime loadingConstant)
+    (htotal : ∀ p, calls p * qSolve ≤ total p)
+    (hconditionLinear : cK * (n : ℝ) ≤ effectiveConditionNumber G (fun _ ↦ 1))
+    (hsparse : (m : ℝ) ≤ sparseConstant * n)
+    (hthreshold : classicalConstant * sparseConstant * classicalLogFactor <
+      (tomographyConstant / 2) * gap * cK * n / (hybridConstant * error)) :
+    ∃ (p : index) (rhs : Fin n → ℝ) (scale : ℝ),
+      (tomographyConstant / 2) * gap * cK * (n : ℝ) ^ 2 /
+          (hybridConstant * error) ≤ total p ∧
+        RHSQueryHardness.IsBalanced rhs ∧
+        RHSQueryHardness.sqNorm rhs = 1 ∧
+        0 < scale ∧
+        G.laplacian (fun _ ↦ 1) *ᵥ (scale • fun i ↦ (target p).1 i) = rhs ∧
+        classicalTime p < total p ∧
+        (isDense p → loadingConstant * n ≤ loadTime p) := by
+  sorry
+
+theorem proposition3_corridorReadout {index : Type*}
+    (G : WeightedGraph n m) (hconn : G.CombinatoriallyConnected) (hn : 1 < n)
+    (hardPair : GraphHardPairCertificate G)
+    (qSolve : ℕ) (calls total classicalTime loadTime : index → ℝ)
+    (target : index → zeroSumSubspace n) (isDense : index → Prop)
+    (preparePlus prepareMinus preparePlusInv prepareMinusInv :
+      (Fin 2 → ℝ) → Fin 2 → ℝ)
+    (tomographyBasis : zeroSumSubspace n)
+    (tomographyPrepare tomographyPrepareInv :
+      index → zeroSumSubspace n → zeroSumSubspace n)
+    (distance gap hybridConstant error successProbability tomographyConstant cK
+      classicalConstant sparseConstant classicalLogFactor loadingConstant : ℝ)
+    (hybrid : ControlledPreparationHybridBound hardPair.pair qSolve
+      (effectiveConditionNumber G (fun _ ↦ 1)) distance gap hybridConstant preparePlus
+      prepareMinus preparePlusInv prepareMinusInv)
+    (tomography : PureStateTomographyBound target calls tomographyBasis
+      tomographyPrepare tomographyPrepareInv error successProbability tomographyConstant)
+    (classicalSolve : ClassicalSDDSolveBound G classicalTime classicalConstant
+      classicalLogFactor)
+    (denseLoading : DenseLoadingBound n isDense loadTime loadingConstant)
+    (htotal : ∀ p, calls p * qSolve ≤ total p)
+    (hconditionQuadratic :
+      cK * (n : ℝ) ^ 2 ≤ effectiveConditionNumber G (fun _ ↦ 1))
+    (hsparse : (m : ℝ) ≤ sparseConstant * n)
+    (hthreshold : classicalConstant * sparseConstant * classicalLogFactor <
+      (tomographyConstant / 2) * gap * cK * n ^ 2 / (hybridConstant * error)) :
+    ∃ (p : index) (rhs : Fin n → ℝ) (scale : ℝ),
+      (tomographyConstant / 2) * gap * cK * (n : ℝ) ^ 3 /
+          (hybridConstant * error) ≤ total p ∧
+        RHSQueryHardness.IsBalanced rhs ∧
+        RHSQueryHardness.sqNorm rhs = 1 ∧
+        0 < scale ∧
+        G.laplacian (fun _ ↦ 1) *ᵥ (scale • fun i ↦ (target p).1 i) = rhs ∧
+        classicalTime p < total p ∧
+        (isDense p → loadingConstant * n ≤ loadTime p) := by
+  sorry
+
+theorem proposition3_localObservable
+    (pair : RHSQueryHardness.BalancedModePair n) (qSolve : ℕ)
+    (condition solverDistance solverGap hybridConstant observableQueries : ℝ)
+    (preparePlus prepareMinus preparePlusInv prepareMinusInv :
+      (Fin 2 → ℝ) → Fin 2 → ℝ)
+    (hybrid : ControlledPreparationHybridBound pair qSolve condition solverDistance solverGap
+      hybridConstant preparePlus prepareMinus preparePlusInv prepareMinusInv)
+    (husesSolve : (qSolve : ℝ) ≤ observableQueries)
+    (isBranch : Bool) (i j : Fin n)
+    (estimatePlus estimateMinus gamma : ℝ) (_hgamma : 0 < gamma)
+    (hexact :
+      |(if isBranch then
+          (RHSQueryHardness.balancedSolutionPlus pair i -
+            RHSQueryHardness.balancedSolutionPlus pair j) ^ 2
+        else (RHSQueryHardness.balancedSolutionPlus pair i) ^ 2) -
+        (if isBranch then
+          (RHSQueryHardness.balancedSolutionMinus pair i -
+            RHSQueryHardness.balancedSolutionMinus pair j) ^ 2
+        else (RHSQueryHardness.balancedSolutionMinus pair i) ^ 2)| = gamma)
+    (hplus :
+      |estimatePlus -
+        (if isBranch then
+          (RHSQueryHardness.balancedSolutionPlus pair i -
+            RHSQueryHardness.balancedSolutionPlus pair j) ^ 2
+        else (RHSQueryHardness.balancedSolutionPlus pair i) ^ 2)| ≤ gamma / 4)
+    (hminus :
+      |estimateMinus -
+        (if isBranch then
+          (RHSQueryHardness.balancedSolutionMinus pair i -
+            RHSQueryHardness.balancedSolutionMinus pair j) ^ 2
+        else (RHSQueryHardness.balancedSolutionMinus pair i) ^ 2)| ≤ gamma / 4) :
+    solverGap * condition / hybridConstant ≤ observableQueries ∧
+      gamma / 2 ≤ |estimatePlus - estimateMinus| := by
+  sorry
+
+theorem groundedConditioningTransfer (G : WeightedGraph n m) (slack : Fin n)
+    (Δ bmax : ℝ) (hconn : G.CombinatoriallyConnected) (hn : 1 < n)
+    (hdegree : ((G.incidentEdges slack).card : ℝ) ≤ Δ)
+    (hbmaxNonnegative : 0 ≤ bmax) (hweight : ∀ e, G.weights e ≤ bmax)
+    (hcorrected : 0 ≤ 2 * G.totalWeight - Δ * bmax) :
+    ((2 * G.totalWeight - Δ * bmax) / ((n : ℝ) - 1)) /
+        laplacian_eigenvalue₂ G (fun _ ↦ 1) ≤
+      groundedConditionNumber G slack := by
+  sorry
+
+theorem flatStartACBlock (G : WeightedGraph n m) :
+    G.acAngleJacobian (fun _ ↦ 0) = G.laplacian (fun _ ↦ 1) := by
+  sorry
+
+theorem dcOpfBarrierBlock (G : WeightedGraph n m)
+    (limit : Fin m → ℝ) (barrier : ℝ) (angle : Fin n → ℝ)
+    (hbarrier : 0 < barrier)
+    (hminus : ∀ e, 0 < limit e - G.dcBranchFlow angle e)
+    (hplus : ∀ e, 0 < limit e + G.dcBranchFlow angle e) :
+    (∀ e, 0 < G.dcOpfBarrierScale limit barrier angle e) ∧
+      G.dcOpfNetworkBlock limit barrier angle =
+        G.laplacian (G.dcOpfBarrierScale limit barrier angle) := by
+  sorry
+
+end PaperClaims
 
 end

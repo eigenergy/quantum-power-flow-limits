@@ -1,17 +1,87 @@
+/-
+Copyright (c) 2026 Cameron Khanpour and Samuel Talkington. All rights reserved.
+Released under MIT license as described in the file LICENSE.
+Authors: Cameron Khanpour, Samuel Talkington
+-/
 import PowerFlowLimits.CutBounds
 
 /-!
 # Proposition 1 (prop:corridor): corridors imply quadratic conditioning
 
 Part of the Lean 4 formalization of
-"The Limits of Quantum Computers for Power Flow" (Khanpour and Talkington).
+"Proving the Limits of Quantum Power Flow" (Khanpour and Talkington).
 -/
 
 open Finset BigOperators
+open Filter Asymptotics
 
 noncomputable section
 
 variable {n m : ℕ}
+
+/-- The exact graph data asserted by Proposition 1's corridor prose. The path branches are
+indexed once, the bus sets form a disjoint cover, and every other branch stays inside one bulk
+together with its adjacent corridor endpoint. -/
+structure CorridorTopology (G : WeightedGraph n m)
+    (VS VT : Finset (Fin n)) (ℓ : ℕ) (p : Fin ℓ → Fin n)
+    (EP : Finset (Fin m)) where
+  length_two : 2 ≤ ℓ
+  path_injective : Function.Injective p
+  /-- The branch joining each consecutive pair of path vertices. -/
+  pathEdge : Fin (ℓ - 1) → Fin m
+  pathEdge_injective : Function.Injective pathEdge
+  pathEdge_range : EP = Finset.univ.image pathEdge
+  pathEdge_endpoints : ∀ i, ∃ j : Fin ℓ, ∃ h : j.val + 1 < ℓ,
+    j.val = i.val ∧
+      ((G.posEndpoint (pathEdge i) = p j ∧
+          G.negEndpoint (pathEdge i) = p ⟨j.val + 1, h⟩) ∨
+        (G.posEndpoint (pathEdge i) = p ⟨j.val + 1, h⟩ ∧
+          G.negEndpoint (pathEdge i) = p j))
+  path_disjoint_left : ∀ i, p i ∉ VS
+  path_disjoint_right : ∀ i, p i ∉ VT
+  bulks_disjoint : Disjoint VS VT
+  vertex_cover : VS ∪ Finset.univ.image p ∪ VT = Finset.univ
+  nonpath_internal : ∀ e ∉ EP,
+    ((G.posEndpoint e ∈ VS ∨ G.posEndpoint e = p ⟨0, by omega⟩) ∧
+      (G.negEndpoint e ∈ VS ∨ G.negEndpoint e = p ⟨0, by omega⟩)) ∨
+    ((G.posEndpoint e ∈ VT ∨ G.posEndpoint e = p ⟨ℓ - 1, by omega⟩) ∧
+      (G.negEndpoint e ∈ VT ∨ G.negEndpoint e = p ⟨ℓ - 1, by omega⟩))
+
+/-- The exact corridor topology contains precisely `ℓ - 1` path branches. -/
+theorem CorridorTopology.pathEdge_card {G : WeightedGraph n m}
+    {VS VT : Finset (Fin n)} {ℓ : ℕ} {p : Fin ℓ → Fin n}
+    {EP : Finset (Fin m)} (C : CorridorTopology G VS VT ℓ p EP) :
+    EP.card = ℓ - 1 := by
+  rw [C.pathEdge_range, Finset.card_image_of_injective _ C.pathEdge_injective,
+    Finset.card_univ, Fintype.card_fin]
+
+/-- The indexed corridor topology implies the branchwise premise used by the Rayleigh proof. -/
+theorem CorridorTopology.path_branch {G : WeightedGraph n m}
+    {VS VT : Finset (Fin n)} {ℓ : ℕ} {p : Fin ℓ → Fin n}
+    {EP : Finset (Fin m)} (C : CorridorTopology G VS VT ℓ p EP) :
+    ∀ e ∈ EP, ∃ i : Fin ℓ, ∃ h : i.val + 1 < ℓ,
+      (G.posEndpoint e = p i ∧ G.negEndpoint e = p ⟨i.val + 1, h⟩) ∨
+      (G.posEndpoint e = p ⟨i.val + 1, h⟩ ∧ G.negEndpoint e = p i) := by
+  intro e he
+  rw [C.pathEdge_range] at he
+  obtain ⟨i, _, rfl⟩ := Finset.mem_image.mp he
+  obtain ⟨j, h, _, hj⟩ := C.pathEdge_endpoints i
+  exact ⟨j, h, hj⟩
+
+/-- The total weight of `ell - 1` corridor branches is at most
+`(ell - 1) * b_max`. -/
+theorem corridorWeight_le_length_mul_bmax (G : WeightedGraph n m)
+    (EP : Finset (Fin m)) (ℓ : ℕ) (bmax : ℝ)
+    (hℓ : 1 ≤ ℓ) (hcard : EP.card = ℓ - 1)
+    (hbmax : ∀ e, G.weights e ≤ bmax) :
+    ∑ e ∈ EP, G.weights e ≤ ((ℓ : ℝ) - 1) * bmax := by
+  calc
+    ∑ e ∈ EP, G.weights e ≤ ∑ _e ∈ EP, bmax :=
+      Finset.sum_le_sum fun e _ ↦ hbmax e
+    _ = (EP.card : ℝ) * bmax := by
+      rw [Finset.sum_const, nsmul_eq_mul]
+    _ = ((ℓ : ℝ) - 1) * bmax := by
+      rw [hcard, Nat.cast_sub hℓ, Nat.cast_one]
 
 /-- Proposition 1 (prop:corridor): corridors imply quadratic conditioning.
     `V = V_S ⊔ P ⊔ V_T` where `P = p_0 … p_{ℓ-1}` is a corridor: `EP` collects
@@ -36,11 +106,14 @@ theorem corridor_kappa_bound (G : WeightedGraph n m)
        (G.negEndpoint e ∈ VT ∨ G.negEndpoint e = p ⟨ℓ - 1, by omega⟩)))
     (hβ : 0 < β)
     (hVS_size : β * n ≤ (VS.card : ℝ)) (hVT_size : β * n ≤ (VT.card : ℝ))
-    (hconn : G.Connected (fun _ => 1)) :
+    (hconn : G.CombinatoriallyConnected) :
     2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 * G.totalWeight / (∑ e ∈ EP, G.weights e) ≤
       effectiveConditionNumber G (fun _ => 1) := by
   classical
-  have hn2 : 1 < n := hconn.one_lt
+  have hℓn : ℓ ≤ n := by
+    simpa using Fintype.card_le_of_injective p hp_inj
+  have hn2 : 1 < n := by omega
+  have hspec := combinatoriallyConnected_implies_spectralConnected G hconn hn2
   have hn_pos : (0 : ℝ) < n := by
     have : (0 : ℕ) < n := by omega
     exact_mod_cast this
@@ -154,8 +227,7 @@ theorem corridor_kappa_bound (G : WeightedGraph n m)
     have hab_le : a + b ≤ n := by
       have hcard := Finset.card_union_of_disjoint hST
       have hle : (VS ∪ VT).card ≤ n := by
-        have := Finset.card_le_card (Finset.subset_univ (VS ∪ VT))
-        simpa using this
+        simpa using Finset.card_le_card (Finset.subset_univ (VS ∪ VT))
       calc a + b = ((VS.card + VT.card : ℕ) : ℝ) := by push_cast; ring
         _ = (((VS ∪ VT).card : ℕ) : ℝ) := by rw [hcard]
         _ ≤ n := by exact_mod_cast hle
@@ -225,7 +297,7 @@ theorem corridor_kappa_bound (G : WeightedGraph n m)
         field_simp
       nlinarith [mul_le_mul_of_nonneg_right h2 hL2.le]
   -- assemble the condition number bound
-  have hconn' := hconn
+  have hconn' := hspec
   unfold WeightedGraph.Connected at hconn'
   have hbEP_pos : 0 < bEP := by
     by_contra hb
@@ -252,5 +324,162 @@ theorem corridor_kappa_bound (G : WeightedGraph n m)
           (div_nonneg (by linarith) hn_pos.le)
     _ ≤ laplacianEigenvalueMax G (fun _ => 1) * bEP :=
         mul_le_mul_of_nonneg_right hlmax hbEP_pos.le
+
+/-- Proposition 1 with its prose topology packaged as one exact witness. -/
+theorem corridor_kappa_bound_of_topology (G : WeightedGraph n m)
+    (VS VT : Finset (Fin n)) (ℓ : ℕ) (p : Fin ℓ → Fin n)
+    (EP : Finset (Fin m)) (C : CorridorTopology G VS VT ℓ p EP)
+    (β : ℝ) (hβ : 0 < β)
+    (hVS_size : β * n ≤ (VS.card : ℝ))
+    (hVT_size : β * n ≤ (VT.card : ℝ))
+    (hconn : G.CombinatoriallyConnected) :
+    2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 * G.totalWeight /
+        (∑ e ∈ EP, G.weights e) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) :=
+  corridor_kappa_bound G VS VT ℓ C.length_two p EP β C.path_injective
+    C.path_disjoint_left C.path_disjoint_right C.bulks_disjoint C.path_branch
+    C.nonpath_internal hβ hVS_size hVT_size hconn
+
+/-- The `ℓ = 2` specialization is a single tie branch. This recovers the tie branch mechanism;
+its displayed coefficient is the corridor proposition's `2β²`. -/
+theorem two_bus_corridor_kappa_bound (G : WeightedGraph n m)
+    (VS VT : Finset (Fin n)) (p : Fin 2 → Fin n) (EP : Finset (Fin m))
+    (C : CorridorTopology G VS VT 2 p EP) (β : ℝ) (hβ : 0 < β)
+    (hVS_size : β * n ≤ (VS.card : ℝ))
+    (hVT_size : β * n ≤ (VT.card : ℝ))
+    (hconn : G.CombinatoriallyConnected) :
+    2 * β ^ 2 * G.totalWeight / G.weights (C.pathEdge ⟨0, by omega⟩) ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  have h := corridor_kappa_bound_of_topology G VS VT 2 p EP C β hβ
+    hVS_size hVT_size hconn
+  have hsum : ∑ e ∈ EP, G.weights e = G.weights (C.pathEdge ⟨0, by omega⟩) := by
+    let pathEdge : Fin 1 → Fin m := C.pathEdge
+    have hrange : EP = Finset.univ.image pathEdge := C.pathEdge_range
+    change ∑ e ∈ EP, G.weights e = G.weights (pathEdge ⟨0, by omega⟩)
+    rw [hrange]
+    simp
+  rw [hsum] at h
+  norm_num at h ⊢
+  exact h
+
+/-- The finite quantitative form of the proposition's quadratic-growth sentence. A corridor whose
+length is at least `α n`, together with a uniform mean-to-maximum weight ratio `ρ`, forces the
+displayed `n²` lower bound. Connectedness supplies `m ≥ n - 1 ≥ n / 2`. -/
+theorem corridor_kappa_quadratic_bound (G : WeightedGraph n m)
+    (VS VT : Finset (Fin n)) (ℓ : ℕ) (p : Fin ℓ → Fin n)
+    (EP : Finset (Fin m)) (C : CorridorTopology G VS VT ℓ p EP)
+    (β α ρ bmax : ℝ) (hβ : 0 < β) (hα : 0 < α) (hρ : 0 < ρ)
+    (hbmax_pos : 0 < bmax)
+    (hVS_size : β * n ≤ (VS.card : ℝ))
+    (hVT_size : β * n ≤ (VT.card : ℝ))
+    (hbmax : ∀ e, G.weights e ≤ bmax)
+    (hmean : ρ * (m : ℝ) * bmax ≤ G.totalWeight)
+    (hmacro : α * n ≤ (ℓ : ℝ) - 1)
+    (hconn : G.CombinatoriallyConnected) :
+    β ^ 2 * α * ρ * (n : ℝ) ^ 2 ≤
+      effectiveConditionNumber G (fun _ ↦ 1) := by
+  have hℓn : ℓ ≤ n := by
+    simpa using Fintype.card_le_of_injective p C.path_injective
+  have hn_two : 2 ≤ n := le_trans C.length_two hℓn
+  have hn_pos : (0 : ℝ) < n := by exact_mod_cast (lt_of_lt_of_le (by omega) hn_two)
+  have hlength_pos : 0 < (ℓ : ℝ) - 1 :=
+    sub_pos.mpr (by exact_mod_cast C.length_two)
+  have hℓ_one : 1 < ℓ := lt_of_lt_of_le (by norm_num) C.length_two
+  have hℓ_one_le : 1 ≤ ℓ := hℓ_one.le
+  have hEP_nonempty : EP.Nonempty := by
+    have hℓsub : 0 < ℓ - 1 := Nat.sub_pos_iff_lt.mpr hℓ_one
+    rw [← Finset.card_pos, C.pathEdge_card]
+    exact hℓsub
+  have hEP_pos : 0 < ∑ e ∈ EP, G.weights e :=
+    Finset.sum_pos (fun e _ ↦ G.weights_pos e) hEP_nonempty
+  have hEP_le : ∑ e ∈ EP, G.weights e ≤ ((ℓ : ℝ) - 1) * bmax :=
+    corridorWeight_le_length_mul_bmax G EP ℓ bmax hℓ_one_le
+      C.pathEdge_card hbmax
+  have hm_nat : n - 1 ≤ m := G.card_sub_one_le_edges hconn
+  have hm_half : (n : ℝ) / 2 ≤ m := by
+    have hm_real : ((n - 1 : ℕ) : ℝ) ≤ m := by exact_mod_cast hm_nat
+    have hn_two_real : (2 : ℝ) ≤ n := by exact_mod_cast hn_two
+    rw [Nat.cast_sub (by omega), Nat.cast_one] at hm_real
+    linarith
+  have hweight_lower : ρ * ((n : ℝ) / 2) * bmax ≤ G.totalWeight := by
+    calc
+      ρ * ((n : ℝ) / 2) * bmax ≤ ρ * (m : ℝ) * bmax := by
+        gcongr
+      _ ≤ G.totalWeight := hmean
+  have htarget_nonneg : 0 ≤ β ^ 2 * α * ρ * (n : ℝ) ^ 2 := by positivity
+  have hfirst :
+      β ^ 2 * α * ρ * (n : ℝ) ^ 2 * (∑ e ∈ EP, G.weights e) ≤
+        β ^ 2 * α * ρ * (n : ℝ) ^ 2 * (((ℓ : ℝ) - 1) * bmax) :=
+    mul_le_mul_of_nonneg_left hEP_le htarget_nonneg
+  have hsecond :
+      β ^ 2 * α * ρ * (n : ℝ) ^ 2 * (((ℓ : ℝ) - 1) * bmax) ≤
+        β ^ 2 * ρ * n * ((ℓ : ℝ) - 1) ^ 2 * bmax := by
+    calc
+      β ^ 2 * α * ρ * (n : ℝ) ^ 2 * (((ℓ : ℝ) - 1) * bmax) =
+          (β ^ 2 * ρ * n * ((ℓ : ℝ) - 1) * bmax) * (α * n) := by ring
+      _ ≤ (β ^ 2 * ρ * n * ((ℓ : ℝ) - 1) * bmax) * ((ℓ : ℝ) - 1) := by
+        gcongr
+      _ = β ^ 2 * ρ * n * ((ℓ : ℝ) - 1) ^ 2 * bmax := by ring
+  have hthird :
+      β ^ 2 * ρ * n * ((ℓ : ℝ) - 1) ^ 2 * bmax ≤
+        2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 * G.totalWeight := by
+    calc
+      β ^ 2 * ρ * n * ((ℓ : ℝ) - 1) ^ 2 * bmax =
+          2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 * (ρ * (n / 2) * bmax) := by ring
+      _ ≤ 2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 * G.totalWeight := by
+        gcongr
+  have htarget_corridor :
+      β ^ 2 * α * ρ * (n : ℝ) ^ 2 ≤
+        2 * β ^ 2 * ((ℓ : ℝ) - 1) ^ 2 * G.totalWeight /
+          (∑ e ∈ EP, G.weights e) := by
+    rw [le_div_iff₀ hEP_pos]
+    exact hfirst.trans (hsecond.trans hthird)
+  exact htarget_corridor.trans
+    (corridor_kappa_bound_of_topology G VS VT ℓ p EP C β hβ
+      hVS_size hVT_size hconn)
+
+/-- A uniform positive quadratic lower bound is precisely an `Ω(n²)` statement in mathlib's
+asymptotics API: `n² = O(κ(n))` at `atTop`. -/
+theorem isBigOmega_sq_of_eventually_quadratic_lower_bound
+    (κ : ℕ → ℝ) (c : ℝ) (hc : 0 < c)
+    (hκ : ∀ᶠ k : ℕ in atTop, c * (k : ℝ) ^ 2 ≤ κ k) :
+    (fun k : ℕ ↦ (k : ℝ) ^ 2) =O[atTop] κ := by
+  refine Asymptotics.isBigO_iff''.2 ⟨c, hc, ?_⟩
+  filter_upwards [hκ] with k hk
+  have hsq : 0 ≤ (k : ℝ) ^ 2 := sq_nonneg _
+  have hκ_nonneg : 0 ≤ κ k := (mul_nonneg hc.le hsq).trans hk
+  simpa [Real.norm_eq_abs, abs_of_nonneg hsq, abs_of_nonneg hκ_nonneg] using hk
+
+/-- Proposition 1's family-level conclusion. The hypotheses give uniform constants beyond `N`:
+the corridor occupies at least an `α` fraction of the buses, both bulk regions occupy at least a
+`β` fraction, and mean susceptance is at least `ρ bmax`. The conclusion is the standard
+`κ(n) = Ω(n²)` relation. -/
+theorem corridor_family_isBigOmega_quadratic
+    (edgeCount length : ℕ → ℕ)
+    (G : (k : ℕ) → WeightedGraph k (edgeCount k))
+    (VS VT : (k : ℕ) → Finset (Fin k))
+    (p : (k : ℕ) → Fin (length k) → Fin k)
+    (EP : (k : ℕ) → Finset (Fin (edgeCount k)))
+    (N : ℕ) (β α ρ bmax : ℝ)
+    (hβ : 0 < β) (hα : 0 < α) (hρ : 0 < ρ) (hbmax_pos : 0 < bmax)
+    (hC : ∀ k : ℕ, N ≤ k →
+      CorridorTopology (G k) (VS k) (VT k) (length k) (p k) (EP k))
+    (hVS_size : ∀ k : ℕ, N ≤ k → β * k ≤ ((VS k).card : ℝ))
+    (hVT_size : ∀ k : ℕ, N ≤ k → β * k ≤ ((VT k).card : ℝ))
+    (hbmax : ∀ k : ℕ, N ≤ k → ∀ e, (G k).weights e ≤ bmax)
+    (hmean : ∀ k : ℕ, N ≤ k →
+      ρ * (edgeCount k : ℝ) * bmax ≤ (G k).totalWeight)
+    (hmacro : ∀ k : ℕ, N ≤ k → α * k ≤ (length k : ℝ) - 1)
+    (hconn : ∀ k : ℕ, N ≤ k → (G k).CombinatoriallyConnected) :
+    (fun k : ℕ ↦ (k : ℝ) ^ 2) =O[atTop]
+      (fun k ↦ effectiveConditionNumber (G k) (fun _ ↦ 1)) := by
+  apply isBigOmega_sq_of_eventually_quadratic_lower_bound _ (β ^ 2 * α * ρ)
+    (by positivity)
+  rw [Filter.eventually_atTop]
+  refine ⟨N, fun k hk ↦ ?_⟩
+  exact corridor_kappa_quadratic_bound (G k) (VS k) (VT k) (length k) (p k)
+    (EP k) (hC k hk) β α ρ bmax hβ hα hρ hbmax_pos
+    (hVS_size k hk) (hVT_size k hk) (hbmax k hk) (hmean k hk)
+    (hmacro k hk) (hconn k hk)
 
 end
