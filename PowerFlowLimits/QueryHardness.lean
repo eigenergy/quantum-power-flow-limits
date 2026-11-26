@@ -10,7 +10,7 @@ import Mathlib.Algebra.Order.Chebyshev
 # Right hand side oracle hardness and local observables
 
 This module isolates the balanced hard input, coded phase family, and local observable algebra for
-Proposition 3. Matrix and right hand side oracle calls are tracked separately. The two-state hard
+Proposition 2. Matrix and right hand side oracle calls are tracked separately. The two-state hard
 pair changes only the prepared right hand side: its input states approach one another as the
 condition number grows, while the normalized solution states remain a fixed distance apart.
 
@@ -59,7 +59,7 @@ def IsBalanced {d : ℕ} (p : Fin d → ℝ) : Prop :=
   ∑ i, p i = 0
 
 /-- Unit-weight star Laplacian on one center and `r` leaves.  This explicit family supplies the
-joint hard instance used in Proposition 3. -/
+joint hard instance used in Proposition 2. -/
 def starLaplacianAction (r : ℕ) (x : Fin (r + 1) → ℝ) : Fin (r + 1) → ℝ :=
   Fin.cases ((r : ℝ) * x 0 - ∑ j : Fin r, x j.succ)
     (fun j ↦ x j.succ - x 0)

@@ -12,7 +12,7 @@ import Mathlib.LinearAlgebra.Matrix.DotProduct
 Quantum linear-system query lower bounds are worst case over an oracle class. They do not imply
 that every fixed system with condition number `κ` needs `Ω(κ)` matrix queries. The family below
 has arbitrarily large condition number, but its right-hand-side state is already the normalized
-solution. This is exactly the free state-preparation setting granted in Proposition 3.
+solution. This is exactly the free state-preparation setting granted in Proposition 2.
 -/
 
 open Finset BigOperators Matrix
