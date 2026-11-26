@@ -15,7 +15,7 @@ Mathlib supplies the parts that already match the letter's proof obligations:
 - `Analysis.Normed.Module.FiniteDimension` supplies the bounded-below characterization of an
   injective linear map used for spectral connectivity and grounded positive definiteness.
 - `Probability.Moments.SubGaussian` supplies the independent sub-Gaussian sum tail bound used in
-  Proposition 2.
+  the random susceptance result of the submitted version (`Random.lean`).
 - Mathlib has no tree decomposition, treewidth, graph planarity, or planar separator API in the
   pinned release. The repository now supplies the standard three tree decomposition axioms and
   proves the weighted centroid and balanced-bag theorem locally. Planarity and Lipton--Tarjan

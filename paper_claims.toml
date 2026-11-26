@@ -1,7 +1,7 @@
 schema_version = 1
 challenge_module = "Challenge"
 solution_module = "PowerFlowLimits.PaperClaims"
-expected_claim_count = 17
+expected_claim_count = 32
 expected_nonformal_claim_count = 7
 permitted_axioms = ["propext", "Quot.sound", "Classical.choice"]
 enable_nanoda = true
@@ -9,75 +9,143 @@ enable_nanoda = true
 [[claim]]
 name = "PaperClaims.lemma1_weightedCuts"
 status = "proved"
-summary = "Trace, edge, cut, and condition number inequalities"
+summary = "Lemma 1: trace, edge, cut, and condition number inequalities"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.theorem1_separator"
 status = "proved"
-summary = "Condition number lower bound from a quantitative separator"
+summary = "Theorem 1: separator bound with both the total weight term and the topology only term"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.corollary1_treewidthSeparation"
+status = "proved"
+summary = "Corollary 1(i): a tree decomposition of small width yields a quarter balanced separation"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.corollary1_treewidth"
 status = "proved"
-summary = "Treewidth bound from a standard rooted tree decomposition"
+summary = "Corollary 1(i): treewidth bound with both terms from a rooted tree decomposition"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.corollary1_planarFromLiptonTarjan"
 status = "proved-relative-to-cited-result"
-summary = "Planar specialization from a quantitative separator partition"
+summary = "Corollary 1(ii): planar bound with both terms from a planarity certificate"
 external_dependencies = ["Lipton-Tarjan planar separator theorem"]
 citation = """
 Lipton and Tarjan, A Separator Theorem for Planar Graphs,
 SIAM Journal on Applied Mathematics 36(2), 1979, doi:10.1137/0136016"""
-interface = "PaperClaims.LiptonTarjanPartition"
+interface = "LiptonTarjanVertexCostTheorem"
+
+[[claim]]
+name = "PaperClaims.nearPlanarSeparatorFromCrossingDrawing"
+status = "proved-relative-to-cited-result"
+summary = "Near planar grids: projected separator of size at most twice the planarized bound"
+external_dependencies = ["Lipton-Tarjan planar separator theorem"]
+citation = """
+Lipton and Tarjan, A Separator Theorem for Planar Graphs,
+SIAM Journal on Applied Mathematics 36(2), 1979, doi:10.1137/0136016"""
+interface = "LiptonTarjanVertexCostTheorem"
+
+[[claim]]
+name = "PaperClaims.nearPlanarFromCrossingDrawing"
+status = "proved-relative-to-cited-result"
+summary = "Near planar grids: condition number bound with both terms from a crossing schedule"
+external_dependencies = ["Lipton-Tarjan planar separator theorem"]
+citation = """
+Lipton and Tarjan, A Separator Theorem for Planar Graphs,
+SIAM Journal on Applied Mathematics 36(2), 1979, doi:10.1137/0136016"""
+interface = "LiptonTarjanVertexCostTheorem"
 
 [[claim]]
 name = "PaperClaims.proposition1_corridor"
 status = "proved"
-summary = "Condition number lower bound for a macroscopic corridor"
+summary = "Proposition 1: corridor bound with the maximum form and its topology only consequence"
 external_dependencies = []
 
 [[claim]]
-name = "PaperClaims.proposition2_randomSeparator"
+name = "PaperClaims.anyDistribution_separator"
 status = "proved"
-summary = "Exponential probability bound for independent bounded weights"
+summary = "The topology only separator bound holds surely under any joint distribution of weights"
 external_dependencies = []
 
 [[claim]]
-name = "PaperClaims.proposition2_randomTreewidth"
+name = "PaperClaims.anyDistribution_corridor"
 status = "proved"
-summary = "Random weight transfer from a rooted tree decomposition"
+summary = "The topology only corridor bound holds surely under any joint distribution of weights"
 external_dependencies = []
 
 [[claim]]
-name = "PaperClaims.proposition2_randomPlanar"
+name = "PaperClaims.pseudoConditionNumber_balancedSolve"
+status = "proved"
+summary = "The pseudo condition number is the condition number on balanced injections"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.energyNormAccuracy"
+status = "proved"
+summary = "Fact F3: energy norm accuracy scaled by the root condition number gives Euclidean accuracy"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.groundedHalfLemma1"
+status = "proved"
+summary = "Grounded matrix: interlacing, the trace bound, and half of Lemma 1(i)"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.groundedLemma1"
+status = "proved"
+summary = "Lemma 1 for the grounded matrix with half the constant"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.groundedTheorem1"
+status = "proved"
+summary = "Theorem 1 for the grounded matrix with half the constant"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.groundedCorollary1_treewidth"
+status = "proved"
+summary = "Corollary 1(i) for the grounded matrix with half the constant"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.groundedCorollary1_planarFromLiptonTarjan"
 status = "proved-relative-to-cited-result"
-summary = "Random weight transfer from a quantitative planar partition"
+summary = "Corollary 1(ii) for the grounded matrix with half the constant"
 external_dependencies = ["Lipton-Tarjan planar separator theorem"]
 citation = """
 Lipton and Tarjan, A Separator Theorem for Planar Graphs,
 SIAM Journal on Applied Mathematics 36(2), 1979, doi:10.1137/0136016"""
-interface = "PaperClaims.LiptonTarjanPartition"
+interface = "LiptonTarjanVertexCostTheorem"
 
 [[claim]]
-name = "PaperClaims.proposition2_randomCorridor"
+name = "PaperClaims.groundedProposition1"
 status = "proved"
-summary = "Random weight transfer for the corridor bound"
+summary = "Proposition 1 for the grounded matrix with half the constant"
 external_dependencies = []
 
 [[claim]]
-name = "PaperClaims.proposition3_balancedHardPair"
+name = "PaperClaims.proposition2_balancedHardPair"
 status = "proved"
-summary = "Extreme Laplacian modes and the resulting normalized hard pair"
+summary = "Proposition 2: extreme Laplacian modes and the resulting normalized hard pair"
 external_dependencies = []
 
 [[claim]]
-name = "PaperClaims.proposition3_fixedScheduleReadout"
+name = "PaperClaims.proposition2_accurateOutputSeparates"
+status = "proved"
+summary = "Proposition 2: an output of accuracy below one over root two tells the hard pair apart"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.proposition2_fixedScheduleReadout"
 status = "proved-relative-to-cited-result"
-summary = "Fixed schedule readout lower bound on one worst case input for a fixed graph"
+summary = "Proposition 2(ii): pipeline readout lower bound on one worst case input for a fixed graph"
 external_dependencies = [
   "Controlled preparation oracle hybrid progress bound",
   "Pure state tomography query lower bound",
@@ -97,9 +165,9 @@ doi:10.1109/TPWRS.2025.3613139"""
 interface = "PaperClaims.ControlledPreparationHybridBound; PaperClaims.PureStateTomographyBound; PaperClaims.ClassicalSDDSolveBound; PaperClaims.DenseLoadingBound"
 
 [[claim]]
-name = "PaperClaims.proposition3_gridReadout"
+name = "PaperClaims.proposition2_gridReadout"
 status = "proved-relative-to-cited-result"
-summary = "Fixed graph readout bound under linear condition growth"
+summary = "Proposition 2(ii): fixed graph readout bound under linear condition growth"
 external_dependencies = [
   "Controlled preparation oracle hybrid progress bound",
   "Pure state tomography query lower bound",
@@ -119,9 +187,9 @@ doi:10.1109/TPWRS.2025.3613139"""
 interface = "PaperClaims.ControlledPreparationHybridBound; PaperClaims.PureStateTomographyBound; PaperClaims.ClassicalSDDSolveBound; PaperClaims.DenseLoadingBound"
 
 [[claim]]
-name = "PaperClaims.proposition3_corridorReadout"
+name = "PaperClaims.proposition2_corridorReadout"
 status = "proved-relative-to-cited-result"
-summary = "Fixed graph readout bound under quadratic condition growth"
+summary = "Proposition 2(ii): fixed graph readout bound under quadratic condition growth"
 external_dependencies = [
   "Controlled preparation oracle hybrid progress bound",
   "Pure state tomography query lower bound",
@@ -141,23 +209,41 @@ doi:10.1109/TPWRS.2025.3613139"""
 interface = "PaperClaims.ControlledPreparationHybridBound; PaperClaims.PureStateTomographyBound; PaperClaims.ClassicalSDDSolveBound; PaperClaims.DenseLoadingBound"
 
 [[claim]]
-name = "PaperClaims.proposition3_localObservable"
+name = "PaperClaims.proposition2_localObservable"
 status = "proved-relative-to-cited-result"
-summary = "Fixed solve query lower bound and separation for a nonzero-gap bus or branch squared observable"
+summary = "Proposition 2(iii): query lower bound and separation for a bus or branch observable"
 external_dependencies = ["Controlled preparation oracle hybrid progress bound"]
 citation = "Costa et al., Optimal Scaling Quantum Linear Systems Solver via Discrete Adiabatic Theorem, PRX Quantum 3, 040303, 2022, doi:10.1103/PRXQuantum.3.040303"
 interface = "PaperClaims.ControlledPreparationHybridBound"
 
 [[claim]]
-name = "PaperClaims.groundedConditioningTransfer"
+name = "PaperClaims.inputDependentSolvers_hardPair"
 status = "proved"
-summary = "Corrected trace condition bound for a grounded matrix"
+summary = "The effective condition number equals the pseudo condition number on the hard pair"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.hhlCriterion_readoutLevel"
+status = "proved"
+summary = "Linear condition growth leaves no readout level in the HHL criterion"
 external_dependencies = []
 
 [[claim]]
 name = "PaperClaims.flatStartACBlock"
 status = "proved"
-summary = "Lossless flat start active-angle block identity"
+summary = "Lossless flat start active power and angle block identity"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.flatStartACOffDiagonalBlocks"
+status = "proved"
+summary = "The off diagonal blocks of the lossless Newton Jacobian vanish at flat angles"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.flatStartACConditioning"
+status = "proved"
+summary = "The block diagonal first Newton system is at least as ill-conditioned as the grounded matrix"
 external_dependencies = []
 
 [[claim]]
@@ -166,25 +252,37 @@ status = "proved"
 summary = "Positive DC optimal power flow barrier scales and Laplacian block identity"
 external_dependencies = []
 
+[[claim]]
+name = "PaperClaims.dcOpfGroundedBarrierBlock"
+status = "proved"
+summary = "The grounded barrier Hessian block inherits the separator bound at every iterate"
+external_dependencies = []
+
+[[claim]]
+name = "PaperClaims.proposition3_dcOpfNewtonSystem"
+status = "proved"
+summary = "Proposition 3: condition number lower bound for the DC optimal power flow Newton system"
+external_dependencies = []
+
 [[nonformal_claim]]
 name = "numerical_corpus_survey"
 status = "empirical"
 summary = "Retained numerical survey of separator, treewidth, planarity, and operating point diagnostics"
 
 [[nonformal_claim]]
-name = "near_planar_extension"
-status = "discussion-not-formalized"
-summary = "Near planar extension from the Lipton-Tarjan vertex cost planar separator theorem after planarization"
+name = "effective_condition_number_survey"
+status = "empirical"
+summary = "Effective condition numbers at the recorded operating points of the PGLib systems"
 
 [[nonformal_claim]]
-name = "full_ac_newton_systems"
+name = "newton_iterations_beyond_flat_start"
 status = "discussion-not-formalized"
-summary = "Claims about complete nonlinear AC Newton systems beyond the verified flat start angle block"
+summary = "Per iteration readout costs of quantum inner solvers along the AC Newton iterations"
 
 [[nonformal_claim]]
-name = "full_opf_kkt_ipm_systems"
+name = "quantum_interior_point_costs"
 status = "discussion-not-formalized"
-summary = "Claims about complete optimal power flow KKT and interior point systems beyond the verified DC barrier block"
+summary = "Per iteration query and readout costs of quantum interior point methods"
 
 [[nonformal_claim]]
 name = "complexity_class_statements"

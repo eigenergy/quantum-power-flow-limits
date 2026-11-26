@@ -5,7 +5,10 @@ Authors: Cameron Khanpour, Samuel Talkington
 -/
 
 import Mathlib.Analysis.Matrix.Spectrum
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
 import Mathlib.Combinatorics.SimpleGraph.Connectivity.Connected
+import Mathlib.Data.Matrix.Block
 import Mathlib.Probability.Moments.SubGaussian
 import Mathlib.Tactic
 
@@ -181,6 +184,15 @@ def groundedLaplacianEigenvalueMax (G : WeightedGraph n m) (r : Fin n) : ℝ :=
 def groundedConditionNumber (G : WeightedGraph n m) (r : Fin n) : ℝ :=
   groundedLaplacianEigenvalueMax G r / groundedLaplacianEigenvalueMin G r
 
+abbrev GroundedIndex (r : Fin n) := {i : Fin n // i ≠ r}
+
+def groundedLaplacian (G : WeightedGraph n m) (r : Fin n) :
+    Matrix (GroundedIndex r) (GroundedIndex r) ℝ :=
+  fun i j ↦ G.laplacian (fun _ ↦ 1) i j
+
+def laplacianEnergy (G : WeightedGraph n m) (x : Fin n → ℝ) : ℝ :=
+  ∑ i, (∑ j, G.laplacian (fun _ ↦ 1) i j * x j) * x i
+
 def WeightedGraph.acActiveInjection (G : WeightedGraph n m)
     (θ : Fin n → ℝ) (i : Fin n) : ℝ :=
   ∑ e, G.incidence i e * G.weights e * Real.sin (voltageDrop G θ e)
@@ -189,6 +201,17 @@ def WeightedGraph.acAngleJacobian (G : WeightedGraph n m)
     (θ : Fin n → ℝ) (i j : Fin n) : ℝ :=
   ∑ e, G.incidence i e * G.weights e * Real.cos (voltageDrop G θ e) *
     G.incidence j e
+
+def WeightedGraph.acActivePower (G : WeightedGraph n m)
+    (θ V : Fin n → ℝ) (i : Fin n) : ℝ :=
+  ∑ e, G.incidence i e * G.weights e * V (G.posEndpoint e) * V (G.negEndpoint e) *
+    Real.sin (voltageDrop G θ e)
+
+def WeightedGraph.acReactivePower (G : WeightedGraph n m) (shunt : Fin n → ℝ)
+    (θ V : Fin n → ℝ) (i : Fin n) : ℝ :=
+  shunt i * V i ^ 2 +
+    ∑ e, G.incidence i e ^ 2 * G.weights e *
+      (V i ^ 2 - V (G.posEndpoint e) * V (G.negEndpoint e) * Real.cos (voltageDrop G θ e))
 
 def WeightedGraph.dcBranchFlow (G : WeightedGraph n m)
     (θ : Fin n → ℝ) (e : Fin m) : ℝ :=
@@ -204,6 +227,25 @@ def WeightedGraph.dcOpfNetworkBlock (G : WeightedGraph n m)
     (limit : Fin m → ℝ) (μ : ℝ) (θ : Fin n → ℝ) (i j : Fin n) : ℝ :=
   ∑ e, G.incidence i e *
     (G.dcOpfBarrierScale limit μ θ e * G.weights e) * G.incidence j e
+
+variable {g : ℕ}
+
+abbrev DcOpfNewtonIndex (g : ℕ) (r : Fin n) := Fin g ⊕ (GroundedIndex r ⊕ Fin n)
+
+def WeightedGraph.dcOpfNewtonMatrix (G : WeightedGraph n m) (r : Fin n)
+    (H : Matrix (Fin g) (Fin g) ℝ) (Γ : Matrix (Fin n) (Fin g) ℝ) (scale : Fin m → ℝ) :
+    Matrix (DcOpfNewtonIndex g r) (DcOpfNewtonIndex g r) ℝ :=
+  Matrix.of fun x y ↦
+    match x, y with
+    | .inl a, .inl b => H a b
+    | .inl _, .inr (.inl _) => 0
+    | .inl a, .inr (.inr k) => -Γ k a
+    | .inr (.inl _), .inl _ => 0
+    | .inr (.inl i), .inr (.inl j) => G.laplacian scale i j
+    | .inr (.inl i), .inr (.inr k) => G.laplacian (fun _ ↦ 1) k i
+    | .inr (.inr k), .inl a => -Γ k a
+    | .inr (.inr k), .inr (.inl j) => G.laplacian (fun _ ↦ 1) k j
+    | .inr (.inr _), .inr (.inr _) => 0
 
 namespace RHSQueryHardness
 
@@ -287,18 +329,101 @@ def zeroSumSubspace (n : ℕ) : Submodule ℝ (EuclideanSpace ℝ (Fin n)) where
     simp only [Set.mem_setOf_eq, PiLp.smul_apply, smul_eq_mul]
     rw [← Finset.mul_sum, hx, mul_zero]
 
-namespace PaperClaims
+def slowModes (G : WeightedGraph n m) (μ : ℝ) : Set (Fin n → ℝ) :=
+  {w | ∑ i, w i = 0 ∧ ∃ lam : ℝ, lam < μ ∧
+    ∀ i, ∑ j, G.laplacian (fun _ ↦ 1) i j * w j = lam * w i}
 
-structure LiptonTarjanPartition (G : WeightedGraph n m)
-    (A X B : Finset (Fin n)) : Prop where
-  order : 288 ≤ n
-  cover : A ∪ X ∪ B = Finset.univ
-  disjoint : Disjoint (A ∪ X) B
-  noCrossing : ∀ e, ¬(G.posEndpoint e ∈ A ∧ G.negEndpoint e ∈ B) ∧
-    ¬(G.posEndpoint e ∈ B ∧ G.negEndpoint e ∈ A)
-  separatorSize : (X.card : ℝ) ≤ Real.sqrt (8 * n)
-  leftSize : (A.card : ℝ) ≤ 2 * n / 3
-  rightSize : (B.card : ℝ) ≤ 2 * n / 3
+def slowMass (G : WeightedGraph n m) (μ : ℝ) (ψ : Fin n → ℝ) : ℝ :=
+  sSup {a : ℝ | ∃ w ∈ Submodule.span ℝ (slowModes G μ),
+    dotProduct w w = 1 ∧ a = dotProduct w ψ ^ 2}
+
+def inputDependentConditionNumber (G : WeightedGraph n m) (ε : ℝ) (ψ : Fin n → ℝ) : ℝ :=
+  laplacianEigenvalueMax G (fun _ ↦ 1) /
+    sSup {μ : ℝ | μ ≤ laplacianEigenvalueMax G (fun _ ↦ 1) ∧ slowMass G μ ψ ≤ ε ^ 2}
+
+structure CorridorTopology (G : WeightedGraph n m)
+    (VS VT : Finset (Fin n)) (ℓ : ℕ) (p : Fin ℓ → Fin n)
+    (EP : Finset (Fin m)) where
+  length_two : 2 ≤ ℓ
+  path_injective : Function.Injective p
+  /-- The branch joining each consecutive pair of path vertices. -/
+  pathEdge : Fin (ℓ - 1) → Fin m
+  pathEdge_injective : Function.Injective pathEdge
+  pathEdge_range : EP = Finset.univ.image pathEdge
+  pathEdge_endpoints : ∀ i, ∃ j : Fin ℓ, ∃ h : j.val + 1 < ℓ,
+    j.val = i.val ∧
+      ((G.posEndpoint (pathEdge i) = p j ∧
+          G.negEndpoint (pathEdge i) = p ⟨j.val + 1, h⟩) ∨
+        (G.posEndpoint (pathEdge i) = p ⟨j.val + 1, h⟩ ∧
+          G.negEndpoint (pathEdge i) = p j))
+  path_disjoint_left : ∀ i, p i ∉ VS
+  path_disjoint_right : ∀ i, p i ∉ VT
+  bulks_disjoint : Disjoint VS VT
+  vertex_cover : VS ∪ Finset.univ.image p ∪ VT = Finset.univ
+  nonpath_internal : ∀ e ∉ EP,
+    ((G.posEndpoint e ∈ VS ∨ G.posEndpoint e = p ⟨0, by omega⟩) ∧
+      (G.negEndpoint e ∈ VS ∨ G.negEndpoint e = p ⟨0, by omega⟩)) ∨
+    ((G.posEndpoint e ∈ VT ∨ G.posEndpoint e = p ⟨ℓ - 1, by omega⟩) ∧
+      (G.negEndpoint e ∈ VT ∨ G.negEndpoint e = p ⟨ℓ - 1, by omega⟩))
+
+abbrev PlanarizedVertex (n c : ℕ) := Fin n ⊕ Fin c
+
+structure CrossingSchedule (G : WeightedGraph n m) (c : ℕ) where
+  /-- The two original branches meeting at each crossing. -/
+  carriers : Fin c → Fin m × Fin m
+  /-- An ordinary crossing never has the same branch as both carriers. -/
+  carriers_ne : ∀ x, (carriers x).1 ≠ (carriers x).2
+  /-- Crossings encountered along each branch, from its negative to its positive endpoint. -/
+  along : Fin m → List (Fin c)
+  /-- A branch does not encounter the same crossing twice. -/
+  along_nodup : ∀ e, (along e).Nodup
+  /-- A crossing occurs on a branch exactly when that branch is one of its two carriers. -/
+  mem_along_iff : ∀ e x, x ∈ along e ↔ e = (carriers x).1 ∨ e = (carriers x).2
+
+namespace CrossingSchedule
+
+variable {c : ℕ} {G : WeightedGraph n m} (S : CrossingSchedule G c)
+
+def route (e : Fin m) : List (PlanarizedVertex n c) :=
+  Sum.inl (G.negEndpoint e) :: (S.along e).map Sum.inr ++ [Sum.inl (G.posEndpoint e)]
+
+def Consecutive {V : Type*} (vertices : List V) (u v : V) : Prop :=
+  ∃ before after, vertices = before ++ u :: v :: after
+
+def planarizedGraph : SimpleGraph (PlanarizedVertex n c) where
+  Adj u v := u ≠ v ∧ ∃ e, Consecutive (S.route e) u v ∨ Consecutive (S.route e) v u
+  symm := by
+    rintro u v ⟨hne, e, h⟩
+    exact ⟨hne.symm, e, h.symm⟩
+  loopless := ⟨by simp⟩
+
+end CrossingSchedule
+
+abbrev PlanarityPredicate := (V : Type) → SimpleGraph V → Prop
+
+structure VertexCostPartition {V : Type} [Fintype V] [DecidableEq V]
+    (H : SimpleGraph V) (cost : V → ℝ) where
+  /-- Vertices on the first side of the separator. -/
+  left : Finset V
+  /-- Vertices in the separator. -/
+  separator : Finset V
+  /-- Vertices on the second side of the separator. -/
+  right : Finset V
+  cover : left ∪ separator ∪ right = Finset.univ
+  disjoint_left_separator : Disjoint left separator
+  disjoint_left_right : Disjoint left right
+  disjoint_separator_right : Disjoint separator right
+  no_left_right : ∀ u v, H.Adj u v → ¬(u ∈ left ∧ v ∈ right)
+  separator_card_le : (separator.card : ℝ) ≤ Real.sqrt (8 * Fintype.card V)
+  left_cost_le : ∑ v ∈ left, cost v ≤ 2 / 3
+  right_cost_le : ∑ v ∈ right, cost v ≤ 2 / 3
+
+def LiptonTarjanVertexCostTheorem (Planar : PlanarityPredicate) : Prop :=
+  ∀ (V : Type) [Fintype V] [DecidableEq V] (H : SimpleGraph V) (cost : V → ℝ),
+    (∀ v, 0 ≤ cost v) → (∑ v, cost v) ≤ 1 → Planar V H →
+      Nonempty (VertexCostPartition H cost)
+
+namespace PaperClaims
 
 structure ControlledPreparationHybridBound {d : ℕ}
     (pair : RHSQueryHardness.BalancedModePair d) (qSolve : ℕ)

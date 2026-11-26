@@ -43,11 +43,12 @@ EXPECTED_TOOL_PINS = {
     "Comparator": "71b52ec29e06d4b7d882726553b1ceb99a2499e0",
     "nanoda": "68d5ca9db226849b41a6fff59d796ff19d0a8840",
 }
+EXPECTED_CLAIM_COUNT = 32
 EXPECTED_NONFORMAL_CLAIMS = [
     ("numerical_corpus_survey", "empirical"),
-    ("near_planar_extension", "discussion-not-formalized"),
-    ("full_ac_newton_systems", "discussion-not-formalized"),
-    ("full_opf_kkt_ipm_systems", "discussion-not-formalized"),
+    ("effective_condition_number_survey", "empirical"),
+    ("newton_iterations_beyond_flat_start", "discussion-not-formalized"),
+    ("quantum_interior_point_costs", "discussion-not-formalized"),
     ("complexity_class_statements", "discussion-not-formalized"),
     ("unit_commitment", "discussion-not-formalized"),
     ("hybrid_algorithms", "discussion-not-formalized"),
@@ -110,8 +111,8 @@ def validate_manifest(manifest: dict[str, object]) -> list[str]:
     if not isinstance(claims, list):
         fail("claim must be an array of tables")
     expected_count = manifest["expected_claim_count"]
-    if not isinstance(expected_count, int) or expected_count != 17:
-        fail("expected_claim_count must be 17")
+    if not isinstance(expected_count, int) or expected_count != EXPECTED_CLAIM_COUNT:
+        fail(f"expected_claim_count must be {EXPECTED_CLAIM_COUNT}")
     if len(claims) != expected_count:
         fail(f"manifest contains {len(claims)} claims; expected {expected_count}")
 
@@ -155,7 +156,7 @@ def validate_manifest(manifest: dict[str, object]) -> list[str]:
                 fail(f"{name} does not name its Lean premise interface")
             interfaces = [item.strip() for item in interface.split(";")]
             if not all(
-                re.fullmatch(r"PaperClaims\.[A-Za-z][A-Za-z0-9_]*", item)
+                re.fullmatch(r"(?:PaperClaims\.)?[A-Za-z][A-Za-z0-9_]*", item)
                 for item in interfaces
             ):
                 fail(f"{name} has an invalid Lean premise interface")
@@ -253,33 +254,54 @@ def validate_sources(names: list[str]) -> None:
 
     manifest = load_manifest()
     public_structures = {
-        "LiptonTarjanPartition",
         "ControlledPreparationHybridBound",
         "PureStateTomographyBound",
         "ClassicalSDDSolveBound",
         "DenseLoadingBound",
         "GraphHardPairCertificate",
+        "CorridorTopology",
+        "CrossingSchedule",
+        "VertexCostPartition",
+    }
+    library_sources = {
+        "CorridorTopology": "Corridors.lean",
+        "CrossingSchedule": "Planarization.lean",
+        "VertexCostPartition": "PlanarSeparator.lean",
     }
     for structure_name in public_structures:
         pattern = re.compile(
             rf"^structure\s+{re.escape(structure_name)}\b.*?"
-            rf"(?=\n\n(?:/--|structure |theorem |end ))",
+            rf"(?=\n\n(?:/--|structure |theorem |namespace |abbrev |def |end ))",
             re.MULTILINE | re.DOTALL,
         )
         challenge_match = pattern.search(definitions_source)
-        solution_match = pattern.search(solution_source)
+        structure_source = solution_source
+        if structure_name in library_sources:
+            structure_source = (
+                ROOT / "PowerFlowLimits" / library_sources[structure_name]
+            ).read_text(encoding="utf-8")
+        solution_match = pattern.search(structure_source)
         if challenge_match is None or solution_match is None:
             fail(f"could not extract public structure {structure_name}")
         if challenge_match.group().strip() != solution_match.group().strip():
             fail(f"public structure {structure_name} differs between claim environments")
+    solution_declarations = "\n".join(
+        [
+            solution_source,
+            (ROOT / "PowerFlowLimits" / "Planarization.lean").read_text(encoding="utf-8"),
+            (ROOT / "PowerFlowLimits" / "PlanarSeparator.lean").read_text(encoding="utf-8"),
+        ]
+    )
     for claim in manifest["claim"]:
         if claim["status"] != "proved-relative-to-cited-result":
             continue
         for interface in claim["interface"].split(";"):
             local_name = interface.strip().removeprefix("PaperClaims.")
-            declaration = re.compile(rf"^structure\s+{re.escape(local_name)}\b", re.MULTILINE)
+            declaration = re.compile(
+                rf"^(?:abbrev|def|structure)\s+{re.escape(local_name)}\b", re.MULTILINE
+            )
             if not declaration.search(definitions_source) or not declaration.search(
-                solution_source
+                solution_declarations
             ):
                 fail(f"{claim['name']} names an interface absent from one claim environment")
             claim_local_name = claim["name"].removeprefix("PaperClaims.")
