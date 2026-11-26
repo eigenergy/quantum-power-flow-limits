@@ -68,7 +68,7 @@ unmodified case data.
 - The direct positive series model is usable without modification in 56
   cases. Twenty-two cases contain at least one active nonpositive or nonfinite
   reactance and are excluded from weighted and spectral conclusions.
-- The Proposition 3 survey computes spectra for 45 cases with residuals below
+- The Proposition 2 survey (stored under the key `proposition3`) computes spectra for 45 cases with residuals below
   `1e-7`; 11 cases exceed its 8,000 bus limit and 22 fail the weight model.
   Every computed condition estimate exceeds both independently calculated
   theorem lower bounds. The largest estimate is `3.393767e6`; the median ratio
@@ -179,7 +179,7 @@ derivatives of the retained survey JSON.
 8. Formalize the vertex cost form of Lipton--Tarjan used after planarization so
    balance is certified on original buses rather than crossing vertices.
 
-## Proposition 3 operating point results
+## Proposition 2 operating point results
 
 The schema version 2 survey extracts each base injection as generation minus
 load and balances its recorded residual at the lowest numbered recorded

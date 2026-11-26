@@ -6,7 +6,7 @@ Authors: Cameron Khanpour, Samuel Talkington
 import PowerFlowLimits.QueryHardness
 
 /-!
-# Proposition 3 (prop:e2e): end-to-end query lower bounds, chaining the cited facts (F1), (F2)
+# Proposition 2 (prop:e2e): end-to-end query lower bounds, chaining the cited facts (F1), (F2)
 
 Part of the Lean 4 formalization of
 "Proving the Limits of Quantum Power Flow" (Khanpour and Talkington).
@@ -18,7 +18,7 @@ noncomputable section
 
 variable {n m : ℕ}
 
-/-- Proposition 3 (prop:e2e), part (i), as a cost composition lemma. Its explicit
+/-- Proposition 2 (prop:e2e), part (i), as a cost composition lemma. Its explicit
     hypotheses give a tomography preparation lower bound, a per-preparation QLS cost,
     and a structural condition-number bound. The recovered worst case theorem below,
     `clean_qls_worst_case_product`, derives the shared per-preparation cost from the
@@ -43,7 +43,7 @@ theorem e2e_query_lower_bound (nn q ε κ preps costPerPrep total c₁ c₂ c₃
     _ ≤ preps * costPerPrep := mul_le_mul_of_nonneg_left hcost hpreps_nn
     _ ≤ total := htotal
 
-/-- Proposition 3 (prop:e2e), part (i) on grid families: κ ≥ c₃·n gives
+/-- Proposition 2 (prop:e2e), part (i) on grid families: κ ≥ c₃·n gives
     query cost ≥ c₁c₂c₃·n²/ε. -/
 theorem e2e_query_lower_bound_grid (nn ε κ preps costPerPrep total c₁ c₂ c₃ : ℝ)
     (hn : 0 < nn) (hε : 0 < ε)
@@ -57,7 +57,7 @@ theorem e2e_query_lower_bound_grid (nn ε κ preps costPerPrep total c₁ c₂ c
     _ ≤ total := e2e_query_lower_bound nn nn ε κ preps costPerPrep total c₁ c₂ c₃
       hn hn hε hc₁ hc₂ hc₃ hκ hpreps hcost htotal
 
-/-- Proposition 3 (prop:e2e), part (i) on corridor families: κ ≥ c₃·n² gives
+/-- Proposition 2 (prop:e2e), part (i) on corridor families: κ ≥ c₃·n² gives
     query cost ≥ c₁c₂c₃·n³/ε. -/
 theorem e2e_query_lower_bound_corridor
     (nn ε κ preps costPerPrep total c₁ c₂ c₃ : ℝ)
@@ -72,7 +72,7 @@ theorem e2e_query_lower_bound_corridor
     _ ≤ total := e2e_query_lower_bound nn (nn ^ 2) ε κ preps costPerPrep total
       c₁ c₂ c₃ hn (by positivity) hε hc₁ hc₂ hc₃ hκ hpreps hcost htotal
 
-/-- Proposition 3 (prop:e2e), part (ii): estimating even one observable pays
+/-- Proposition 2 (prop:e2e), part (ii): estimating even one observable pays
     the full solve cost, ≥ c₁·κ ≥ c₁c₃·n queries — already the price of the
     classical solution. -/
 theorem e2e_observable_lower_bound (nn κ cost c₁ c₃ : ℝ)
@@ -80,7 +80,7 @@ theorem e2e_observable_lower_bound (nn κ cost c₁ c₃ : ℝ)
     c₁ * (c₃ * nn) ≤ cost :=
   le_trans (mul_le_mul_of_nonneg_left hκ hc₁.le) hcost
 
-/-- Joint hard-family form of Proposition 3.  A code of dimension proportional to `nn` is
+/-- Joint hard-family form of Proposition 2.  A code of dimension proportional to `nn` is
 embedded in slow balanced Laplacian modes.  The right hand side oracle exposes that code with
 phase `phase`; `horacle` is the fractional-phase direct-sum lower bound, and `hattenuation`
 records suppression by the fast/slow inverse gain ratio `gain`.  Unlike a multiplication of two
@@ -243,7 +243,7 @@ theorem corridor_rhs_oracle_exceeds_classical
       _ = cR * (cK * nn ^ 2) := by ring
   exact lt_of_le_of_lt hclassical (lt_of_lt_of_le hlinear hquadratic)
 
-/-- Direct worst case recovery of Proposition 3 on corridor families.  The balanced hard pair
+/-- Direct worst case recovery of Proposition 2 on corridor families.  The balanced hard pair
 supplies constant output separation and per-query progress at most `hybridConstant / κ`; the
 corridor condition supplies `κ = Ω(nn²)`.  The resulting right hand side query lower bound
 strictly exceeds the nearly linear classical upper bound after the displayed threshold. -/

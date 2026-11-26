@@ -8,7 +8,12 @@ import PowerFlowLimits.Separators
 import Mathlib.Probability.Moments.SubGaussian
 
 /-!
-# Proposition 2 (prop:random): pathwise ill-conditioning with random susceptances
+# Random susceptances: the probabilistic proposition of the submitted letter
+
+The first revision of the letter removed this proposition, because the topology only bounds
+hold for every positive choice of susceptances (see `AnyDistribution.lean`). The Hoeffding
+result is kept as a library theorem outside the public claim surface. In this file,
+"Proposition 2" refers to the numbering of the submitted version.
 
 This is part of the Lean 4 formalization of
 "Proving the Limits of Quantum Power Flow" (Khanpour and Talkington).

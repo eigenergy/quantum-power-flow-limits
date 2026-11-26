@@ -1,8 +1,8 @@
-# Proposition 3 recovery
+# Proposition 2 recovery
 
 ## Outcome
 
-The worst case product in Proposition 3 is recovered for the QLS plus tomography
+The worst case product in Proposition 2 is recovered for the QLS plus tomography
 architecture used in the original proof. Fix a connected positive weighted Laplacian `B`, and put
 `d = n - 1`. For every clean QLS readout procedure that succeeds on every normalized injection in
 `span(1)^perp`, there is one normalized balanced injection `p` with total query cost

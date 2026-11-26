@@ -1,6 +1,6 @@
 # Query lower bound counterexamples
 
-The intended Proposition 3 is a worst case statement: every QLS algorithm has a hard power flow
+The intended Proposition 2 is a worst case statement: every QLS algorithm has a hard power flow
 input. The direct reduction must exhibit that input inside the lossless DCPF domain. It need not
 show that every operating point is hard.
 
@@ -23,7 +23,7 @@ fixed connected Laplacian, two lossless prepared right hand sides at squared dis
 oracles prepare the pair, are exact inverses, and have the required `O(1/kappa_+)` operator gap.
 The exact bus and branch observable gaps are also proved for the paper's intended rank-one local
 observables. A hybrid lower bound then counts right hand side preparation oracle calls. See
-`docs/proposition-3-recovery.md` for the precise trust boundary and corpus results.
+`docs/query-lower-bound-recovery.md` for the precise trust boundary and corpus results.
 
 For full classical readout, the recovered proof does not require the two-state witness to be the
 tomography witness. The two-state argument lower bounds the fixed query schedule of the controlled
